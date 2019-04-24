@@ -29,3 +29,12 @@ def plugin_settings(settings):
     Defines seb_openedx settings when app is used as a plugin to edx-platform.
     See: https://github.com/edx/edx-platform/blob/master/openedx/core/djangoapps/plugins/README.rst
     """
+
+    settings.CUSTOM_SAML_IDENTITY_PROVIDERS = [
+        {
+            "provider_key": "nau_custom_saml_provider",
+            "idp_module": "nau_openedx_extensions.third_party_auth.providers.saml",
+            "idp_class": "NauEdXSAMLIdentityProvider",
+            "verbose_name": "NAU SAML provider"
+        }
+    ]
