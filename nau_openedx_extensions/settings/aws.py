@@ -2,4 +2,5 @@
 Settings for nau_openedx_extensions
 """
 
-from .common import *  # pylint: disable=wildcard-import, unused-wildcard-impor
+from __future__ import absolute_import, unicode_literals
+from nau_openedx_extensions.settings.production import plugin_settings  # pylint: disable=unused-import
