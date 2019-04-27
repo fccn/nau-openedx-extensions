@@ -29,6 +29,7 @@ def plugin_settings(settings):
     Defines seb_openedx settings when app is used as a plugin to edx-platform.
     See: https://github.com/edx/edx-platform/blob/master/openedx/core/djangoapps/plugins/README.rst
     """
+    settings.CERTIFICATE_CONTEXT_EXTENSION = 'nau_openedx_extensions.certificates.update_cert_context'
 
     settings.CUSTOM_SAML_IDENTITY_PROVIDERS = [
         {

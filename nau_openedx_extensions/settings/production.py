@@ -15,3 +15,8 @@ def plugin_settings(settings):
         'CUSTOM_SAML_IDENTITY_PROVIDERS',
         settings.CUSTOM_SAML_IDENTITY_PROVIDERS
     )
+
+    settings.CERTIFICATE_CONTEXT_EXTENSION = getattr(settings, 'ENV_TOKENS', {}).get(
+        'CERTIFICATE_CONTEXT_EXTENSION',
+        settings.CERTIFICATE_CONTEXT_EXTENSION
+    )
