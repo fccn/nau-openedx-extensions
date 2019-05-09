@@ -2,6 +2,10 @@
 Slightly customized python-social-auth idp for SAML 2.0 support
 """
 import logging
+from importlib import import_module
+
+from django.conf import settings
+
 from third_party_auth.saml import EdXSAMLIdentityProvider
 
 log = logging.getLogger(__name__)
@@ -35,3 +39,41 @@ class NauEdXSAMLIdentityProvider(EdXSAMLIdentityProvider):
             )
 
         return details
+
+
+def get_extended_saml_idp_choices(*args, **kwargs):
+    """
+    Returns a tuple with custom SAML idp choices. If an exception
+    ocurs, it returns only the valid choices.
+    """
+
+    for idp in getattr(settings, 'CUSTOM_SAML_IDENTITY_PROVIDERS', []):
+        try:
+            kwargs['choices'] += ((idp['provider_key'], idp['verbose_name']),)
+        except KeyError:
+            log.error(
+                '%s could not be added as identity provider choice',
+                idp
+            )
+
+    return kwargs['choices']
+
+
+def extend_saml_idp_classes(*args, **kwargs):
+    """
+    Return a dict containing SAML valid idps classes
+    """
+
+    for idp in getattr(settings, 'CUSTOM_SAML_IDENTITY_PROVIDERS', []):
+        try:
+            module, klass = idp['provider_class'].rsplit('.', 1)
+            idp_module = import_module(module)
+            idp_class = getattr(idp_module, klass)
+            kwargs['choices'][idp['provider_key']] = idp_class
+        except Exception:
+            log.error(
+                '%s could not be added as identity provider',
+                kwargs['idp_identifier_string']
+            )
+
+    return kwargs['choices']

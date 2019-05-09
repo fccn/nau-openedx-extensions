@@ -33,8 +33,10 @@ def plugin_settings(settings):
     settings.CUSTOM_SAML_IDENTITY_PROVIDERS = [
         {
             "provider_key": "nau_custom_saml_provider",
-            "idp_module": "nau_openedx_extensions.third_party_auth.providers.saml",
-            "idp_class": "NauEdXSAMLIdentityProvider",
+            "provider_class": "nau_openedx_extensions.third_party_auth.providers.saml.NauEdXSAMLIdentityProvider",
             "verbose_name": "NAU SAML provider"
         }
     ]
+
+    settings.ADD_SAML_IDP_CHOICES = 'nau_openedx_extensions.third_party_auth.providers.saml.get_extended_saml_idp_choices'
+    settings.ADD_SAML_IDP_CLASSES = 'nau_openedx_extensions.third_party_auth.providers.saml.extend_saml_idp_classes'
