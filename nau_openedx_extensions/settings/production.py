@@ -15,3 +15,11 @@ def plugin_settings(settings):
         'CUSTOM_SAML_IDENTITY_PROVIDERS',
         settings.CUSTOM_SAML_IDENTITY_PROVIDERS
     )
+    settings.ADD_SAML_IDP_CHOICES = getattr(settings, 'ENV_TOKENS', {}).get(
+        'ADD_SAML_IDP_CHOICES',
+        settings.ADD_SAML_IDP_CHOICES
+    )
+    settings.ADD_SAML_IDP_CLASSES = getattr(settings, 'ENV_TOKENS', {}).get(
+        'ADD_SAML_IDP_CLASSES',
+        settings.ADD_SAML_IDP_CLASSES
+    )
