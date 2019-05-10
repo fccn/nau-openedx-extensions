@@ -7,6 +7,7 @@ from importlib import import_module
 from django.conf import settings
 
 from third_party_auth.saml import EdXSAMLIdentityProvider
+from student.forms import get_registration_extension_form
 
 log = logging.getLogger(__name__)
 
@@ -77,3 +78,34 @@ def extend_saml_idp_classes(*args, **kwargs):
             )
 
     return kwargs['choices']
+
+
+def _apply_saml_overrides(*args, **kwargs):
+    """
+    Applies custom saml override rules for custom
+    registration forms
+    """
+    custom_form = get_registration_extension_form()    
+    form_desc = kwargs['form_desc']
+
+    for field_name, field in custom_form.fields.items():
+        visibility = kwargs['extra_settings'].get(field_name, 'hidden')
+        # applying commmon overrides
+        form_desc.override_field_properties(
+            field_name,
+            required=False,
+        )
+
+        if visibility == 'required':
+            form_desc.override_field_properties(
+                field_name,
+                required=True,
+            )
+        if visibility == 'hidden':
+            form_desc.override_field_properties(
+                field_name,
+                field_type=visibility,
+                label="",
+                instructions="",
+                restrictions={},
+            )
