@@ -23,3 +23,7 @@ def plugin_settings(settings):
         'ADD_SAML_IDP_CLASSES',
         settings.ADD_SAML_IDP_CLASSES
     )
+    settings.APPLY_SAML_OVERRIDES = getattr(settings, 'ENV_TOKENS', {}).get(
+        'APPLY_SAML_OVERRIDES',
+        settings.APPLY_SAML_OVERRIDES
+    )
