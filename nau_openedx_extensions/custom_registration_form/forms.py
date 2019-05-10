@@ -20,4 +20,4 @@ class NauUserExtendedForm(ModelForm):
         self.fields['data_authorization'].error_messages = {
             "required": _('Please authorize data processing')
         }
-        self.fields['data_authorization'].required = True
+
