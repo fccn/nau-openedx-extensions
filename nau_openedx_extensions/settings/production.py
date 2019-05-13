@@ -27,3 +27,7 @@ def plugin_settings(settings):
         'APPLY_SAML_OVERRIDES',
         settings.APPLY_SAML_OVERRIDES
     )
+    settings.CERTIFICATE_CONTEXT_EXTENSION = getattr(settings, 'ENV_TOKENS', {}).get(
+        'CERTIFICATE_CONTEXT_EXTENSION',
+        settings.CERTIFICATE_CONTEXT_EXTENSION
+    )
