@@ -16,15 +16,59 @@ class NauUserExtendedModel(models.Model):
         verbose_name=_("I authorize data processing for this site "),
         default=False
     )
-    citizen_card = models.CharField(
-        verbose_name=_("Citizen Card"),
+    cc_nif = models.CharField(
+        verbose_name=_("NIF"),
+        max_length=9,
+        blank=True,
+        null=True
+    )
+    cc_nic = models.CharField(
+        verbose_name=_("NIC"),
         max_length=16,
         blank=True,
         null=True
     )
-    nif = models.CharField(
-        verbose_name=_("NIF"),
-        max_length=9,
+    cc_first_name = models.TextField(
+        verbose_name=_("First name"),
+        blank=True,
+        null=True
+    )
+    cc_last_name = models.TextField(
+        verbose_name=_("Last name"),
+        blank=True,
+        null=True
+    )
+    cc_nationality = models.TextField(
+        verbose_name=_("Nacionality"),
+        blank=True,
+        null=True
+    )
+    cc_zip3 = models.CharField(
+        verbose_name=_("Zip code 3 digits"),
+        max_length=3,
+        blank=True,
+        null=True
+    )
+    cc_zip4 = models.CharField(
+        verbose_name=_("Zip code 4 digits"),
+        max_length=4,
+        blank=True,
+        null=True
+    )
+    cc_doc_number = models.CharField(
+        verbose_name=_("Document number"),
+        max_length=16,
+        blank=True,
+        null=True
+    )
+    cc_birth_date = models.CharField(
+        verbose_name=_("Birth date"),
+        max_length=12,
+        blank=True,
+        null=True
+    )
+    employment_situation = models.TextField(
+        verbose_name=_("Employment situation"),
         blank=True,
         null=True
     )
