@@ -26,7 +26,7 @@ class NauEdXSAMLIdentityProvider(EdXSAMLIdentityProvider):
         the corresponding SAML backend. A valid 'field_mapping_rules' must be defined
         in order to fully support custom field defintions.
         """
-        details = super(EdXSAMLIdentityProvider, self).get_user_details(attributes)
+        details = super(NauEdXSAMLIdentityProvider, self).get_user_details(attributes)
         field_mapping_rules = self.conf.get('field_mapping_rules', [])
         try:
             details.update({
@@ -85,7 +85,7 @@ def _apply_saml_overrides(*args, **kwargs):
     Applies custom saml override rules for custom
     registration forms
     """
-    custom_form = get_registration_extension_form()    
+    custom_form = get_registration_extension_form()
     form_desc = kwargs['form_desc']
 
     for field_name, field in custom_form.fields.items():
