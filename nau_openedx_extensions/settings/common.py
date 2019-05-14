@@ -41,3 +41,4 @@ def plugin_settings(settings):
     settings.ADD_SAML_IDP_CHOICES = 'nau_openedx_extensions.third_party_auth.providers.saml.get_extended_saml_idp_choices'
     settings.ADD_SAML_IDP_CLASSES = 'nau_openedx_extensions.third_party_auth.providers.saml.extend_saml_idp_classes'
     settings.APPLY_SAML_OVERRIDES = 'nau_openedx_extensions.third_party_auth.providers.saml._apply_saml_overrides'
+    settings.CERTIFICATE_CONTEXT_EXTENSION = 'nau_openedx_extensions.certificates.context_extender.update_cert_context'

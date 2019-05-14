@@ -11,8 +11,16 @@ class NauUserExtendedForm(ModelForm):
         model = NauUserExtendedModel
         fields = [
             'data_authorization',
-            'citizen_card',
-            'nif',
+            'cc_nif',
+            'cc_nic',
+            'cc_first_name',
+            'cc_last_name',
+            'cc_nationality',
+            'cc_zip3',
+            'cc_zip4',
+            'cc_doc_number',
+            'cc_birth_date',
+            'employment_situation',
         ]
 
     def __init__(self, *args, **kwargs):
@@ -20,4 +28,3 @@ class NauUserExtendedForm(ModelForm):
         self.fields['data_authorization'].error_messages = {
             "required": _('Please authorize data processing')
         }
-
