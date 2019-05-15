@@ -3,8 +3,9 @@ Context extender module for edx-platform certificates
 """
 from django.core.exceptions import ObjectDoesNotExist
 
-from nau_openedx_extensions.edxapp_wrapper.registration import get_registration_extension_form
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
+from nau_openedx_extensions.edxapp_wrapper.grades import get_course_grades
+from nau_openedx_extensions.edxapp_wrapper.registration import get_registration_extension_form
 
 
 def update_cert_context(*args, **kwargs):
@@ -13,7 +14,10 @@ def update_cert_context(*args, **kwargs):
     """
     context = kwargs['context']
     user = kwargs['user']
+    course = kwargs['course']
+
     update_context_with_custom_form(user, NauUserExtendedModel, context)
+    update_context_with_grades(user, course)
 
 
 def update_context_with_custom_form(user, custom_model, context):
@@ -31,3 +35,10 @@ def update_context_with_custom_form(user, custom_model, context):
         context.update({
             field: getattr(custom_model_instance, field, "")
         })
+
+
+def update_context_with_grades(user, course):
+    """
+    Updates certifcates context with grades data for the user
+    """
+    grades = get_course_grades(user, course)

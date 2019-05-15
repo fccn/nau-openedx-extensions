@@ -35,3 +35,7 @@ def plugin_settings(settings):
         'REGISTRATION_MODULE',
         settings.REGISTRATION_MODULE
     )
+    settings.GRADES_MODULE = getattr(settings, 'ENV_TOKENS', {}).get(
+        'GRADES_MODULE',
+        settings.GRADES_MODULE
+    )
