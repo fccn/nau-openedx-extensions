@@ -6,8 +6,8 @@ from importlib import import_module
 
 from django.conf import settings
 
-from third_party_auth.saml import EdXSAMLIdentityProvider
-from student.forms import get_registration_extension_form
+from nau_openedx_extensions.edxapp_wrapper.registration import EdXSAMLIdentityProvider
+from nau_openedx_extensions.edxapp_wrapper.registration import get_registration_extension_form
 
 log = logging.getLogger(__name__)
 

@@ -3,8 +3,7 @@ Context extender module for edx-platform certificates
 """
 from django.core.exceptions import ObjectDoesNotExist
 
-from student.forms import get_registration_extension_form
-
+from nau_openedx_extensions.edxapp_wrapper.registration import get_registration_extension_form
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
 
 

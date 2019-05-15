@@ -31,3 +31,7 @@ def plugin_settings(settings):
         'CERTIFICATE_CONTEXT_EXTENSION',
         settings.CERTIFICATE_CONTEXT_EXTENSION
     )
+    settings.REGISTRATION_MODULE = getattr(settings, 'ENV_TOKENS', {}).get(
+        'REGISTRATION_MODULE',
+        settings.REGISTRATION_MODULE
+    )
