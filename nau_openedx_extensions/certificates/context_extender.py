@@ -1,12 +1,16 @@
 """
 Context extender module for edx-platform certificates
 """
+import logging
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext as _
 
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
 from nau_openedx_extensions.edxapp_wrapper.grades import get_course_grades
 from nau_openedx_extensions.edxapp_wrapper.registration import get_registration_extension_form
+
+log = logging.getLogger(__name__)
 
 
 def update_cert_context(*args, **kwargs):
@@ -58,7 +62,11 @@ def update_context_with_grades(user, course, context, settings, updated_fields):
                 'course_percent_grade': grades.percent,
             }
         except Exception:
-            pass
+            log.error(
+                'Could not get grades for user %s in %s',
+                user.username,
+                course.display_name,
+            )
         else:
             context.update(context_element)
             updated_fields.update(context_element)
@@ -76,6 +84,10 @@ def update_context_with_interpolated_strings(context, settings, updated_fields):
             try:
                 formatted_string = value.format(**updated_fields)
             except (ValueError, AttributeError, KeyError):
+                log.error(
+                    'Failed to add value (%s) as formatted string in the certificate context',
+                    value,
+                )
                 continue
             else:
                 context.update({
