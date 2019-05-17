@@ -13,15 +13,12 @@ from nau_openedx_extensions.edxapp_wrapper.registration import get_registration_
 log = logging.getLogger(__name__)
 
 
-def update_cert_context(*args, **kwargs):
+def update_cert_context(context, user, course, **kwargs):
     """
     Updates certifcates context with custom data for the user within
     the course context
     """
     updated_fields = {}
-    context = kwargs['context']
-    user = kwargs['user']
-    course = kwargs['course']
     nau_cert_settings = course.cert_html_view_overrides.get('nau_certs_settings')
 
     update_context_with_custom_form(user, NauUserExtendedModel, context, updated_fields)
