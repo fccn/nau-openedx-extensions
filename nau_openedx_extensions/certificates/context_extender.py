@@ -23,7 +23,7 @@ def update_cert_context(*args, **kwargs):
     update_context_with_custom_form(user, NauUserExtendedModel, context, updated_fields)
     if nau_cert_settings:
         update_context_with_grades(user, course, context, nau_cert_settings, updated_fields)
-        update_context_with_interpolated_strings(course, context, nau_cert_settings, updated_fields)
+        update_context_with_interpolated_strings(context, nau_cert_settings, updated_fields)
 
 
 def update_context_with_custom_form(user, custom_model, context, updated_fields):
@@ -39,7 +39,7 @@ def update_context_with_custom_form(user, custom_model, context, updated_fields)
 
     for field in custom_form.fields.keys():
         context_element = {
-            field: getattr(custom_model_instance, field, "")
+            field: getattr(custom_model_instance, field, '')
         }
         context.update(context_element)
         updated_fields.update(context_element)
@@ -53,9 +53,9 @@ def update_context_with_grades(user, course, context, settings, updated_fields):
         try:
             grades = get_course_grades(user, course)
             context_element = {
-                "course_letter_grade": grades.letter_grade or '',
-                "user_has_approved_course": grades.passed,
-                "course_percent_grade": grades.percent,
+                'course_letter_grade': grades.letter_grade or '',
+                'user_has_approved_course': grades.passed,
+                'course_percent_grade': grades.percent,
             }
         except Exception:
             pass
@@ -64,7 +64,7 @@ def update_context_with_grades(user, course, context, settings, updated_fields):
             updated_fields.update(context_element)
 
 
-def update_context_with_interpolated_strings(course, context, settings, updated_fields):
+def update_context_with_interpolated_strings(context, settings, updated_fields):
     """
     Updates certificate context using custom interpolated strings.
     Applies the corresponding translation before updating the context.
