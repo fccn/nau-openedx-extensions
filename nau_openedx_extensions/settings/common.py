@@ -30,7 +30,7 @@ def plugin_settings(settings):
     See: https://github.com/edx/edx-platform/blob/master/openedx/core/djangoapps/plugins/README.rst
     """
 
-    settings.CUSTOM_SAML_IDENTITY_PROVIDERS = [
+    settings.NAU_CUSTOM_SAML_IDENTITY_PROVIDERS = [
         {
             "provider_key": "nau_custom_saml_provider",
             "provider_class": "nau_openedx_extensions.third_party_auth.providers.saml.NauEdXSAMLIdentityProvider",
@@ -38,7 +38,9 @@ def plugin_settings(settings):
         }
     ]
 
-    settings.ADD_SAML_IDP_CHOICES = 'nau_openedx_extensions.third_party_auth.providers.saml.get_extended_saml_idp_choices'
-    settings.ADD_SAML_IDP_CLASSES = 'nau_openedx_extensions.third_party_auth.providers.saml.extend_saml_idp_classes'
-    settings.APPLY_SAML_OVERRIDES = 'nau_openedx_extensions.third_party_auth.providers.saml._apply_saml_overrides'
-    settings.CERTIFICATE_CONTEXT_EXTENSION = 'nau_openedx_extensions.certificates.context_extender.update_cert_context'
+    settings.NAU_ADD_SAML_IDP_CHOICES = 'nau_openedx_extensions.third_party_auth.providers.saml.get_extended_saml_idp_choices'
+    settings.NAU_ADD_SAML_IDP_CLASSES = 'nau_openedx_extensions.third_party_auth.providers.saml.extend_saml_idp_classes'
+    settings.NAU_APPLY_SAML_OVERRIDES = 'nau_openedx_extensions.third_party_auth.providers.saml._apply_saml_overrides'
+    settings.NAU_CERTIFICATE_CONTEXT_EXTENSION = 'nau_openedx_extensions.certificates.context_extender.update_cert_context'
+    settings.NAU_REGISTRATION_MODULE = 'nau_openedx_extensions.edxapp_wrapper.backends.registration_h_v1'
+    settings.NAU_GRADES_MODULE = 'nau_openedx_extensions.edxapp_wrapper.backends.grades_h_v1'

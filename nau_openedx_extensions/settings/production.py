@@ -11,23 +11,31 @@ def plugin_settings(settings):
     See: https://github.com/edx/edx-platform/blob/master/openedx/core/djangoapps/plugins/README.rst
     """
 
-    settings.CUSTOM_SAML_IDENTITY_PROVIDERS = getattr(settings, 'ENV_TOKENS', {}).get(
-        'CUSTOM_SAML_IDENTITY_PROVIDERS',
-        settings.CUSTOM_SAML_IDENTITY_PROVIDERS
+    settings.NAU_CUSTOM_SAML_IDENTITY_PROVIDERS = getattr(settings, 'ENV_TOKENS', {}).get(
+        'NAU_CUSTOM_SAML_IDENTITY_PROVIDERS',
+        settings.NAU_CUSTOM_SAML_IDENTITY_PROVIDERS
     )
-    settings.ADD_SAML_IDP_CHOICES = getattr(settings, 'ENV_TOKENS', {}).get(
-        'ADD_SAML_IDP_CHOICES',
-        settings.ADD_SAML_IDP_CHOICES
+    settings.NAU_ADD_SAML_IDP_CHOICES = getattr(settings, 'ENV_TOKENS', {}).get(
+        'NAU_ADD_SAML_IDP_CHOICES',
+        settings.NAU_ADD_SAML_IDP_CHOICES
     )
-    settings.ADD_SAML_IDP_CLASSES = getattr(settings, 'ENV_TOKENS', {}).get(
-        'ADD_SAML_IDP_CLASSES',
-        settings.ADD_SAML_IDP_CLASSES
+    settings.NAU_ADD_SAML_IDP_CLASSES = getattr(settings, 'ENV_TOKENS', {}).get(
+        'NAU_ADD_SAML_IDP_CLASSES',
+        settings.NAU_ADD_SAML_IDP_CLASSES
     )
-    settings.APPLY_SAML_OVERRIDES = getattr(settings, 'ENV_TOKENS', {}).get(
-        'APPLY_SAML_OVERRIDES',
-        settings.APPLY_SAML_OVERRIDES
+    settings.NAU_APPLY_SAML_OVERRIDES = getattr(settings, 'ENV_TOKENS', {}).get(
+        'NAU_APPLY_SAML_OVERRIDES',
+        settings.NAU_APPLY_SAML_OVERRIDES
     )
-    settings.CERTIFICATE_CONTEXT_EXTENSION = getattr(settings, 'ENV_TOKENS', {}).get(
-        'CERTIFICATE_CONTEXT_EXTENSION',
-        settings.CERTIFICATE_CONTEXT_EXTENSION
+    settings.NAU_CERTIFICATE_CONTEXT_EXTENSION = getattr(settings, 'ENV_TOKENS', {}).get(
+        'NAU_CERTIFICATE_CONTEXT_EXTENSION',
+        settings.NAU_CERTIFICATE_CONTEXT_EXTENSION
+    )
+    settings.NAU_REGISTRATION_MODULE = getattr(settings, 'ENV_TOKENS', {}).get(
+        'NAU_REGISTRATION_MODULE',
+        settings.NAU_REGISTRATION_MODULE
+    )
+    settings.NAU_GRADES_MODULE = getattr(settings, 'ENV_TOKENS', {}).get(
+        'NAU_GRADES_MODULE',
+        settings.NAU_GRADES_MODULE
     )
