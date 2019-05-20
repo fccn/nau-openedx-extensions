@@ -48,7 +48,7 @@ def get_extended_saml_idp_choices(*args, **kwargs):
     ocurs, it returns only the valid choices.
     """
 
-    for idp in getattr(settings, 'NOX_CUSTOM_SAML_IDENTITY_PROVIDERS', []):
+    for idp in getattr(settings, 'NAU_CUSTOM_SAML_IDENTITY_PROVIDERS', []):
         try:
             kwargs['choices'] += ((idp['provider_key'], idp['verbose_name']),)
         except KeyError:
@@ -65,7 +65,7 @@ def extend_saml_idp_classes(*args, **kwargs):
     Return a dict containing SAML valid idps classes
     """
 
-    for idp in getattr(settings, 'NOX_CUSTOM_SAML_IDENTITY_PROVIDERS', []):
+    for idp in getattr(settings, 'NAU_CUSTOM_SAML_IDENTITY_PROVIDERS', []):
         try:
             module, klass = idp['provider_class'].rsplit('.', 1)
             idp_module = import_module(module)
