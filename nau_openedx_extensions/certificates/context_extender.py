@@ -18,16 +18,15 @@ def update_cert_context(context, user, course, **kwargs):
     Updates certifcates context with custom data for the user within
     the course context
     """
-    updated_fields = {}
     nau_cert_settings = course.cert_html_view_overrides.get('nau_certs_settings')
 
-    update_context_with_custom_form(user, NauUserExtendedModel, context, updated_fields)
+    update_context_with_custom_form(user, NauUserExtendedModel, context)
     if nau_cert_settings:
-        update_context_with_grades(user, course, context, nau_cert_settings, updated_fields)
-        update_context_with_interpolated_strings(context, nau_cert_settings, updated_fields)
+        update_context_with_grades(user, course, context, nau_cert_settings, kwargs['user_certificate'])
+        update_context_with_interpolated_strings(context, nau_cert_settings)
 
 
-def update_context_with_custom_form(user, custom_model, context, updated_fields):
+def update_context_with_custom_form(user, custom_model, context):
     """
     Updates the context in-place with extra user information
     """
@@ -38,19 +37,24 @@ def update_context_with_custom_form(user, custom_model, context, updated_fields)
         # If a custom model does not exist for the user, just return
         return
 
-    for field in custom_form.fields.keys():
-        context_element = {
-            field: getattr(custom_model_instance, field, '')
-        }
-        context.update(context_element)
-        updated_fields.update(context_element)
+    if custom_form:
+        for field in custom_form.fields.keys():
+            context_element = {
+                field: getattr(custom_model_instance, field, '')
+            }
+            context.update(context_element)
 
 
-def update_context_with_grades(user, course, context, settings, updated_fields):
+def update_context_with_grades(user, course, context, settings, user_certificate):
     """
     Updates certifcates context with grades data for the user
     """
-    if settings.get('update_with_grades_context', False):
+    # always add `user certificate` grade context
+    context.update({
+        'certificate_final_grade': user_certificate.grade,
+    })
+
+    if settings.get('calculate_grades_context', False):
         try:
             grades = get_course_grades(user, course)
             context_element = {
@@ -66,10 +70,9 @@ def update_context_with_grades(user, course, context, settings, updated_fields):
             )
         else:
             context.update(context_element)
-            updated_fields.update(context_element)
 
 
-def update_context_with_interpolated_strings(context, settings, updated_fields):
+def update_context_with_interpolated_strings(context, settings):
     """
     Updates certificate context using custom interpolated strings.
     Applies the corresponding translation before updating the context.
@@ -79,7 +82,7 @@ def update_context_with_interpolated_strings(context, settings, updated_fields):
     if interpolated_strings:
         for key, value in interpolated_strings.iteritems():
             try:
-                formatted_string = value.format(**updated_fields)
+                formatted_string = value.format(**context)
             except (ValueError, AttributeError, KeyError):
                 log.error(
                     'Failed to add value (%s) as formatted string in the certificate context',
