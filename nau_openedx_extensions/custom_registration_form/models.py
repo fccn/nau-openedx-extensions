@@ -72,3 +72,6 @@ class NauUserExtendedModel(models.Model):
         blank=True,
         null=True
     )
+
+    def __unicode__(self):
+        return u'<Nau extended data for {}>'.format(self.user.username)
