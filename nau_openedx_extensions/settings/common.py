@@ -44,3 +44,4 @@ def plugin_settings(settings):
     settings.NAU_CERTIFICATE_CONTEXT_EXTENSION = 'nau_openedx_extensions.certificates.context_extender.update_cert_context'
     settings.NAU_REGISTRATION_MODULE = 'nau_openedx_extensions.edxapp_wrapper.backends.registration_h_v1'
     settings.NAU_GRADES_MODULE = 'nau_openedx_extensions.edxapp_wrapper.backends.grades_h_v1'
+    settings.NAU_CC_ALLOWED_SLUG = 'cccmd:'

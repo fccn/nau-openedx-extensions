@@ -39,3 +39,13 @@ def plugin_settings(settings):
         'NAU_GRADES_MODULE',
         settings.NAU_GRADES_MODULE
     )
+    settings.NAU_CC_ALLOWED_SLUG = getattr(settings, 'ENV_TOKENS', {}).get(
+        'NAU_CC_ALLOWED_SLUG',
+        settings.NAU_CC_ALLOWED_SLUG
+    )
+    SOCIAL_AUTH_TPA_SAML_PIPELINE = getattr(settings, 'ENV_TOKENS', {}).get(
+        'SOCIAL_AUTH_TPA_SAML_PIPELINE',
+        None
+    )
+    if SOCIAL_AUTH_TPA_SAML_PIPELINE:
+        settings.SOCIAL_AUTH_TPA_SAML_PIPELINE = SOCIAL_AUTH_TPA_SAML_PIPELINE
