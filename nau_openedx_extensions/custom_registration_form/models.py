@@ -28,6 +28,12 @@ class NauUserExtendedModel(models.Model):
         blank=True,
         null=True
     )
+    cc_nic_check_digit = models.CharField(
+        verbose_name=_("NIC Check Digit"),
+        max_length=16,
+        blank=True,
+        null=True
+    )
     cc_first_name = models.TextField(
         verbose_name=_("First name"),
         blank=True,
