@@ -18,6 +18,7 @@ class NauUserExtendedModelAdmin(admin.ModelAdmin):
         'openedx_email',
     )
     raw_id_fields = ('user',)
+    list_display = ('openedx_username', 'openedx_email', 'cc_nif', 'data_authorization')
 
     def openedx_email(self, instance):
         """
