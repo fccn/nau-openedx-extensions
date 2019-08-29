@@ -5,6 +5,7 @@ import logging
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import ugettext as _
+from django.db import models
 
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
 from nau_openedx_extensions.edxapp_wrapper.grades import get_course_grades
@@ -30,19 +31,20 @@ def update_context_with_custom_form(user, custom_model, context):
     """
     Updates the context in-place with extra user information
     """
-    custom_form = get_registration_extension_form()
     try:
         custom_model_instance = custom_model.objects.get(user=user)
     except ObjectDoesNotExist:
-        # If a custom model does not exist for the user, just return
-        return
+        # If a custom model does not exist for the user, create an empty one
+        custom_model_instance = custom_model()
+    finally:
+        for field in custom_model_instance._meta.fields:
 
-    if custom_form:
-        for field in custom_form.fields.keys():
-            context_element = {
-                field: getattr(custom_model_instance, field, '')
-            }
-            context.update(context_element)
+            if isinstance(field, models.BooleanField) or isinstance(field, models.TextField) or isinstance(field, models.CharField):
+                context_element = {
+                    field.name: getattr(custom_model_instance, field.name, '')
+                }
+                context.update(context_element)
+
 
 
 def update_context_with_grades(user, course, context, settings, user_certificate):
