@@ -84,7 +84,8 @@ def update_context_with_interpolated_strings(context, settings, certificate_lang
     if interpolated_strings:
         for key, value in interpolated_strings.iteritems():
             try:
-                formatted_string = value.format(**context)
+                # Also try to translate the string if defined in platform .po
+                formatted_string = _(value).format(**context)
             except (ValueError, AttributeError, KeyError):
                 log.error(
                     'Failed to add value (%s) as formatted string in the certificate context',
@@ -92,9 +93,8 @@ def update_context_with_interpolated_strings(context, settings, certificate_lang
                 )
                 continue
             else:
-                # Finally, try to translate the string if defined in platform .po
                 context.update({
-                    key: _(formatted_string)
+                    key: formatted_string
                 })
 
 
@@ -107,9 +107,16 @@ def get_interpolated_strings(settings, certificate_language):
     multilang_interpolated_strings = settings.get('interpolated_strings')
     if multilang_interpolated_strings:
         for key, value in multilang_interpolated_strings.iteritems():
-            for lang, string in value.iteritems():
-                if lang in certificate_language:
-                    lang_interpolated_strings[key] = string
-                    break
+            try:
+                for lang, string in value.iteritems():
+                    if lang in certificate_language:
+                        lang_interpolated_strings[key] = string
+                        break
+            except AttributeError:
+                log.error(
+                    'Failed to read (%s) as formatted string in the certificate context',
+                    key,
+                )
+                continue
 
     return lang_interpolated_strings
