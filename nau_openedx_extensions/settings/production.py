@@ -31,6 +31,10 @@ def plugin_settings(settings):
         'NAU_CERTIFICATE_CONTEXT_EXTENSION',
         settings.NAU_CERTIFICATE_CONTEXT_EXTENSION
     )
+    settings.NAU_STUDENT_ACCOUNT_CONTEXT_EXTENSION = getattr(settings, 'ENV_TOKENS', {}).get(
+        'NAU_STUDENT_ACCOUNT_CONTEXT_EXTENSION',
+        settings.NAU_STUDENT_ACCOUNT_CONTEXT_EXTENSION
+    )
     settings.NAU_REGISTRATION_MODULE = getattr(settings, 'ENV_TOKENS', {}).get(
         'NAU_REGISTRATION_MODULE',
         settings.NAU_REGISTRATION_MODULE
