@@ -53,3 +53,7 @@ def plugin_settings(settings):
     )
     if SOCIAL_AUTH_TPA_SAML_PIPELINE:
         settings.SOCIAL_AUTH_TPA_SAML_PIPELINE = SOCIAL_AUTH_TPA_SAML_PIPELINE
+    settings.NAU_ACCOUNTS_CC_VISIBLE_FIELDS = getattr(settings, 'ENV_TOKENS', {}).get(
+        'NAU_ACCOUNTS_CC_VISIBLE_FIELDS',
+        settings.NAU_ACCOUNTS_CC_VISIBLE_FIELDS
+    )
