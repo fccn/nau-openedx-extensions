@@ -16,6 +16,7 @@ class NauUserExtendedForm(ModelForm):
             'data_authorization',
             'cc_nif',
             'cc_nic',
+            'cc_nic_check_digit',
             'cc_first_name',
             'cc_last_name',
             'cc_nationality',

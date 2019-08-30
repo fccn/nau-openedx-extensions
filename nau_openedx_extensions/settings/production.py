@@ -31,6 +31,10 @@ def plugin_settings(settings):
         'NAU_CERTIFICATE_CONTEXT_EXTENSION',
         settings.NAU_CERTIFICATE_CONTEXT_EXTENSION
     )
+    settings.NAU_STUDENT_ACCOUNT_CONTEXT_EXTENSION = getattr(settings, 'ENV_TOKENS', {}).get(
+        'NAU_STUDENT_ACCOUNT_CONTEXT_EXTENSION',
+        settings.NAU_STUDENT_ACCOUNT_CONTEXT_EXTENSION
+    )
     settings.NAU_REGISTRATION_MODULE = getattr(settings, 'ENV_TOKENS', {}).get(
         'NAU_REGISTRATION_MODULE',
         settings.NAU_REGISTRATION_MODULE
@@ -49,3 +53,7 @@ def plugin_settings(settings):
     )
     if SOCIAL_AUTH_TPA_SAML_PIPELINE:
         settings.SOCIAL_AUTH_TPA_SAML_PIPELINE = SOCIAL_AUTH_TPA_SAML_PIPELINE
+    settings.NAU_ACCOUNTS_CC_VISIBLE_FIELDS = getattr(settings, 'ENV_TOKENS', {}).get(
+        'NAU_ACCOUNTS_CC_VISIBLE_FIELDS',
+        settings.NAU_ACCOUNTS_CC_VISIBLE_FIELDS
+    )
