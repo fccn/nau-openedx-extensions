@@ -1,0 +1,4 @@
+-c constraints.txt
+celery
+edx-opaque-keys[django]
+six
