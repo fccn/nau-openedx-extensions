@@ -1,0 +1,34 @@
+.email-targets-nau li {
+  display: table-cell;
+  margin: 0;
+  width: 20%;
+}
+
+.message-gateway-header {
+  margin-top: 18px;
+}
+
+.send-message {
+  margin-top: 10px;
+}
+
+.message {
+  margin-top: 20px;
+}
+.nau-message-editor {
+  width: 80%;
+  margin-top: 10px;
+}
+
+.msg-confirm {
+  display: none;
+  background: tint(rgb(0, 132, 1), 95%);
+  border-top: 2px solid rgb(0, 132, 1);
+  color: rgb(0, 132, 1);
+}
+
+.request-response-error {
+  margin: 0;
+  padding-bottom: (20px);
+  color: rgb(203, 7, 18);
+}

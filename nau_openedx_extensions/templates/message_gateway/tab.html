@@ -1,0 +1,63 @@
+## mako
+<%page expression_filter="h"/>
+
+<%! from django.utils.translation import ugettext as _ %>
+
+<h3 class="message-gateway-header" id="header-message-gateway">Message Gateway</h3>
+
+<div class="vert-left send-message" id="section-send-message">
+  <form method="post" onsubmit="sendMessage(this); return false;">
+    <div
+      class="request-response msg msg-confirm copy"
+      id="request-response"
+    ></div>
+    <div class="send_to_input">
+      <div class="send_to_list">${_("Send to:")}</div>
+      <ul class="email-targets-nau">
+        <li>
+          <input
+            type="checkbox"
+            name="send_to"
+            value="myself"
+            id="target_myself"
+          />
+          <label for="target_myself">${_("Myself")}</label>
+        </li>
+        <li>
+          <input
+            type="checkbox"
+            name="send_to"
+            value="staff"
+            id="target_staff"
+          />
+          <label for="target_staff">${_("Staff and Administrators")}</label>
+        </li>
+        <li>
+          <input
+            type="checkbox"
+            name="send_to"
+            value="learners"
+            id="target_learners"
+          />
+          <label for="target_learners">${_("All Learners")}</label>
+        </li>
+      </ul>
+    </div>
+    <div class="message">
+      <label> ${_("Message:")} </label>
+      <input
+        type="text"
+        name="message"
+        class="nau-message-editor"
+        id="message"
+        value=""
+      />
+    </div>
+    <br />
+    <input type="submit" name="send" value="${_("Send Message")}"
+    data-endpoint="${send_message_endpoint}" >
+    <input type="hidden" name="csrfmiddlewaretoken" value="${ csrf_token }" />
+    <div class="request-response-error"></div>
+  </form>
+</div>
+
