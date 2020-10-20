@@ -27,3 +27,9 @@ class NauOpenEdxConfig(AppConfig):
             },
         },
     }
+    def ready(self):
+        """
+        Method to perform actions after apps registry is ended
+        """
+        from nau_openedx_extensions.permissions import load_permissions
+        load_permissions()
