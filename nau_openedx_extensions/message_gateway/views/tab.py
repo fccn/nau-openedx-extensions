@@ -10,7 +10,7 @@ from opaque_keys.edx.keys import CourseKey
 from opaque_keys import InvalidKeyError
 from web_fragments.fragment import Fragment
 
-from nau_openedx_extensions.edxapp_wrapper.courseware import get_has_access, get_get_course_by_id
+from nau_openedx_extensions.edxapp_wrapper.courseware import get_get_course_by_id
 from nau_openedx_extensions.edxapp_wrapper.fragments import (
     get_course_tab_view,
     get_enrolled_tab,
@@ -18,12 +18,14 @@ from nau_openedx_extensions.edxapp_wrapper.fragments import (
     get_tab_fragment_view_mixin
 )
 
+from nau_openedx_extensions.permissions import NAU_SEND_MESSAGE_PERMISSION_NAME
+
+
 CourseTabView = get_course_tab_view()
 EnrolledTab = get_enrolled_tab()
 EdxFragmentView = get_edx_fragment_view()
 TabFragmentViewMixin = get_tab_fragment_view_mixin()
 get_course_by_id = get_get_course_by_id()
-has_access = get_has_access()
 
 log = logging.getLogger(__name__)
 
@@ -42,9 +44,9 @@ class NauMessageGatewayTab(TabFragmentViewMixin, EnrolledTab):
     @classmethod
     def is_enabled(cls, course, user=None):
         """
-        Only available for the Course Staff
+        Only available for the users with the NAU_SEND_MESSAGE_PERMISSION_NAME permission.
         """
-        return bool(user and has_access(user, 'staff', course, course.id))
+        return bool(user and user.has_perm(NAU_SEND_MESSAGE_PERMISSION_NAME))
 
     def uses_bootstrap(self):
         """
@@ -87,7 +89,7 @@ class NauMessageGatewayTabView(CourseTabView):
     def get(self, request, course_id, **kwargs):
         """
         Displays a the course message tab page that contains a web fragment.
-        If and only if the user has staff access to the course.
+        If and only if the user has the NAU_SEND_MESSAGE_PERMISSION_NAME permission.
         """
         try:
             course_key = CourseKey.from_string(course_id)
@@ -95,12 +97,11 @@ class NauMessageGatewayTabView(CourseTabView):
             return HttpResponseServerError()
 
         course = get_course_by_id(course_key, depth=0)
+        user = request.user
 
-        is_course_staff = has_access(request.user, 'staff', course)
-
-        if not is_course_staff:
-            log.info("User <%s> tried to access the Nau Message Gateway Tab, but they don't "
-                     "have staff access to the course %s", request.user, course_id)
+        if not user.has_perm(NAU_SEND_MESSAGE_PERMISSION_NAME):
+            log.info("User <%s> tried to access the Nau Message Gateway Tab in course %s, but they don't "
+                     "have permission to access that view.", user, course_id)
             raise Http404()
         return super(NauMessageGatewayTabView, self).get(request, course_id, 'message_gw', **kwargs)
 
