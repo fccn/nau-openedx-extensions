@@ -8,3 +8,6 @@ Django<2.0.0
 
 # version used in hawthorn
 edx-opaque-keys[django]==0.4.4
+
+# edx-lint version 1.5.0 dropped support for python2.7
+edx-lint<1.5.0
