@@ -1,3 +1,4 @@
 include AUTHORS.txt
 include README.md
 recursive-include nau_openedx_extensions *.html *.png *.gif *js *.css *jpg *jpeg *svg *py
+include requirements/base.in
