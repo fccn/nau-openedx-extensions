@@ -1,3 +1,6 @@
+"""
+openedx backend for edx fragments
+"""
 from lms.djangoapps.courseware.tabs import EnrolledTab
 from lms.djangoapps.courseware.views.views import CourseTabView
 from openedx.core.djangoapps.plugin_api.views import EdxFragmentView

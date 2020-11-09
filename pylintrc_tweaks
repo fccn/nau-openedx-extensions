@@ -1,0 +1,2 @@
+[MASTER]
+ignore+ = .git, .tox, migrations

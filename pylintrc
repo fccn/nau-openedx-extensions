@@ -64,7 +64,7 @@
 #
 # ------------------------------
 [MASTER]
-ignore = 
+ignore = .git, .tox, migrations
 persistent = yes
 load-plugins = edx_lint.pylint,pylint_django,pylint_celery
 
@@ -457,4 +457,4 @@ int-import-graph =
 [EXCEPTIONS]
 overgeneral-exceptions = Exception
 
-# 8ddc1c8915b27d166df86bbfe7f08f0bb83bb71e
+# 5018f0226796a4b0003181ce5e10863973a4dad4

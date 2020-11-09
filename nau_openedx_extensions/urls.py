@@ -1,13 +1,13 @@
 """ urls.py """
 
-from django.conf.urls import url, include
+from django.conf.urls import url
 from django.conf import settings
 
 from nau_openedx_extensions.message_gateway.views import api as message_gateway_api
 from nau_openedx_extensions.message_gateway.views import tab as message_gateway_tab
 
 
-urlpatterns = [  # pylint: disable=invalid-name
+urlpatterns = [
     url(
         r"^nau-tools/{}/$".format(
             settings.COURSE_ID_PATTERN,

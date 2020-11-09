@@ -31,4 +31,5 @@ pytz==2020.4              # via -r requirements/base.txt, celery, django
 singledispatch==3.4.0.3   # via astroid, pylint
 six==1.15.0               # via -r requirements/base.txt, astroid, edx-lint, edx-opaque-keys, pylint, singledispatch, stevedore
 stevedore==1.32.0         # via -r requirements/base.txt, edx-opaque-keys
+web-fragments==0.3.2      # via -r requirements/base.txt
 wrapt==1.12.1             # via astroid

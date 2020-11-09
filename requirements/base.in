@@ -2,3 +2,4 @@
 celery
 edx-opaque-keys[django]
 six
+web-fragments

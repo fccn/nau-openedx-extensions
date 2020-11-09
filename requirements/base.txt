@@ -16,3 +16,4 @@ pymongo==3.11.0           # via edx-opaque-keys
 pytz==2020.4              # via celery, django
 six==1.15.0               # via -r requirements/base.in, edx-opaque-keys, stevedore
 stevedore==1.32.0         # via edx-opaque-keys
+web-fragments==0.3.2      # via -r requirements/base.in
