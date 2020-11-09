@@ -17,6 +17,7 @@ from nau_openedx_extensions.permissions import NAU_SEND_MESSAGE_PERMISSION_NAME
 
 log = logging.getLogger(__name__)
 
+
 @require_POST
 @ensure_csrf_cookie
 @permission_required(NAU_SEND_MESSAGE_PERMISSION_NAME)
@@ -41,11 +42,13 @@ def send_message(request, course_id):
         return HttpResponseBadRequest(repr(err))
 
     tasks.submit_bulk_course_message.delay(message_id=message.id, course_id=course_id)
-    log.info("Task to submit course messages was successfuly created with course message id (%d)", message.id)
-
+    log.info(
+        "Task to submit course messages was successfuly created with course message id (%d)",
+        message.id,
+    )
 
     response_payload = {
-        'course_id': six.text_type(course_id),
-        'success': True,
+        "course_id": six.text_type(course_id),
+        "success": True,
     }
     return JsonResponse(response_payload)

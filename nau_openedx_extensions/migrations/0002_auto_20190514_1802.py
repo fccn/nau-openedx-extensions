@@ -8,62 +8,74 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('nau_openedx_extensions', '0001_initial'),
+        ("nau_openedx_extensions", "0001_initial"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='nauuserextendedmodel',
-            old_name='nif',
-            new_name='cc_nif',
+            model_name="nauuserextendedmodel",
+            old_name="nif",
+            new_name="cc_nif",
         ),
         migrations.RemoveField(
-            model_name='nauuserextendedmodel',
-            name='citizen_card',
+            model_name="nauuserextendedmodel",
+            name="citizen_card",
         ),
         migrations.AddField(
-            model_name='nauuserextendedmodel',
-            name='cc_birth_date',
-            field=models.CharField(blank=True, max_length=12, null=True, verbose_name='Birth date'),
+            model_name="nauuserextendedmodel",
+            name="cc_birth_date",
+            field=models.CharField(
+                blank=True, max_length=12, null=True, verbose_name="Birth date"
+            ),
         ),
         migrations.AddField(
-            model_name='nauuserextendedmodel',
-            name='cc_doc_number',
-            field=models.CharField(blank=True, max_length=16, null=True, verbose_name='Document number'),
+            model_name="nauuserextendedmodel",
+            name="cc_doc_number",
+            field=models.CharField(
+                blank=True, max_length=16, null=True, verbose_name="Document number"
+            ),
         ),
         migrations.AddField(
-            model_name='nauuserextendedmodel',
-            name='cc_first_name',
-            field=models.TextField(blank=True, null=True, verbose_name='First name'),
+            model_name="nauuserextendedmodel",
+            name="cc_first_name",
+            field=models.TextField(blank=True, null=True, verbose_name="First name"),
         ),
         migrations.AddField(
-            model_name='nauuserextendedmodel',
-            name='cc_last_name',
-            field=models.TextField(blank=True, null=True, verbose_name='Last name'),
+            model_name="nauuserextendedmodel",
+            name="cc_last_name",
+            field=models.TextField(blank=True, null=True, verbose_name="Last name"),
         ),
         migrations.AddField(
-            model_name='nauuserextendedmodel',
-            name='cc_nationality',
-            field=models.TextField(blank=True, null=True, verbose_name='Nacionality'),
+            model_name="nauuserextendedmodel",
+            name="cc_nationality",
+            field=models.TextField(blank=True, null=True, verbose_name="Nacionality"),
         ),
         migrations.AddField(
-            model_name='nauuserextendedmodel',
-            name='cc_nic',
-            field=models.CharField(blank=True, max_length=16, null=True, verbose_name='NIC'),
+            model_name="nauuserextendedmodel",
+            name="cc_nic",
+            field=models.CharField(
+                blank=True, max_length=16, null=True, verbose_name="NIC"
+            ),
         ),
         migrations.AddField(
-            model_name='nauuserextendedmodel',
-            name='cc_zip3',
-            field=models.CharField(blank=True, max_length=3, null=True, verbose_name='Zip code 3 digits'),
+            model_name="nauuserextendedmodel",
+            name="cc_zip3",
+            field=models.CharField(
+                blank=True, max_length=3, null=True, verbose_name="Zip code 3 digits"
+            ),
         ),
         migrations.AddField(
-            model_name='nauuserextendedmodel',
-            name='cc_zip4',
-            field=models.CharField(blank=True, max_length=4, null=True, verbose_name='Zip code 4 digits'),
+            model_name="nauuserextendedmodel",
+            name="cc_zip4",
+            field=models.CharField(
+                blank=True, max_length=4, null=True, verbose_name="Zip code 4 digits"
+            ),
         ),
         migrations.AddField(
-            model_name='nauuserextendedmodel',
-            name='employment_situation',
-            field=models.TextField(blank=True, null=True, verbose_name='Employment situation'),
+            model_name="nauuserextendedmodel",
+            name="employment_situation",
+            field=models.TextField(
+                blank=True, null=True, verbose_name="Employment situation"
+            ),
         ),
     ]

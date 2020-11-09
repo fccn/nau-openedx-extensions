@@ -17,13 +17,47 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='NauUserExtendedModel',
+            name="NauUserExtendedModel",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('data_authorization', models.BooleanField(default=False, verbose_name='I authorize data processing for this site ')),
-                ('citizen_card', models.CharField(blank=True, max_length=16, null=True, verbose_name='Citizen Card')),
-                ('nif', models.CharField(blank=True, max_length=9, null=True, verbose_name='NIF')),
-                ('user', models.OneToOneField(null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "data_authorization",
+                    models.BooleanField(
+                        default=False,
+                        verbose_name="I authorize data processing for this site ",
+                    ),
+                ),
+                (
+                    "citizen_card",
+                    models.CharField(
+                        blank=True,
+                        max_length=16,
+                        null=True,
+                        verbose_name="Citizen Card",
+                    ),
+                ),
+                (
+                    "nif",
+                    models.CharField(
+                        blank=True, max_length=9, null=True, verbose_name="NIF"
+                    ),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

@@ -11,6 +11,7 @@ def get_has_access(*args, **kwargs):
 
     return backend.get_has_access(*args, **kwargs)
 
+
 def get_get_course_by_id(*args, **kwargs):
     """ Get get_course_by_id function from edx-platform """
 

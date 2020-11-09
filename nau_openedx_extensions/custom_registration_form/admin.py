@@ -6,19 +6,20 @@ class NauUserExtendedModelAdmin(admin.ModelAdmin):
     """
     Helper model to make administration of many such models easier.
     """
+
     search_fields = (
-        'user__email',
-        'user__username',
-        'cc_nif',
-        'cc_first_name',
-        'cc_last_name',
+        "user__email",
+        "user__username",
+        "cc_nif",
+        "cc_first_name",
+        "cc_last_name",
     )
     readonly_fields = (
-        'openedx_username',
-        'openedx_email',
+        "openedx_username",
+        "openedx_email",
     )
-    raw_id_fields = ('user',)
-    list_display = ('openedx_username', 'openedx_email', 'cc_nic', 'data_authorization')
+    raw_id_fields = ("user",)
+    list_display = ("openedx_username", "openedx_email", "cc_nic", "data_authorization")
 
     def openedx_email(self, instance):
         """

@@ -13,7 +13,10 @@ class NauCourseMessage(models.Model):
     """
     Model that stores the information of the messages that are sent by the Nau Message Gateway.
     """
-    sender = models.ForeignKey(User, default=1, blank=True, null=True, on_delete=models.CASCADE)
+
+    sender = models.ForeignKey(
+        User, default=1, blank=True, null=True, on_delete=models.CASCADE
+    )
     course_id = CourseKeyField(max_length=255, db_index=True)
     targets = models.ManyToManyField(Target)
     message = models.TextField(null=True, blank=True)
@@ -23,7 +26,7 @@ class NauCourseMessage(models.Model):
         new_targets = []
         for target in targets:
             # split target, to handle cohort:cohort_name and track:mode_slug
-            target_split = target.split(':', 1)
+            target_split = target.split(":", 1)
             # Ensure our desired target exists
             if target_split[0] not in EMAIL_TARGETS:
                 fmt = 'Course message being sent to unrecognized target: "{target}" for "{course}"'
@@ -31,7 +34,9 @@ class NauCourseMessage(models.Model):
                 log.info(msg)
                 raise ValueError(msg)
             else:
-                new_target, _ = Target.objects.get_or_create(target_type=target_split[0])
+                new_target, _ = Target.objects.get_or_create(
+                    target_type=target_split[0]
+                )
             new_targets.append(new_target)
 
         # create the task, then save it immediately:

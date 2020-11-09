@@ -12,19 +12,41 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('bulk_email', '0006_course_mode_targets'),
-        ('nau_openedx_extensions', '0003_nauuserextendedmodel_cc_nic_check_digit'),
+        ("bulk_email", "0006_course_mode_targets"),
+        ("nau_openedx_extensions", "0003_nauuserextendedmodel_cc_nic_check_digit"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='NauCourseMessage',
+            name="NauCourseMessage",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('course_id', opaque_keys.edx.django.models.CourseKeyField(db_index=True, max_length=255)),
-                ('message', models.TextField(blank=True, null=True)),
-                ('sender', models.ForeignKey(blank=True, default=1, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('targets', models.ManyToManyField(to='bulk_email.Target')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "course_id",
+                    opaque_keys.edx.django.models.CourseKeyField(
+                        db_index=True, max_length=255
+                    ),
+                ),
+                ("message", models.TextField(blank=True, null=True)),
+                (
+                    "sender",
+                    models.ForeignKey(
+                        blank=True,
+                        default=1,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                ("targets", models.ManyToManyField(to="bulk_email.Target")),
             ],
         ),
     ]

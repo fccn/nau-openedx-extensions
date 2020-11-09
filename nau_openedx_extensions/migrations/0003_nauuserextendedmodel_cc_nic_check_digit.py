@@ -8,13 +8,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('nau_openedx_extensions', '0002_auto_20190514_1802'),
+        ("nau_openedx_extensions", "0002_auto_20190514_1802"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='nauuserextendedmodel',
-            name='cc_nic_check_digit',
-            field=models.CharField(blank=True, max_length=16, null=True, verbose_name='NIC Check Digit'),
+            model_name="nauuserextendedmodel",
+            name="cc_nic_check_digit",
+            field=models.CharField(
+                blank=True, max_length=16, null=True, verbose_name="NIC Check Digit"
+            ),
         ),
     ]

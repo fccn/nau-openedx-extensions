@@ -16,15 +16,21 @@ def ensure_cartao_cidadao_data(strategy, details, user, uid, *args, **kwargs):
         return
 
     changed = False
-    protected = ('username', 'id', 'pk', 'email') + tuple(strategy.setting('PROTECTED_USER_FIELDS', []))
+    protected = ("username", "id", "pk", "email") + tuple(
+        strategy.setting("PROTECTED_USER_FIELDS", [])
+    )
 
     # Make sure the user has a nau extended model.
-    if not hasattr(user, 'nauuserextendedmodel'):
+    if not hasattr(user, "nauuserextendedmodel"):
         NauUserExtendedModel.objects.create(user=user)
 
     # Update the NAU extended model.
     for name, value in details.items():
-        if value is None or not hasattr(user.nauuserextendedmodel, name) or name in protected:
+        if (
+            value is None
+            or not hasattr(user.nauuserextendedmodel, name)
+            or name in protected
+        ):
             continue
 
         current_value = getattr(user.nauuserextendedmodel, name, None)
