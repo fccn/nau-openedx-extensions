@@ -1,6 +1,8 @@
 """
 Log backend for the message gateway integration
 """
+from __future__ import absolute_import, unicode_literals
+
 import logging
 
 from .base import BaseBackend
@@ -14,5 +16,5 @@ class Backend(BaseBackend):
     """
     def send_message(self, message, recipients):
         log.info(
-            u"Sending message with id (%s) to %d recipients", message.id, len(recipients)
+            "Sending message with id (%s) to %d recipients", message.id, len(recipients)
         )

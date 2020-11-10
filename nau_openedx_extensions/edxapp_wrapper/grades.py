@@ -1,4 +1,6 @@
 """ Grades backend abstraction """
+from __future__ import absolute_import, unicode_literals
+
 from importlib import import_module
 
 from django.conf import settings

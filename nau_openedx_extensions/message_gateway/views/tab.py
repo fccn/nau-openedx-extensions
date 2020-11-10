@@ -1,6 +1,8 @@
 """
 Custom tab for nau message gateway integration
 """
+from __future__ import absolute_import, unicode_literals
+
 import logging
 
 import six
@@ -99,8 +101,8 @@ class NauMessageGatewayTabView(CourseTabView):
 
         if not user.has_perm(NAU_SEND_MESSAGE_PERMISSION_NAME):
             log.info(
-                u"User <%s> tried to access the Nau Message Gateway Tab in course %s, but they don't "
-                u"have permission to access that view.",
+                "User <%s> tried to access the Nau Message Gateway Tab in course %s, but they don't "
+                "have permission to access that view.",
                 user,
                 course_id,
             )

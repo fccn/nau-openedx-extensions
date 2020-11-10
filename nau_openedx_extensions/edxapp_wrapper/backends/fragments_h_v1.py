@@ -1,6 +1,8 @@
 """
 openedx backend for edx fragments
 """
+from __future__ import absolute_import, unicode_literals
+
 from lms.djangoapps.courseware.tabs import EnrolledTab  # pylint: disable=import-error
 from lms.djangoapps.courseware.views.views import CourseTabView  # pylint: disable=import-error
 from openedx.core.djangoapps.plugin_api.views import EdxFragmentView  # pylint: disable=import-error

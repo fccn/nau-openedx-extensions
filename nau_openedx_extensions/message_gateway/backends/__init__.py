@@ -1,6 +1,8 @@
 """
 Message gateway backends
 """
+from __future__ import absolute_import, unicode_literals
+
 import logging
 
 from django.conf import settings
@@ -17,5 +19,5 @@ def get_backend():
         return logfile.Backend()
     else:
         raise ValueError(
-            u"Invalid NAU_MESSAGE_GATEWAY_BACKEND setting value: %s" % backend_setting
+            "Invalid NAU_MESSAGE_GATEWAY_BACKEND setting value: %s" % backend_setting
         )

@@ -1,6 +1,8 @@
 """
 Slightly customized python-social-auth idp for SAML 2.0 support
 """
+from __future__ import absolute_import, unicode_literals
+
 import logging
 from importlib import import_module
 
@@ -38,7 +40,7 @@ class NauEdXSAMLIdentityProvider(EdXSAMLIdentityProvider):
             )
         except KeyError as e:
             log.error(
-                u"%s field missing to complete mappings based on provider configurations",
+                "%s field missing to complete mappings based on provider configurations",
                 str(e),
             )
 
@@ -55,7 +57,7 @@ def get_extended_saml_idp_choices(*args, **kwargs):  # pylint: disable=unused-ar
         try:
             kwargs["choices"] += ((idp["provider_key"], idp["verbose_name"]),)
         except KeyError:
-            log.error(u"%s could not be added as identity provider choice", idp)
+            log.error("%s could not be added as identity provider choice", idp)
 
     return kwargs["choices"]
 
@@ -73,7 +75,7 @@ def extend_saml_idp_classes(*args, **kwargs):  # pylint: disable=unused-argument
             kwargs["choices"][idp["provider_key"]] = idp_class
         except Exception:  # pylint: disable=broad-except
             log.error(
-                u"%s could not be added as identity provider",
+                "%s could not be added as identity provider",
                 kwargs["idp_identifier_string"],
             )
 

@@ -1,8 +1,11 @@
 """
 Context extender module for edx-platform certificates
 """
+from __future__ import absolute_import, unicode_literals
+
 import logging
 
+import six
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.translation import ugettext as _
@@ -70,7 +73,7 @@ def update_context_with_grades(user, course, context, settings, user_certificate
             }
         except Exception:  # pylint: disable=broad-except
             log.error(
-                u"Could not get grades for user %s in %s",
+                "Could not get grades for user %s in %s",
                 user.username,
                 course.display_name,
             )
@@ -86,13 +89,13 @@ def update_context_with_interpolated_strings(context, settings, certificate_lang
     interpolated_strings = get_interpolated_strings(settings, certificate_language)
 
     if interpolated_strings:
-        for key, value in interpolated_strings.iteritems():
+        for key, value in six.iteritems(interpolated_strings):
             try:
                 # Also try to translate the string if defined in platform .po
                 formatted_string = _(value).format(**context)  # pylint: disable=translation-of-non-string
             except (ValueError, AttributeError, KeyError):
                 log.error(
-                    u"Failed to add value (%s) as formatted string in the certificate context",
+                    "Failed to add value (%s) as formatted string in the certificate context",
                     value,
                 )
                 continue
@@ -108,15 +111,15 @@ def get_interpolated_strings(settings, certificate_language):
     lang_interpolated_strings = {}
     multilang_interpolated_strings = settings.get("interpolated_strings")
     if multilang_interpolated_strings:
-        for key, value in multilang_interpolated_strings.iteritems():
+        for key, value in six.iteritems(multilang_interpolated_strings):
             try:
-                for lang, string in value.iteritems():
+                for lang, string in six.iteritems(value):
                     if lang in certificate_language:
                         lang_interpolated_strings[key] = string
                         break
             except AttributeError:
                 log.error(
-                    u"Failed to read (%s) as formatted string in the certificate context",
+                    "Failed to read (%s) as formatted string in the certificate context",
                     key,
                 )
                 continue

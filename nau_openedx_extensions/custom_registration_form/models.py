@@ -2,6 +2,8 @@
 Models for Nau extended user
 """
 
+from __future__ import absolute_import, unicode_literals
+
 from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -53,4 +55,4 @@ class NauUserExtendedModel(models.Model):
     )
 
     def __unicode__(self):
-        return u"<Nau extended data for {}>".format(self.user.username)
+        return "<Nau extended data for {}>".format(self.user.username)

@@ -1,4 +1,6 @@
 """ Registration edxapp backend abstraction """
+from __future__ import absolute_import, unicode_literals
+
 from student import forms  # pylint: disable=import-error
 from third_party_auth.saml import EdXSAMLIdentityProvider  # pylint: disable=import-error
 

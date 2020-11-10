@@ -1,6 +1,8 @@
 """
 Auth pipeline definitions.
 """
+from __future__ import absolute_import, unicode_literals
+
 from django.conf import settings
 
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel

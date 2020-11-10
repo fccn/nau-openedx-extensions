@@ -1,6 +1,8 @@
 """
 Django models for the message gateway integration
 """
+from __future__ import absolute_import, unicode_literals
+
 import logging
 
 from bulk_email.models import EMAIL_TARGETS, Target  # pylint: disable=import-error
@@ -34,7 +36,7 @@ class NauCourseMessage(models.Model):
             target_split = target.split(":", 1)
             # Ensure our desired target exists
             if target_split[0] not in EMAIL_TARGETS:
-                fmt = u'Course message being sent to unrecognized target: "{target}" for "{course}"'
+                fmt = 'Course message being sent to unrecognized target: "{target}" for "{course}"'
                 msg = fmt.format(target=target, course=course_id)
                 log.info(msg)
                 raise ValueError(msg)
@@ -57,4 +59,4 @@ class NauCourseMessage(models.Model):
         return course_message
 
     def __unicode__(self):
-        return u"<Nau Course Message from course {} with id {}>".format(self.course_id, self.id)
+        return "<Nau Course Message from course {} with id {}>".format(self.course_id, self.id)

@@ -1,6 +1,8 @@
 """
 Async tasks for the message gateway integration.
 """
+from __future__ import absolute_import, unicode_literals
+
 import logging
 
 from celery import task
@@ -24,13 +26,13 @@ def submit_bulk_course_message(message_id, course_id):
     try:
         message_obj = NauCourseMessage.objects.get(id=message_id)
     except NauCourseMessage.DoesNotExist:
-        log.error(u"Not found a NauCourseMessage with id (%d)", message_id)
+        log.error("Not found a NauCourseMessage with id (%d)", message_id)
         raise
 
     course_key = CourseKey.from_string(course_id)
     if course_key != message_obj.course_id:
         format_msg = (
-            u"Course id conflict: explicit value %r does not match task value %r"
+            "Course id conflict: explicit value %r does not match task value %r"
         )
         log.error(format_msg, course_key, message_obj.course_id)
         raise ValueError(format_msg % (course_id, message_obj.course_id))
@@ -48,7 +50,7 @@ def submit_bulk_course_message(message_id, course_id):
     total_recipients = combined_set.count()
 
     if total_recipients == 0:
-        msg = u"Bulk Course Email Task: Empty recipient set"
+        msg = "Bulk Course Email Task: Empty recipient set"
         log.error(msg)
         raise ValueError(msg)
     batch_size = getattr(settings, "NAU_COURSE_MESSAGE_BATCH_SIZE", 50)

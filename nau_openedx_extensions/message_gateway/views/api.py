@@ -1,6 +1,8 @@
 """
 APIs for message gateway integration.
 """
+from __future__ import absolute_import, unicode_literals
+
 import json
 import logging
 
@@ -45,7 +47,7 @@ def send_message(request, course_id):
 
     tasks.submit_bulk_course_message.delay(message_id=message.id, course_id=course_id)
     log.info(
-        u"Task to submit course messages was successfuly created with course message id (%d)",
+        "Task to submit course messages was successfuly created with course message id (%d)",
         message.id,
     )
 
