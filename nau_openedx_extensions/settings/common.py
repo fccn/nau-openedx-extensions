@@ -4,7 +4,6 @@ Settings for nau_openedx_extensions
 
 from __future__ import absolute_import, unicode_literals
 
-
 SECRET_KEY = "a-not-to-be-trusted-secret-key"
 INSTALLED_APPS = (
     "django.contrib.auth",
@@ -38,7 +37,7 @@ def plugin_settings(settings):
         }
     ]
 
-    settings.NAU_ADD_SAML_IDP_CHOICES = "nau_openedx_extensions.third_party_auth.providers.saml.get_extended_saml_idp_choices" # pylint: disable=line-too-long
+    settings.NAU_ADD_SAML_IDP_CHOICES = "nau_openedx_extensions.third_party_auth.providers.saml.get_extended_saml_idp_choices"
     settings.NAU_ADD_SAML_IDP_CLASSES = (
         "nau_openedx_extensions.third_party_auth.providers.saml.extend_saml_idp_classes"
     )
@@ -48,9 +47,9 @@ def plugin_settings(settings):
     settings.NAU_CERTIFICATE_CONTEXT_EXTENSION = (
         "nau_openedx_extensions.certificates.context_extender.update_cert_context"
     )
-    settings.NAU_STUDENT_ACCOUNT_CONTEXT_EXTENSION = "nau_openedx_extensions.custom_registration_form.context_extender.update_account_view"  # pylint: disable=line-too-long
-    settings.NAU_STUDENT_SERIALIZER_CONTEXT_EXTENSION = "nau_openedx_extensions.custom_registration_form.context_extender.update_account_serializer"  # pylint: disable=line-too-long
-    settings.NAU_STUDENT_ACCOUNT_PARTIAL_UPDATE = "nau_openedx_extensions.custom_registration_form.context_extender.partial_update"  # pylint: disable=line-too-long
+    settings.NAU_STUDENT_ACCOUNT_CONTEXT_EXTENSION = "nau_openedx_extensions.custom_registration_form.context_extender.update_account_view"
+    settings.NAU_STUDENT_SERIALIZER_CONTEXT_EXTENSION = "nau_openedx_extensions.custom_registration_form.context_extender.update_account_serializer"
+    settings.NAU_STUDENT_ACCOUNT_PARTIAL_UPDATE = "nau_openedx_extensions.custom_registration_form.context_extender.partial_update"
     settings.NAU_COURSEWARE_MODULE = (
         "nau_openedx_extensions.edxapp_wrapper.backends.courseware_h_v1"
     )

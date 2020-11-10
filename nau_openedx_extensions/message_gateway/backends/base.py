@@ -1,3 +1,8 @@
+"""
+Base backend for the message gateway integration.
+"""
+
+
 class BaseBackend(object):
     """
     Base class for NAU Message Gateway backend.

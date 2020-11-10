@@ -1,15 +1,17 @@
+"""
+APIs for message gateway integration.
+"""
 import json
 import logging
-import six
 
-from util.json_request import JsonResponse
-from opaque_keys.edx.keys import CourseKey
+import six
+from django.contrib.auth.decorators import permission_required
 from django.http import HttpResponseBadRequest
+from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import permission_required
-
-from django.views.decorators.cache import cache_control
+from opaque_keys.edx.keys import CourseKey
+from util.json_request import JsonResponse  # pylint: disable=import-error
 
 from nau_openedx_extensions.message_gateway import tasks
 from nau_openedx_extensions.message_gateway.models import NauCourseMessage
@@ -43,7 +45,7 @@ def send_message(request, course_id):
 
     tasks.submit_bulk_course_message.delay(message_id=message.id, course_id=course_id)
     log.info(
-        "Task to submit course messages was successfuly created with course message id (%d)",
+        u"Task to submit course messages was successfuly created with course message id (%d)",
         message.id,
     )
 

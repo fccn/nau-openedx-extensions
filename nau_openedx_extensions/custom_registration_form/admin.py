@@ -1,4 +1,9 @@
+"""
+Admin for nau user extended model
+"""
+
 from django.contrib import admin
+
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
 
 

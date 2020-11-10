@@ -3,6 +3,7 @@ Nau openedx extension custom forms module
 """
 from django.forms import ModelForm
 from django.utils.translation import ugettext as _
+
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
 
 

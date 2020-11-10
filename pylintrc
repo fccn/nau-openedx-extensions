@@ -358,6 +358,7 @@ disable =
 	using-cmp-argument,
 	xrange-builtin,
 	zip-builtin-not-iterating,
+	line-too-long
 
 [REPORTS]
 output-format = text
@@ -457,4 +458,4 @@ int-import-graph =
 [EXCEPTIONS]
 overgeneral-exceptions = Exception
 
-# 5018f0226796a4b0003181ce5e10863973a4dad4
+# 5e23d3304d2e8962ac33597d4837529c4c4483d8

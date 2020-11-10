@@ -1,11 +1,10 @@
 """ urls.py """
 
-from django.conf.urls import url
 from django.conf import settings
+from django.conf.urls import url
 
 from nau_openedx_extensions.message_gateway.views import api as message_gateway_api
 from nau_openedx_extensions.message_gateway.views import tab as message_gateway_tab
-
 
 urlpatterns = [
     url(

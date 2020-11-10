@@ -3,30 +3,33 @@ Context extender module for edx-platform account page
 """
 import logging
 
-from django.core.exceptions import ObjectDoesNotExist
-from django.utils.translation import ugettext as _
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.utils.translation import ugettext as _
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers  # pylint: disable=import-error
 
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
-from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 log = logging.getLogger(__name__)
 
 
 def get_fields(custom_model_instance):
-    custom_fields = custom_model_instance._meta.fields  # pylint: disable=W0212
+    """
+    Get CC account visible fields from site configuration.
+    """
+    custom_fields = custom_model_instance._meta.fields
     allowed_fields = configuration_helpers.get_value(
         "NAU_ACCOUNTS_CC_VISIBLE_FIELDS", settings.NAU_ACCOUNTS_CC_VISIBLE_FIELDS
     )
     for field in custom_fields:
         if field.name not in allowed_fields:
             continue
-        if isinstance(field, models.TextField) or isinstance(field, models.CharField):
+        if isinstance(field, (models.CharField, models.TextField)):
             yield field
 
 
-def update_account_view(context, user, **kwargs):
+def update_account_view(context, user, **kwargs):  # pylint: disable=unused-argument
     """
     Updates the context from the student account view
     """
@@ -40,8 +43,8 @@ def update_account_view(context, user, **kwargs):
         for field in get_fields(custom_model_instance):
             extended_profile_fields.append(
                 {
-                    "field_name": _(field.name),
-                    "field_label": _(field.verbose_name),
+                    "field_name": _(field.name),  # pylint: disable=translation-of-non-string
+                    "field_label": _(field.verbose_name),  # pylint: disable=translation-of-non-string
                     "field_type": "TextField" if not field.choices else "ListField",
                     "field_options": [] if not field.choices else field.choices,
                 }
@@ -50,7 +53,7 @@ def update_account_view(context, user, **kwargs):
     context["extended_profile_fields"].extend(extended_profile_fields)
 
 
-def update_account_serializer(data, user, **kwargs):
+def update_account_serializer(data, user, **kwargs):  # pylint: disable=unused-argument
     """
     Updates the data from the student account serializer
     """
@@ -75,7 +78,7 @@ def update_account_serializer(data, user, **kwargs):
         data["extended_profile"] = extended_profile
 
 
-def partial_update(update, user, **kwargs):
+def partial_update(update, user, **kwargs):  # pylint: disable=unused-argument
     """
     Saves the data from the student account when something changes
     """

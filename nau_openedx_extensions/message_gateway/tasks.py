@@ -1,14 +1,15 @@
+"""
+Async tasks for the message gateway integration.
+"""
 import logging
 
 from celery import task
-
-from django.contrib.auth.models import User
 from django.conf import settings
-
+from django.contrib.auth.models import User
 from opaque_keys.edx.keys import CourseKey
 
-from nau_openedx_extensions.message_gateway.models import NauCourseMessage
 from nau_openedx_extensions.message_gateway.backends import get_backend
+from nau_openedx_extensions.message_gateway.models import NauCourseMessage
 
 log = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ def submit_bulk_course_message(message_id, course_id):
     try:
         message_obj = NauCourseMessage.objects.get(id=message_id)
     except NauCourseMessage.DoesNotExist:
-        log.error("Not found a NauCourseMessage with id (%d)", message_id)
+        log.error(u"Not found a NauCourseMessage with id (%d)", message_id)
         raise
 
     course_key = CourseKey.from_string(course_id)

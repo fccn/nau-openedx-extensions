@@ -1,10 +1,12 @@
+"""
+Django models for the message gateway integration
+"""
 import logging
 
-from django.db import models
+from bulk_email.models import EMAIL_TARGETS, Target  # pylint: disable=import-error
 from django.contrib.auth.models import User
+from django.db import models
 from opaque_keys.edx.django.models import CourseKeyField
-
-from bulk_email.models import Target, EMAIL_TARGETS
 
 log = logging.getLogger(__name__)
 
@@ -23,13 +25,16 @@ class NauCourseMessage(models.Model):
 
     @classmethod
     def create(cls, course_id, sender, message, targets):
+        """
+        Create NauCourseMessage instance and store it in the DB
+        """
         new_targets = []
         for target in targets:
             # split target, to handle cohort:cohort_name and track:mode_slug
             target_split = target.split(":", 1)
             # Ensure our desired target exists
             if target_split[0] not in EMAIL_TARGETS:
-                fmt = 'Course message being sent to unrecognized target: "{target}" for "{course}"'
+                fmt = u'Course message being sent to unrecognized target: "{target}" for "{course}"'
                 msg = fmt.format(target=target, course=course_id)
                 log.info(msg)
                 raise ValueError(msg)
@@ -50,3 +55,6 @@ class NauCourseMessage(models.Model):
         course_message.save()
 
         return course_message
+
+    def __unicode__(self):
+        return u"<Nau Course Message from course {} with id {}>".format(self.course_id, self.id)

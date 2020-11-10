@@ -4,14 +4,11 @@ Context extender module for edx-platform certificates
 import logging
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.utils.translation import ugettext as _
 from django.db import models
+from django.utils.translation import ugettext as _
 
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
 from nau_openedx_extensions.edxapp_wrapper.grades import get_course_grades
-from nau_openedx_extensions.edxapp_wrapper.registration import (
-    get_registration_extension_form,
-)
 
 log = logging.getLogger(__name__)
 
@@ -45,11 +42,7 @@ def update_context_with_custom_form(user, custom_model, context):
     finally:
         for field in custom_model_instance._meta.fields:
 
-            if (
-                isinstance(field, models.BooleanField)
-                or isinstance(field, models.TextField)
-                or isinstance(field, models.CharField)
-            ):
+            if isinstance(field, (models.BooleanField, models.CharField, models.TextField)):
                 context_element = {
                     field.name: getattr(custom_model_instance, field.name, "")
                 }
@@ -75,9 +68,9 @@ def update_context_with_grades(user, course, context, settings, user_certificate
                 "user_has_approved_course": grades.passed,
                 "course_percent_grade": grades.percent,
             }
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             log.error(
-                "Could not get grades for user %s in %s",
+                u"Could not get grades for user %s in %s",
                 user.username,
                 course.display_name,
             )
@@ -96,10 +89,10 @@ def update_context_with_interpolated_strings(context, settings, certificate_lang
         for key, value in interpolated_strings.iteritems():
             try:
                 # Also try to translate the string if defined in platform .po
-                formatted_string = _(value).format(**context)
+                formatted_string = _(value).format(**context)  # pylint: disable=translation-of-non-string
             except (ValueError, AttributeError, KeyError):
                 log.error(
-                    "Failed to add value (%s) as formatted string in the certificate context",
+                    u"Failed to add value (%s) as formatted string in the certificate context",
                     value,
                 )
                 continue
@@ -123,7 +116,7 @@ def get_interpolated_strings(settings, certificate_language):
                         break
             except AttributeError:
                 log.error(
-                    "Failed to read (%s) as formatted string in the certificate context",
+                    u"Failed to read (%s) as formatted string in the certificate context",
                     key,
                 )
                 continue
