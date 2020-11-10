@@ -18,7 +18,7 @@ class NauUserExtendedModel(models.Model):
     Used during user registration as a form extension.
     """
 
-    user = models.OneToOneField(USER_MODEL, null=True)
+    user = models.OneToOneField(USER_MODEL, on_delete=models.CASCADE, null=True)
     data_authorization = models.BooleanField(
         verbose_name=_("I authorize data processing for this site "), default=False
     )
