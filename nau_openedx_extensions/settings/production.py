@@ -61,3 +61,6 @@ def plugin_settings(settings):
     settings.ORA2_FILEUPLOAD_BACKEND = getattr(settings, "ENV_TOKENS", {}).get(
         "ORA2_FILEUPLOAD_BACKEND", "django"
     )
+    settings.DEFAULT_COURSE_LANGUAGE = getattr(settings, "ENV_TOKENS", {}).get(
+        "DEFAULT_COURSE_LANGUAGE", settings.DEFAULT_COURSE_LANGUAGE
+    )
