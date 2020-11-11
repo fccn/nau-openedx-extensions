@@ -1,6 +1,6 @@
 ###############################################
 #
-# eox-tagging commands.
+# nau-openedx-extensions
 #
 ###############################################
 
@@ -24,6 +24,12 @@ clean: ## delete most git-ignored files
 requirements: ## install environment requirements
 	pip install -r requirements/base.txt
 
+quality:
+	$(TOX) pylint ./nau_openedx_extensions
+	$(TOX) pycodestyle ./nau_openedx_extensions
+	$(TOX) isort --check-only --recursive --diff ./nau_openedx_extensions
+
+
 # Define PIP_COMPILE_OPTS=-v to get more information during make upgrade.
 PIP_COMPILE = pip-compile --rebuild --upgrade $(PIP_COMPILE_OPTS)
 
@@ -33,4 +39,11 @@ upgrade: ## update the requirements/*.txt files with the latest packages satisfy
 	# Make sure to compile files after any other files they include!
 	$(PIP_COMPILE) -o requirements/pip-tools.txt requirements/pip-tools.in
 	$(PIP_COMPILE) -o requirements/base.txt requirements/base.in
+	$(PIP_COMPILE) -o requirements/test.txt requirements/test.in
+	$(PIP_COMPILE) -o requirements/tox.txt requirements/tox.in
+	# Let tox control the Django, and django-filter version for tests
+	grep -e "^django==" -e "^celery==" -e "^edx-opaque-keys[django]==" requirements/test.txt > requirements/django.txt
+	sed '/^[dD]jango==/d;/^celery==/d;/^edx-opaque-keys[django]==/d' requirements/test.txt > requirements/test.tmp
+	mv requirements/test.tmp requirements/test.txt
+
 

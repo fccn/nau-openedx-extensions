@@ -1,16 +1,20 @@
+"""
+Async tasks for the message gateway integration.
+"""
+from __future__ import absolute_import, unicode_literals
+
 import logging
 
 from celery import task
-
-from django.contrib.auth.models import User
 from django.conf import settings
-
+from django.contrib.auth.models import User
 from opaque_keys.edx.keys import CourseKey
 
-from nau_openedx_extensions.message_gateway.models import NauCourseMessage
 from nau_openedx_extensions.message_gateway.backends import get_backend
+from nau_openedx_extensions.message_gateway.models import NauCourseMessage
 
 log = logging.getLogger(__name__)
+
 
 @task
 def submit_bulk_course_message(message_id, course_id):
@@ -27,7 +31,9 @@ def submit_bulk_course_message(message_id, course_id):
 
     course_key = CourseKey.from_string(course_id)
     if course_key != message_obj.course_id:
-        format_msg = u"Course id conflict: explicit value %r does not match task value %r"
+        format_msg = (
+            "Course id conflict: explicit value %r does not match task value %r"
+        )
         log.error(format_msg, course_key, message_obj.course_id)
         raise ValueError(format_msg % (course_id, message_obj.course_id))
 
@@ -35,10 +41,7 @@ def submit_bulk_course_message(message_id, course_id):
     targets = message_obj.targets.all()
     user_id = message_obj.sender.id
 
-    recipient_qsets = [
-        target.get_users(course_key, user_id)
-        for target in targets
-    ]
+    recipient_qsets = [target.get_users(course_key, user_id) for target in targets]
     combined_set = User.objects.none()
     for qset in recipient_qsets:
         combined_set |= qset
@@ -47,19 +50,22 @@ def submit_bulk_course_message(message_id, course_id):
     total_recipients = combined_set.count()
 
     if total_recipients == 0:
-        msg = u"Bulk Course Email Task: Empty recipient set"
+        msg = "Bulk Course Email Task: Empty recipient set"
         log.error(msg)
         raise ValueError(msg)
-    batch_size = getattr(settings, 'NAU_COURSE_MESSAGE_BATCH_SIZE', 50)
+    batch_size = getattr(settings, "NAU_COURSE_MESSAGE_BATCH_SIZE", 50)
     for recipients in _iterate_over_recipients(combined_set, batch_size):
         submit_course_message.delay(message_id, recipients)
+
 
 def _iterate_over_recipients(combined_set, batch_size):
     """
     Iterate over recipients and generate lists of batch_size size.
     """
-    recipient_fields = list(getattr(settings, 'NAU_COURSE_MESSAGE_RECIPIENT_FIELDS', []))
-    recipient_fields.append('pk')
+    recipient_fields = list(
+        getattr(settings, "NAU_COURSE_MESSAGE_RECIPIENT_FIELDS", [])
+    )
+    recipient_fields.append("pk")
     recipients = []
     num_subtasks = 0
     num_items_queued = 0
@@ -75,6 +81,7 @@ def _iterate_over_recipients(combined_set, batch_size):
     if recipients:
         yield recipients
         num_items_queued += len(recipients)
+
 
 @task
 def submit_course_message(message_id, recipients):

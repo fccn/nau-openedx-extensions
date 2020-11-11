@@ -1,4 +1,6 @@
 """
 Init for main nau openedx extensions app
 """
-__version__ = '0.2.1'
+from __future__ import unicode_literals
+
+__version__ = "0.2.1"

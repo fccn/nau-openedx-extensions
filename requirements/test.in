@@ -1,0 +1,9 @@
+
+-r base.txt
+-c constraints.txt
+
+# quality
+edx-lint
+pycodestyle
+pylint
+

@@ -1,0 +1,6 @@
+[MASTER]
+ignore+ = .git, .tox, migrations
+
+[MESSAGES CONTROL]
+disable+=
+	line-too-long
