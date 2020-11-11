@@ -12,6 +12,7 @@ Change Log
 Unreleased
 ----------
 
+* Add entrypoiny to use this plugin also in studio. Add the capability to change the value of MAX_ASSET_UPLOAD_FILE_SIZE_IN_MB from the configuration files.
 * Added support for python3 and django2.2
 * Added quality tests
 
