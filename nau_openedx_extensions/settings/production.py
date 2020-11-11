@@ -54,3 +54,7 @@ def plugin_settings(settings):
     settings.NAU_ACCOUNTS_CC_VISIBLE_FIELDS = getattr(settings, "ENV_TOKENS", {}).get(
         "NAU_ACCOUNTS_CC_VISIBLE_FIELDS", settings.NAU_ACCOUNTS_CC_VISIBLE_FIELDS
     )
+    if settings.SERVICE_VARIANT == "cms":
+        settings.MAX_ASSET_UPLOAD_FILE_SIZE_IN_MB = getattr(settings, "ENV_TOKENS", {}).get(
+            'MAX_ASSET_UPLOAD_FILE_SIZE_IN_MB', settings.MAX_ASSET_UPLOAD_FILE_SIZE_IN_MB
+        )
