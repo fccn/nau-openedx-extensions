@@ -61,6 +61,9 @@ def plugin_settings(settings):
         settings.DEFAULT_COURSE_LANGUAGE = getattr(settings, "ENV_TOKENS", {}).get(
             "DEFAULT_COURSE_LANGUAGE", settings.DEFAULT_COURSE_LANGUAGE
         )
+    elif settings.SERVICE_VARIANT == "lms":
+        settings.COURSE_DISCOVERY_MEANINGS = getattr(settings, "ENV_TOKENS", {}).get("COURSE_DISCOVERY_MEANINGS", {})
+
     settings.ORA2_FILEUPLOAD_BACKEND = getattr(settings, "ENV_TOKENS", {}).get(
         "ORA2_FILEUPLOAD_BACKEND", "django"
     )
