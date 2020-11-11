@@ -58,3 +58,6 @@ def plugin_settings(settings):
         settings.MAX_ASSET_UPLOAD_FILE_SIZE_IN_MB = getattr(settings, "ENV_TOKENS", {}).get(
             'MAX_ASSET_UPLOAD_FILE_SIZE_IN_MB', settings.MAX_ASSET_UPLOAD_FILE_SIZE_IN_MB
         )
+    settings.ORA2_FILEUPLOAD_BACKEND = getattr(settings, "ENV_TOKENS", {}).get(
+        "ORA2_FILEUPLOAD_BACKEND", "django"
+    )
