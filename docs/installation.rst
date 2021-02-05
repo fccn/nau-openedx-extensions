@@ -36,7 +36,7 @@ The `devstack <https://github.com/edx/devstack>`_ install based on docker is a v
     .. code-block:: bash
 
         cd ../../devstack
-        docker-compose exec lms bash -c 'source /edx/app/edxapp/edxapp_env && cd /edx/src/edxapp/nau-openedx-extensions && pip install -e .'
+        docker exec edx.nau-juniper-devstack.lms bash -c 'source /edx/app/edxapp/edxapp_env && cd /edx/src/edxapp/nau-openedx-extensions && pip install -e .'
         make lms-restart
 
     Or more interactively if you prefer
@@ -86,18 +86,25 @@ The `devstack <https://github.com/edx/devstack>`_ install based on docker is a v
         The database is shared between lms and studio so you only need to migrate once for both applications.
 
 
-#. Configure the plugin to work with edxapp(edx-platform) at ``lms.env.json``
+#. Configure the plugin to work with edxapp(edx-platform) at ``lms.yml``
 
-    Let edx-platform work with a custom form:
+    Let edx-platform work with a custom form.
 
-    .. code-block:: json
+    Open a shell on the lms.
 
-        {
-            ...
-            "REGISTRATION_EXTENSION_FORM": "nau_openedx_extensions.custom_registration_form.forms.NauUserExtendedForm"
-            ...
-        }
+    .. code-block:: bash
+        make lms-shell
+        
+    Edit the lms.yml file.
+    
+    .. code-block:: bash
+        vim /edx/etc/lms.yml
 
+    Add this line.
+    .. code-block:: yaml
+        ...
+        REGISTRATION_EXTENSION_FORM: nau_openedx_extensions.custom_registration_form.forms.NauUserExtendedForm
+        ...
 
 #. For every course requiring extra certificate context, use the advanced studio settings ``Certificate Web/HTML View Overrides`` as follows:
 
