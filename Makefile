@@ -5,6 +5,7 @@
 ###############################################
 
 .DEFAULT_GOAL := help
+.PHONY: requirements
 
 ifdef TOXENV
 TOX := tox -- #to isolate each tox environment if TOXENV is defined
@@ -46,4 +47,23 @@ upgrade: ## update the requirements/*.txt files with the latest packages satisfy
 	sed '/^[dD]jango==/d;/^celery==/d;/^edx-opaque-keys[django]==/d' requirements/test.txt > requirements/test.tmp
 	mv requirements/test.tmp requirements/test.txt
 
+requirements_translations:
+	pip install Babel==2.9.0
+	pip install mako==1.0.2
 
+# TODO: define somewhere else
+lang_targets = en pt_PT
+
+create_translations_catalogs: | requirements_translations ## Create the initial configuration of .mo files for translation
+	pybabel extract -F conf/locale/babel.cfg -o  conf/locale/django.pot --msgid-bugs-address=equipa@nau.edu.pt --copyright-holder=NAU nau_openedx_extensions
+	for lang in $(lang_targets) ; do \
+        pybabel init -i conf/locale/django.pot -D django -d conf/locale/ -l $$lang ; \
+    done
+
+update_translations: | requirements_translations ## update strings to be translated
+	pybabel extract -F conf/locale/babel.cfg -o conf/locale/django.pot nau_openedx_extensions
+	pybabel update -N -D django -i conf/locale/django.pot -d conf/locale/
+	rm conf/locale/django.pot
+
+compile_translations: | requirements_translations ## compile .mo files into .po files
+	pybabel compile -f -D django -d conf/locale/
