@@ -29,6 +29,7 @@ class NauUserExtendedForm(ModelForm):
             "cc_doc_number",
             "cc_birth_date",
             "employment_situation",
+            "allow_newsletter",
         ]
 
     def __init__(self, *args, **kwargs):

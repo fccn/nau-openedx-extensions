@@ -53,6 +53,9 @@ class NauUserExtendedModel(models.Model):
     employment_situation = models.TextField(
         verbose_name=_("Employment situation"), blank=True, null=True
     )
+    allow_newsletter = models.BooleanField(
+        verbose_name=_("Allow newsletter"), default=False
+    )
 
     def __unicode__(self):
         return "<Nau extended data for {}>".format(self.user.username)
