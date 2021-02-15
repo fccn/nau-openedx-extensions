@@ -49,6 +49,8 @@ msgstr "Outro"
 #: nau_openedx_extensions/custom_registration_form/models.py:39
 msgid "I authorize data processing for this site "
 msgstr ""
+"Autorizo que os dados sejam processados segundo os termos de serviço e "
+"política de privacidade"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:42
 msgid "NIF"
@@ -92,11 +94,11 @@ msgstr ""
 
 #: nau_openedx_extensions/custom_registration_form/models.py:70
 msgid "Employment situation"
-msgstr ""
+msgstr "Situação profissional"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:73
 msgid "Allow newsletter"
-msgstr ""
+msgstr "Aceito receber informações no âmbito dos cursos disponibilizados pela NAU, bem como novidades associadas à NAU, através de email marketing e /ou newsletter."
 
 #: nau_openedx_extensions/templates/message_gateway/tab.html:15
 msgid "Send to:"
