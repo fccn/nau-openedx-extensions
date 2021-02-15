@@ -18,6 +18,22 @@ class NauUserExtendedModel(models.Model):
     Used during user registration as a form extension.
     """
 
+    STUDENT='Student'
+    UNEMPLOYED='Unemployed'
+    PUBLIC_SERVICE_CONTRACT='Public service contract'
+    PRIVATE_INSTITUTION_CONTRACT='Private institution contract'
+    SELF_EMPLOYED='Self employed entrepreneur'
+    OTHER='Other'
+
+    EMPLOYMENT_SITUATION_CHOICES = [
+        (STUDENT, _('Student')),
+        (UNEMPLOYED, _('Unemployed')),
+        (PUBLIC_SERVICE_CONTRACT, _('Public service contract')),
+        (PRIVATE_INSTITUTION_CONTRACT, _('Private institution contract')),
+        (SELF_EMPLOYED, _('Self employed entrepreneur')),
+        (OTHER, _('Other'))
+    ]
+
     user = models.OneToOneField(USER_MODEL, on_delete=models.CASCADE, null=True)
     data_authorization = models.BooleanField(
         verbose_name=_("I authorize data processing for this site "), default=False
@@ -51,7 +67,7 @@ class NauUserExtendedModel(models.Model):
         verbose_name=_("Birth date"), max_length=12, blank=True, null=True
     )
     employment_situation = models.TextField(
-        verbose_name=_("Employment situation"), blank=True, null=True
+        verbose_name=_("Employment situation"), blank=True, null=True, choices=EMPLOYMENT_SITUATION_CHOICES
     )
     allow_newsletter = models.BooleanField(
         verbose_name=_("Allow newsletter"), default=False
