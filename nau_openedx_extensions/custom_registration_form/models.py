@@ -75,3 +75,6 @@ class NauUserExtendedModel(models.Model):
 
     def __unicode__(self):
         return "<Nau extended data for {}>".format(self.user.username)
+
+    def date_joined(self):
+        return self.user.date_joined
