@@ -1,15 +1,9 @@
 """ Registration edxapp backend abstraction """
 from __future__ import absolute_import, unicode_literals
 
-from student import forms  # pylint: disable=import-error
+from openedx.core.djangoapps.user_authn.views.registration_form import get_registration_extension_form
+
 from third_party_auth.saml import EdXSAMLIdentityProvider  # pylint: disable=import-error
-
-
-def get_registration_extension_form():
-    """
-    Gets edxapp custom registration form
-    """
-    return forms.get_registration_extension_form()
 
 
 def get_edx_saml_identity_provider():
