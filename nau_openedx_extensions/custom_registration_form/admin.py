@@ -32,7 +32,7 @@ class NauUserExtendedModelAdmin(admin.ModelAdmin, ExportCsvMixin):
     date_hierarchy= "user__date_joined"
     
     # limit the fields that are exported to CSV to prevent export a CSV with information too personal like NIC
-    csv_export_fields = ("user", "data_authorization", "employment_situation", "allow_newsletter", "date_joined",)
+    csv_export_fields = ("user", "openedx_email", "data_authorization", "employment_situation", "allow_newsletter", "date_joined",)
 
     # Add a new action to combo box that permit to export to csv the selected rows
     actions = ["export_as_csv"]
