@@ -66,3 +66,4 @@ def plugin_settings(settings):
     settings.NAU_COURSE_MESSAGE_RECIPIENT_FIELDS = ["profile__name", "email"]
     settings.NAU_CC_ALLOWED_SLUG = "cccmd:"
     settings.NAU_ACCOUNTS_CC_VISIBLE_FIELDS = ["employment_situation"]
+    settings.SCORMXBLOCK_ASYNC_THRESHOLD = 500
