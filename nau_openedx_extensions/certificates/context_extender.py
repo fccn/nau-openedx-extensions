@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 def update_cert_context(context, user, course, **kwargs):
     """
-    Updates certifcates context with custom data for the user within
+    Updates certificates context with custom data for the user within
     the course context
     """
     nau_cert_settings = course.cert_html_view_overrides.get("nau_certs_settings")
@@ -28,6 +28,7 @@ def update_cert_context(context, user, course, **kwargs):
         update_context_with_grades(
             user, course, context, nau_cert_settings, kwargs["user_certificate"]
         )
+        context.update({"certificate_language", kwargs["certificate_language"]})
         update_context_with_interpolated_strings(
             context, nau_cert_settings, kwargs["certificate_language"]
         )
@@ -54,7 +55,7 @@ def update_context_with_custom_form(user, custom_model, context):
 
 def update_context_with_grades(user, course, context, settings, user_certificate):
     """
-    Updates certifcates context with grades data for the user
+    Updates certificates context with grades data for the user
     """
     # always add `user certificate` grade context
     context.update(

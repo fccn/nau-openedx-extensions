@@ -105,3 +105,6 @@ venv.bak/
 
 !openedx/core/lib/
 node_modules/
+
+# Vs code
+.vscode/
