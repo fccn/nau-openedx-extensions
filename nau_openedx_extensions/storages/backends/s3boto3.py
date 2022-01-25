@@ -18,9 +18,6 @@ class NAUS3Boto3Storage(S3Boto3Storage):
         url = super().url(name, parameters, expire)
 
         if self.nau_custom_endpoint_url:
-            # Remove the bucket name from the url
-            url = url.replace("/" + self.bucket_name + "/", "/")
-
             import re
             url_path_and_attributes = re.search("/", url[9:]).start() +9
             url = self.nau_custom_endpoint_url + url[url_path_and_attributes:]
