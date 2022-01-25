@@ -29,7 +29,7 @@ The `devstack <https://github.com/edx/devstack>`_ install based on docker is a v
         sudo mkdir edxapp
         sudo chown $USER edxapp/
         cd edxapp
-        git clone https://gitlab.fccn.pt/nau/nau-openedx-extensions.git
+        git clone https://github.com/fccn/nau-openedx-extensions.git
 
     Now we need to install it in the virtualenv.
 
@@ -141,7 +141,7 @@ To install the SEB Open edX plugin in there you need to change some ansible vari
 
         EDXAPP_PRIVATE_REQUIREMENTS:
           # NAU plugin
-          - name: 'git+ssh://git@gitlab.fccn.pt/nau/nau-openedx-extensions.git@v1.0.3#egg=nau_openedx_extensions==1.0.3'
+          - name: 'git+ssh://git@github.com/fccn/nau-openedx-extensions.git@v1.0.3#egg=nau_openedx_extensions==1.0.3'
 
         EDXAPP_ENV_EXTRA:
           REGISTRATION_EXTENSION_FORM: "nau_openedx_extensions.custom_registration_form.forms.NauUserExtendedForm"
@@ -164,7 +164,7 @@ To run the installation without the help of any script you still need to run the
     .. code-block:: shell
 
         sudo su edxapp -s /bin/bash
-        /edx/bin/pip.edxapp install git+ssh://git@gitlab.fccn.pt/nau/nau-openedx-extensions.git@v1.0.3#egg=nau_openedx_extensions==1.0.3
+        /edx/bin/pip.edxapp install git+ssh://git@github.com/fccn/nau-openedx-extensions.git@v1.0.3#egg=nau_openedx_extensions==1.0.3
 
 
 #. Restart the services

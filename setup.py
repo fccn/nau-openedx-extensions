@@ -60,7 +60,7 @@ setup(
     version=version,
     author="eduNEXT",
     author_email="contact@edunext.co",
-    url="https://gitlab.fccn.pt/nau/nau-openedx-extensions",
+    url="https://github.com/fccn/nau-openedx-extensions",
     description="NAU openedX extensions",
     long_description="",
     install_requires=load_requirements('requirements/base.in'),
