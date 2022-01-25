@@ -1,5 +1,6 @@
-
 from storages.backends.s3boto3 import S3Boto3Storage
+from storages.utils import setting
+
 
 class NAUS3Boto3Storage(S3Boto3Storage):
     """
@@ -8,7 +9,7 @@ class NAUS3Boto3Storage(S3Boto3Storage):
     url protocol and domain.
     """
 
-    nau_custom_endpoint_url = None
+    nau_custom_endpoint_url = setting('NAU_CUSTOM_ENDPOINT_URL')
 
     def __init__(self, acl=None, bucket=None, **settings):
         super().__init__(acl, bucket, **settings)
@@ -17,6 +18,9 @@ class NAUS3Boto3Storage(S3Boto3Storage):
         url = super().url(name, parameters, expire)
 
         if self.nau_custom_endpoint_url:
+            # Remove the bucket name from the url
+            url = url.replace("/" + self.bucket_name + "/", "/")
+
             import re
             url_path_and_attributes = re.search("/", url[9:]).start() +9
             url = self.nau_custom_endpoint_url + url[url_path_and_attributes:]
