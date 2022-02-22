@@ -78,3 +78,29 @@ class NauUserExtendedModel(models.Model):
 
     def date_joined(self):
         return self.user.date_joined
+
+# Add more fields to the student profile download csv file.
+#
+# This feature requires that additional properties be configured on `STUDENT_FEATURES` list on file
+# lms/djangoapps/instructor_analytics/basic.py
+# 
+# Dynamic add properties to the User model so they could be added to the `student_profile_download_fields` site configuration
+from django.contrib.auth.models import User
+
+def get_nau_user_extended_model_cc_nic(self):
+    if hasattr(self, "nauuserextendedmodel"):
+        return self.nauuserextendedmodel.cc_nic
+    return None
+setattr(User, 'nau_user_extended_model_cc_nic', property(get_nau_user_extended_model_cc_nic))
+
+def get_nau_user_extended_model_cc_nif(self):
+    if hasattr(self, "nauuserextendedmodel"):
+        return self.nauuserextendedmodel.cc_nif
+    return None
+setattr(User, 'nau_user_extended_model_cc_nif', property(get_nau_user_extended_model_cc_nif))
+
+def get_nau_user_extended_model_employment_situation(self):
+    if hasattr(self, "nauuserextendedmodel"):
+        return self.nauuserextendedmodel.employment_situation
+    return None
+setattr(User, 'nau_user_extended_model_employment_situation', property(get_nau_user_extended_model_employment_situation))
