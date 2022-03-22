@@ -112,7 +112,7 @@ The `devstack <https://github.com/edx/devstack>`_ install based on docker is a v
 
         {
             "nau_certs_settings": {
-                "update_with_grades_context": true,
+                "calculate_grades_context": true,
                 "interpolated_strings": {
                     "completion_statement": "This acknowledges that {cc_first_name} {cc_last_name} has succesfully completed the course"
                 }
