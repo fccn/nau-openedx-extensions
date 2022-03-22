@@ -66,10 +66,14 @@ def update_context_with_grades(user, course, context, settings, user_certificate
     if settings.get("calculate_grades_context", False):
         try:
             grades = get_course_grades(user, course)
+            # The `grades.percent` is a number from 0 to 1.
+            grade_percent = grades.percent
             context_element = {
                 "course_letter_grade": grades.letter_grade or "",
                 "user_has_approved_course": grades.passed,
-                "course_percent_grade": grades.percent,
+                "course_percent_grade": grade_percent,
+                "course_grade_scale_10": grade_percent * 10,
+                "course_grade_scale_20": grade_percent * 20,
             }
         except Exception:  # pylint: disable=broad-except
             log.error(

@@ -122,8 +122,23 @@ The `devstack <https://github.com/edx/devstack>`_ install based on docker is a v
     .. image:: images/certs_config_example.png
 
     .. note::
-        Since grades calculation could take a while, you could configure the plugin to avoid such process using ``"update_with_grades_context": false``.
+        Since grades calculation could take a while, you could configure the plugin to avoid such process using ``"calculate_grades_context": false``.
 
+
+#. Or replace the default variable `accomplishment_copy_course_description` with a new interpolated that formats the grade has percentage without any decimal cases.
+
+    .. code-block:: json
+        {
+            "nau_certs_settings": {
+                "calculate_grades_context": true,
+                "interpolated_strings": {
+                    "accomplishment_copy_course_description": {
+                        "en": ", with a grade of {course_percent_grade:.0%}.",
+                        "pt": ", com nota de {course_percent_grade:.0%}."
+                    }
+                }
+            }
+        }
 
 Native Installation
 ===================
