@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2021-02-15 15:56+0000\n"
+"POT-Creation-Date: 2022-02-23 11:35+0000\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -54,51 +54,58 @@ msgstr ""
 
 #: nau_openedx_extensions/custom_registration_form/models.py:42
 msgid "NIF"
-msgstr ""
+msgstr "NIF - Nº de Identificação Fiscal"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:45
-msgid "NIC"
+msgid "CC NIF"
 msgstr ""
 
 #: nau_openedx_extensions/custom_registration_form/models.py:48
-msgid "NIC Check Digit"
+msgid "CC NIC"
 msgstr ""
 
 #: nau_openedx_extensions/custom_registration_form/models.py:51
-msgid "First name"
+msgid "CC NIC Check Digit"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:53
-msgid "Last name"
+#: nau_openedx_extensions/custom_registration_form/models.py:54
+msgid "CC First name"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:55
-msgid "Nacionality"
+#: nau_openedx_extensions/custom_registration_form/models.py:56
+msgid "CC Last name"
 msgstr ""
 
 #: nau_openedx_extensions/custom_registration_form/models.py:58
-msgid "Zip code 3 digits"
+msgid "CC Nacionality"
 msgstr ""
 
 #: nau_openedx_extensions/custom_registration_form/models.py:61
-msgid "Zip code 4 digits"
+msgid "CC Zip code 3 digits"
 msgstr ""
 
 #: nau_openedx_extensions/custom_registration_form/models.py:64
-msgid "Document number"
+msgid "CC Zip code 4 digits"
 msgstr ""
 
 #: nau_openedx_extensions/custom_registration_form/models.py:67
-msgid "Birth date"
+msgid "CC Document number"
 msgstr ""
 
 #: nau_openedx_extensions/custom_registration_form/models.py:70
+msgid "CC Birth date"
+msgstr ""
+
+#: nau_openedx_extensions/custom_registration_form/models.py:73
 msgid "Employment situation"
 msgstr "Situação profissional"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:73
+#: nau_openedx_extensions/custom_registration_form/models.py:76
 msgid "Allow newsletter"
-msgstr "Aceito receber informações no âmbito dos cursos disponibilizados pela NAU, bem como novidades associadas à NAU, através de email marketing e /ou newsletter."
+msgstr ""
+"Aceito receber informações no âmbito dos cursos disponibilizados pela "
+"NAU, bem como novidades associadas à NAU, através de email marketing e "
+"/ou newsletter."
 
 #: nau_openedx_extensions/templates/message_gateway/tab.html:15
 msgid "Send to:"
