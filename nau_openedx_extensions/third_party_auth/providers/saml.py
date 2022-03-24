@@ -13,6 +13,8 @@ from nau_openedx_extensions.edxapp_wrapper.registration import EdXSAMLIdentityPr
 log = logging.getLogger(__name__)
 
 
+# Deprecated
+# edx-platform has the same code
 class NauEdXSAMLIdentityProvider(EdXSAMLIdentityProvider):
     """
     Customized version of EdXSAMLIdentityProvider that can retrieve details beyond the standard
