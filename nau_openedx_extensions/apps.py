@@ -39,4 +39,4 @@ class NauOpenEdxConfig(AppConfig):
         """
         from nau_openedx_extensions.permissions import load_permissions
 
-        load_permissions()
+        #load_permissions()
