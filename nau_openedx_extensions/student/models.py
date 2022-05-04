@@ -1,4 +1,4 @@
-from student.models import CourseAccessRole
+from common.djangoapps.student.models import CourseAccessRole
 
 class CourseAccessRoleProxy(CourseAccessRole):
 
