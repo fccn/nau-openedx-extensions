@@ -60,7 +60,7 @@ def plugin_settings(settings):
         "nau_openedx_extensions.edxapp_wrapper.backends.grades_h_v1"
     )
     settings.NAU_REGISTRATION_MODULE = (
-        "nau_openedx_extensions.edxapp_wrapper.backends.registration_h_v1"
+        "nau_openedx_extensions.edxapp_wrapper.backends.registration_l_v1"
     )
     settings.NAU_COURSE_MESSAGE_BATCH_SIZE = 50
     settings.NAU_COURSE_MESSAGE_RECIPIENT_FIELDS = ["profile__name", "email"]

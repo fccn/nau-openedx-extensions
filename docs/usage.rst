@@ -14,7 +14,7 @@ This is the list of settings that you can alter globally:
     Defines the method's path to use when extending the context of certificates.
 
 - **NAU_REGISTRATION_MODULE**
-    Default: ``'nau_openedx_extensions.edxapp_wrapper.backends.registration_h_v1'``
+    Default: ``'nau_openedx_extensions.edxapp_wrapper.backends.registration_l_v1'``
 
     Defines the module's path to use as the backend for edx-platform registration module.    
 
