@@ -90,6 +90,10 @@ def _apply_saml_overrides(*args, **kwargs):  # pylint: disable=unused-argument
     registration forms
     """
     custom_form = get_registration_extension_form()
+
+    if not custom_form:
+        return
+
     form_desc = kwargs["form_desc"]
 
     for field_name, _field in custom_form.fields.items():
