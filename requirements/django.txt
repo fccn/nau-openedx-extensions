@@ -1,2 +1,2 @@
-celery==3.1.25            # via -c requirements/constraints.txt, -r requirements/base.txt
-django==1.11.29           # via -c requirements/constraints.txt, -r requirements/base.txt, edx-opaque-keys
+celery==4.4.7
+django==2.2.25

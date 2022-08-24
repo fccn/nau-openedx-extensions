@@ -1,13 +1,5 @@
-
-
-# version used in hawthorn
-celery==3.1.25
-
-# version used in hawthorn
-Django<2.0.0
-
-# version used in hawthorn
-edx-opaque-keys[django]==0.4.4
-
-# edx-lint version 1.5.0 dropped support for python2.7
-edx-lint<1.5.0
+# Same version as the platform
+celery<5.0
+Django==2.2.25
+edx-opaque-keys[django]==2.2.0
+edx-lint
