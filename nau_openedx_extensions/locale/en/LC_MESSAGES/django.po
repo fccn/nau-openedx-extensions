@@ -106,6 +106,13 @@ msgstr ""
 "I agree to receive information regarding the courses offered by NAU, as "
 "well as news associated with NAU, through email marketing and newsletter."
 
+#: nau_openedx_extensions/filters/pipeline.py:40
+msgid ""
+"You can't enroll on this course because your email                 domain"
+" is not allowed. If you think this is an error, contact the course "
+"support"
+msgstr ""
+
 #: nau_openedx_extensions/templates/message_gateway/tab.html:15
 msgid "Send to:"
 msgstr ""
