@@ -38,13 +38,14 @@ def update_context_with_custom_form(user, custom_model, context):
     """
     Updates the context in-place with extra user information
     """
+    custom_model_instance = None
     try:
         custom_model_instance = custom_model.objects.get(user=user)
     except ObjectDoesNotExist:
         # If a custom model does not exist for the user, create an empty one
         custom_model_instance = custom_model()
     finally:
-        for field in custom_model_instance._meta.fields:
+        for field in custom_model_instance._meta.fields:  # pylint: disable=protected-access
 
             if isinstance(field, (models.BooleanField, models.CharField, models.TextField)):
                 context_element = {
@@ -188,12 +189,12 @@ def get_qualitative_grade(user, course, certificate_language, course_qualitative
     """
     try:
         grade_rounded_f = float(grade_rounded)
-        for range in course_qualitative_ranges_settings:
-            min_included = float(range.get("min_included", -1.0))
-            max_excluded = float(range.get("max_excluded", -1.0))
-            if min_included <= grade_rounded_f and grade_rounded_f < max_excluded:
-                grade_text = range.get("grade_text", {})
-                if type(grade_text) is dict:
+        for qualitative_range in course_qualitative_ranges_settings:
+            min_included = float(qualitative_range.get("min_included", -1.0))
+            max_excluded = float(qualitative_range.get("max_excluded", -1.0))
+            if min_included <= grade_rounded_f < max_excluded:
+                grade_text = qualitative_range.get("grade_text", {})
+                if grade_text.isinstance(dict):
                     # use certificate language to use correct grade text translation
                     grade_text = grade_text.get(certificate_language.lower())
                     if not grade_text:
@@ -204,12 +205,11 @@ def get_qualitative_grade(user, course, certificate_language, course_qualitative
                     grade_text = str(grade_text)
                 if grade_text:
                     return grade_text
-        log.warn(
+        log.warning(
             "Could not find any qualitative grade for user %s in course %s",
             user.username,
             course.display_name,
         )
-        return None
     except Exception:  # pylint: disable=broad-except
         log.error(
             "Could not get qualitative grade for user %s in course %s with a rounded grade of %s",
@@ -217,6 +217,7 @@ def get_qualitative_grade(user, course, certificate_language, course_qualitative
             course.display_name,
             grade_rounded,
         )
+    return None
 
 def update_context_with_interpolated_strings(context, nau_cert_settings, certificate_language):
     """
