@@ -210,7 +210,6 @@ on scale from 0 to 10 and a qualitative grade of {course_grade_qualitative}."
         grade_rounded,
     )
     if qualitative_grade:
-
         context.update({"course_grade_qualitative": qualitative_grade})
 
 
@@ -231,7 +230,7 @@ def get_qualitative_grade(
             max_excluded = float(qualitative_range.get("max_excluded", -1.0))
             if min_included <= grade_rounded_f < max_excluded:
                 grade_text = qualitative_range.get("grade_text", {})
-                if grade_text.isinstance(dict):
+                if isinstance(grade_text, dict):
                     # use certificate language to use correct grade text translation
                     grade_text = grade_text.get(certificate_language.lower())
                     if not grade_text:
@@ -248,7 +247,7 @@ def get_qualitative_grade(
             course.display_name,
         )
     except Exception:  # pylint: disable=broad-except
-        log.error(
+        log.exception(
             "Could not get qualitative grade for user %s in course %s with a rounded grade of %s",
             user.username,
             course.display_name,
