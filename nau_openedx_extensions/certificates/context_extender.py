@@ -27,7 +27,12 @@ def update_cert_context(context, user, course, **kwargs):
     update_context_with_custom_form(user, NauUserExtendedModel, context)
     if nau_cert_settings:
         update_context_with_grades(
-            user, course, context, nau_cert_settings, kwargs["user_certificate"], kwargs["certificate_language"]
+            user,
+            course,
+            context,
+            nau_cert_settings,
+            kwargs["user_certificate"],
+            kwargs["certificate_language"],
         )
         update_context_with_interpolated_strings(
             context, nau_cert_settings, kwargs["certificate_language"]
@@ -45,16 +50,22 @@ def update_context_with_custom_form(user, custom_model, context):
         # If a custom model does not exist for the user, create an empty one
         custom_model_instance = custom_model()
     finally:
-        for field in custom_model_instance._meta.fields:  # pylint: disable=protected-access
+        for (
+            field
+        ) in custom_model_instance._meta.fields:  # pylint: disable=protected-access
 
-            if isinstance(field, (models.BooleanField, models.CharField, models.TextField)):
+            if isinstance(
+                field, (models.BooleanField, models.CharField, models.TextField)
+            ):
                 context_element = {
                     field.name: getattr(custom_model_instance, field.name, "")
                 }
                 context.update(context_element)
 
 
-def update_context_with_grades(user, course, context, nau_certs_settings, user_certificate, certificate_language):
+def update_context_with_grades(
+    user, course, context, nau_certs_settings, user_certificate, certificate_language
+):
     """
     Updates certifcates context with grades data for the user
     """
@@ -87,19 +98,32 @@ def update_context_with_grades(user, course, context, nau_certs_settings, user_c
         else:
             context.update(context_element)
 
-        course_qualitative_grade_config = nau_certs_settings.get("course_qualitative_grade")
+        course_qualitative_grade_config = nau_certs_settings.get(
+            "course_qualitative_grade"
+        )
         if course_qualitative_grade_config:
-            course_qualitative_grade(user, course, context, course_qualitative_grade_config, certificate_language)
+            course_qualitative_grade(
+                user,
+                course,
+                context,
+                course_qualitative_grade_config,
+                certificate_language,
+            )
 
-def course_qualitative_grade(user, course, context, course_qualitative_grade_config, certificate_language):
+
+def course_qualitative_grade(
+    user, course, context, course_qualitative_grade_config, certificate_language
+):
     """
     Custom per course qualitative grade generator.
 
     "nau_certs_settings": {
         "interpolated_strings": {
             "accomplishment_copy_course_description": {
-                "pt": ", com nota de numérica de {course_percent_grade:.0%} numa escala de 0 a 10 e nota qualitativa de {course_grade_qualitative}.",
-                "en": ", with a numberic grade of {course_percent_grade:.0%} on scale from 0 to 10 and a qualitative grade of {course_grade_qualitative}."
+                "pt": ", com nota de numérica de {course_percent_grade:.0%} \
+numa escala de 0 a 10 e nota qualitativa de {course_grade_qualitative}.",
+                "en": ", with a numberic grade of {course_percent_grade:.0%} \
+on scale from 0 to 10 and a qualitative grade of {course_grade_qualitative}."
             }
         },
         "calculate_grades_context": true,
@@ -157,15 +181,16 @@ def course_qualitative_grade(user, course, context, course_qualitative_grade_con
             grade_round_format = "{" + grade_round_format
 
         # suffix with `}` if not already has that character
-        if grade_round_format[len(grade_round_format)-1] != "}":
+        if grade_round_format[len(grade_round_format) - 1] != "}":
             grade_round_format += "}"
 
         grade_rounded = grade_round_format.format(**context)
         # clear `%` caracter
-        grade_rounded = grade_rounded.replace('%', '')
+        grade_rounded = grade_rounded.replace("%", "")
     except Exception:  # pylint: disable=broad-except
         log.error(
-            "Could not round the course grade for qualitative grade scale for user %s in course %s",
+            "Could not round the course grade for qualitative grade scale for "
+            "user %s in course %s",
             user.username,
             course.display_name,
         )
@@ -175,15 +200,27 @@ def course_qualitative_grade(user, course, context, course_qualitative_grade_con
         grade_rounded = context.course_percent_grade
 
     # append to context the rounded grade
-    context.update({"course_grade_rounded" : grade_rounded})
+    context.update({"course_grade_rounded": grade_rounded})
 
-    qualitative_grade = get_qualitative_grade(user, course, certificate_language, course_qualitative_grade_config.get("ranges", []), grade_rounded)
+    qualitative_grade = get_qualitative_grade(
+        user,
+        course,
+        certificate_language,
+        course_qualitative_grade_config.get("ranges", []),
+        grade_rounded,
+    )
     if qualitative_grade:
 
-        context.update({"course_grade_qualitative" : qualitative_grade})
+        context.update({"course_grade_qualitative": qualitative_grade})
 
 
-def get_qualitative_grade(user, course, certificate_language, course_qualitative_ranges_settings, grade_rounded):
+def get_qualitative_grade(
+    user,
+    course,
+    certificate_language,
+    course_qualitative_ranges_settings,
+    grade_rounded,
+):
     """
     Returns a qualitative grade for the rounded grade given the course qualitative ranges settings.
     """
@@ -219,18 +256,25 @@ def get_qualitative_grade(user, course, certificate_language, course_qualitative
         )
     return None
 
-def update_context_with_interpolated_strings(context, nau_cert_settings, certificate_language):
+
+def update_context_with_interpolated_strings(
+    context, nau_cert_settings, certificate_language
+):
     """
     Updates certificate context using custom interpolated strings.
     Applies the corresponding translation before updating the context.
     """
-    interpolated_strings = get_interpolated_strings(nau_cert_settings, certificate_language)
+    interpolated_strings = get_interpolated_strings(
+        nau_cert_settings, certificate_language
+    )
 
     if interpolated_strings:
         for key, value in six.iteritems(interpolated_strings):
             try:
                 # Also try to translate the string if defined in platform .po
-                formatted_string = _(value).format(**context)  # pylint: disable=translation-of-non-string
+                formatted_string = _(value).format(
+                    **context
+                )  # pylint: disable=translation-of-non-string
             except (ValueError, AttributeError, KeyError):
                 log.error(
                     "Failed to add value (%s) as formatted string in the certificate context",
