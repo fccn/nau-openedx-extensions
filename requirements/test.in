@@ -6,4 +6,5 @@
 edx-lint
 pycodestyle
 pylint
-
+pytest
+coverage
