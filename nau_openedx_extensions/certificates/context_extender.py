@@ -81,7 +81,7 @@ def update_context_with_grades(
             grades = get_course_grades(user, course)
             # The `grades.percent` is a number from 0 to 1.
             grade_percent = grades.percent
-            # grade_percent = 0.64001
+            # grade_percent = 0.641
             context_element = {
                 "course_letter_grade": grades.letter_grade or "",
                 "user_has_approved_course": grades.passed,
@@ -200,7 +200,9 @@ on scale from 0 to 10 and a qualitative grade of {course_grade_qualitative}."
         grade_rounded = context.course_percent_grade
 
     # append to context the rounded grade
-    context.update({"course_grade_rounded": grade_rounded})
+    context.update(
+        {"course_grade_rounded": format_grade(grade_rounded, certificate_language)}
+    )
 
     qualitative_grade = get_qualitative_grade(
         user,
@@ -211,6 +213,16 @@ on scale from 0 to 10 and a qualitative grade of {course_grade_qualitative}."
     )
     if qualitative_grade:
         context.update({"course_grade_qualitative": qualitative_grade})
+
+
+def format_grade(grade, language):
+    """
+    If portuguese replace dot character with a comma.
+    """
+    if language[:2] == "pt":
+        return grade.replace(".", ",")
+    else:
+        return grade
 
 
 def get_qualitative_grade(
