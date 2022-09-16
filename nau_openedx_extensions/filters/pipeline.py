@@ -27,7 +27,7 @@ class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public
         }
     """
 
-    def run_filter(self, user, course_key, mode):   # pylint: disable=unused-argument, no-self-use
+    def run_filter(self, user, course_key, mode):   # pylint: disable=unused-argument, arguments-differ
         """Filter."""
 
         user_domain = user.email.split("@")[1]

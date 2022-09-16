@@ -1,15 +1,16 @@
 """
 Tests the separation layer between edxapp and the plugin
 """
-from django.test import TestCase
-from django.conf import settings
 from unittest.mock import Mock, patch
+
+from django.conf import settings
+from django.test import TestCase
 
 from nau_openedx_extensions.edxapp_wrapper import course_module
 
 
 class CourseMetadataTest(TestCase):
-    """Test"""
+    """Test CourseMetadata."""
 
     @patch('nau_openedx_extensions.edxapp_wrapper.course_module.import_module')
     def test_imported_module_is_used(self, import_mock):
