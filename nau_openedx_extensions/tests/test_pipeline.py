@@ -2,7 +2,7 @@
 Tests for the pipeline module used in nau_openex_extensions
 """
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 from django.test import TestCase
 from opaque_keys.edx.keys import CourseKey
@@ -23,7 +23,7 @@ class FilterEnrollmentByDomainTest(TestCase):
     def test_user_is_allowed_to_enroll_for_allowed_domain(self, get_other_course_settings_mock):
         """Test"""
 
-        get_other_course_settings_mock.return_value = {"filter_enrollment_by_domain_list": ["example.com"]}
+        get_other_course_settings_mock.return_value = {"value": {"filter_enrollment_by_domain_list": ["example.com"]}}
 
         response = FilterEnrollmentByDomain.run_filter(self, self.user, self.course_key, self.mode)
 
@@ -36,19 +36,22 @@ class FilterEnrollmentByDomainTest(TestCase):
 
         course_other_course_settings = Mock()
         get_other_course_settings_mock.return_value = course_other_course_settings
-        course_other_course_settings.get.return_value = []
+        course_other_course_settings.get.return_value = Mock()
+        course_other_course_settings_get_value = course_other_course_settings.get()
+        course_other_course_settings_get_value.get.return_value = []
 
         response = FilterEnrollmentByDomain.run_filter(self, self.user, self.course_key, self.mode)
 
         get_other_course_settings_mock.assert_called_once_with(self.course_key)
-        course_other_course_settings.get.assert_called_once_with('filter_enrollment_by_domain_list', [])
+        calls = [call("value", {}), call().get("filter_enrollment_by_domain_list", [])]
+        course_other_course_settings.get.assert_has_calls(calls)
         self.assertEqual(response, {})
 
 
     def test_user_is_not_allowed_to_enroll(self, get_other_course_settings_mock):
         """Test"""
 
-        get_other_course_settings_mock.return_value = {"filter_enrollment_by_domain_list": ["test.com"]}
+        get_other_course_settings_mock.return_value = {"value": {"filter_enrollment_by_domain_list": ["test.com"]}}
 
         with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment):
             FilterEnrollmentByDomain.run_filter(self, self.user, self.course_key, self.mode)
