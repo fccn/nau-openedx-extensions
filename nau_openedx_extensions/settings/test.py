@@ -34,3 +34,6 @@ DATABASES = {
 NAU_COURSE_MODULE = (
         "nau_openedx_extensions.edxapp_wrapper.backends.course_module_l_v1_tests"
     )
+NAU_EMAIL_MODULE = (
+        "nau_openedx_extensions.edxapp_wrapper.backends.email_module_l_v1_tests"
+    )

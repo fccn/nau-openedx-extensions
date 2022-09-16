@@ -46,6 +46,9 @@ def plugin_settings(settings):
     settings.NAU_COURSE_MODULE = getattr(settings, "ENV_TOKENS", {}).get(
         "NAU_COURSE_MODULE", settings.NAU_COURSE_MODULE
     )
+    settings.NAU_EMAIL_MODULE = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_EMAIL_MODULE", settings.NAU_EMAIL_MODULE
+    )
     settings.NAU_CC_ALLOWED_SLUG = getattr(settings, "ENV_TOKENS", {}).get(
         "NAU_CC_ALLOWED_SLUG", settings.NAU_CC_ALLOWED_SLUG
     )
