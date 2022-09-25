@@ -31,6 +31,18 @@ class FilterEnrollmentByDomainTest(TestCase):
         self.assertEqual(response, {})
 
 
+    def test_user_is_allowed_to_enroll_for_allowed_domain_with_subdomain(self, get_other_course_settings_mock):
+        """Test"""
+
+        get_other_course_settings_mock.return_value = {"value": {"filter_enrollment_by_domain_list": ["example.com"]}}
+        user = MagicMock(email="example@subdomain.example.com")
+
+        response = FilterEnrollmentByDomain.run_filter(self, user, self.course_key, self.mode)
+
+        get_other_course_settings_mock.assert_called_once_with(self.course_key)
+        self.assertEqual(response, {})
+
+
     def test_user_is_allowed_to_enroll_for_no_other_course_setting(self, get_other_course_settings_mock):
         """Test"""
 
