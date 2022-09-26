@@ -10,7 +10,7 @@ from nau_openedx_extensions.edxapp_wrapper import course_module
 
 
 class CourseMetadataTest(TestCase):
-    """Test CourseMetadata."""
+    """Test CourseMetadata wrapper that allow to use the course module from the OpenedX platform."""
 
     @patch('nau_openedx_extensions.edxapp_wrapper.course_module.import_module')
     def test_imported_module_is_used(self, import_mock):
