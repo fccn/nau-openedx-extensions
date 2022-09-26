@@ -37,3 +37,6 @@ NAU_COURSE_MODULE = (
 NAU_EMAIL_MODULE = (
         "nau_openedx_extensions.edxapp_wrapper.backends.email_module_l_v1_tests"
     )
+
+# This is to avoid "initialized translation infrastructure before the apps registry is ready" issue in tests.
+USE_I18N = False
