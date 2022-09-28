@@ -107,6 +107,15 @@ msgstr ""
 "NAU, bem como novidades associadas à NAU, através de email marketing e "
 "/ou newsletter."
 
+#: nau_openedx_extensions/filters/pipeline.py:40
+msgid ""
+"You can't enroll on this course because your email                 domain"
+" is not allowed. If you think this is an error, contact the course "
+"support"
+msgstr "Você não pode se inscrever neste curso porque seu domínio"
+" de e-mail não é permitido. Se você acha que isso é um erro,"
+" entre em contato com o suporte do curso"
+
 #: nau_openedx_extensions/templates/message_gateway/tab.html:15
 msgid "Send to:"
 msgstr ""

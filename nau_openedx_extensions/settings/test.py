@@ -30,3 +30,7 @@ DATABASES = {
         "NAME": "db.sqlite3",
     }
 }
+
+NAU_COURSE_MODULE = (
+        "nau_openedx_extensions.edxapp_wrapper.backends.course_module_l_v1_tests"
+    )
