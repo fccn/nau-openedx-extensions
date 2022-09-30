@@ -65,6 +65,9 @@ def plugin_settings(settings):
     settings.NAU_COURSE_MODULE = (
         "nau_openedx_extensions.edxapp_wrapper.backends.course_module_l_v1"
     )
+    settings.NAU_EMAIL_MODULE = (
+        "nau_openedx_extensions.edxapp_wrapper.backends.email_module_l_v1"
+    )
     settings.NAU_COURSE_MESSAGE_BATCH_SIZE = 50
     settings.NAU_COURSE_MESSAGE_RECIPIENT_FIELDS = ["profile__name", "email"]
     settings.NAU_CC_ALLOWED_SLUG = "cccmd:"

@@ -12,6 +12,6 @@ pluggy==1.0.0             # via tox
 py==1.11.0                # via tox
 pyparsing==3.0.9          # via packaging
 six==1.16.0               # via tox
-toml==0.10.2              # via tox
-tox==3.25.1               # via -r requirements/tox.in
-virtualenv==20.16.3       # via tox
+tomli==2.0.1              # via tox
+tox==3.26.0               # via -r requirements/tox.in
+virtualenv==20.16.5       # via tox

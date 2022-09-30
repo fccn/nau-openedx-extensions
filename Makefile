@@ -25,6 +25,11 @@ clean: ## delete most git-ignored files
 requirements: ## install environment requirements
 	pip install -r requirements/base.txt
 
+python-test: clean ## Run tests
+	$(TOX) pip install -r requirements/test.txt --exists-action w
+	$(TOX) coverage run --source="." -m pytest ./nau_openedx_extensions
+	$(TOX) coverage report --fail-under=5
+
 quality:
 	$(TOX) pylint ./nau_openedx_extensions
 	$(TOX) pycodestyle ./nau_openedx_extensions

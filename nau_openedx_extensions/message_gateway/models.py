@@ -5,7 +5,7 @@ from __future__ import absolute_import, unicode_literals
 
 import logging
 
-from lms.djangoapps.bulk_email.models import EMAIL_TARGETS, Target  # pylint: disable=import-error
+from nau_openedx_extensions.edxapp_wrapper.email_module import EMAIL_TARGETS, Target  # pylint: disable=import-error
 from django.contrib.auth.models import User
 from django.db import models
 from opaque_keys.edx.django.models import CourseKeyField
