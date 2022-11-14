@@ -36,7 +36,7 @@ The `devstack <https://github.com/edx/devstack>`_ install based on docker is a v
     .. code-block:: bash
 
         cd ../../devstack
-        docker exec edx.nau-juniper-devstack.lms bash -c 'source /edx/app/edxapp/edxapp_env && cd /edx/src/edxapp/nau-openedx-extensions && pip install -e .'
+        docker exec edx.devstack-nau-lilac.master.lms bash -c 'source /edx/app/edxapp/edxapp_env && cd /edx/src/edxapp/nau-openedx-extensions && pip install -e .'
         make lms-restart
 
     Or more interactively if you prefer
