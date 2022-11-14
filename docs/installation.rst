@@ -30,6 +30,7 @@ The `devstack <https://github.com/edx/devstack>`_ install based on docker is a v
         sudo chown $USER edxapp/
         cd edxapp
         git clone https://github.com/fccn/nau-openedx-extensions.git
+        git checkout nau/lilac.master
 
     Now we need to install it in the virtualenv.
 
