@@ -7,13 +7,13 @@ import json
 import logging
 
 import six
+from common.djangoapps.util.json_request import JsonResponse  # pylint: disable=import-error
 from django.contrib.auth.decorators import permission_required
 from django.http import HttpResponseBadRequest
 from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 from opaque_keys.edx.keys import CourseKey
-from common.djangoapps.util.json_request import JsonResponse  # pylint: disable=import-error
 
 from nau_openedx_extensions.message_gateway import tasks
 from nau_openedx_extensions.message_gateway.models import NauCourseMessage

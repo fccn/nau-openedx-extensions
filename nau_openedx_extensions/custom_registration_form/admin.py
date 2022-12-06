@@ -3,7 +3,9 @@ Admin for nau user extended model
 """
 
 from __future__ import absolute_import, unicode_literals
+
 from django.contrib import admin
+
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
 from nau_openedx_extensions.utils.admin import ExportCsvMixin
 
