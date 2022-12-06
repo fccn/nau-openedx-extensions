@@ -27,7 +27,7 @@ requirements: ## install environment requirements
 
 python-test: clean ## Run tests
 	$(TOX) pip install -r requirements/test.txt --exists-action w
-	$(TOX) coverage run --source="." -m pytest ./nau_openedx_extensions
+	$(TOX) DJANGO_SETTINGS_MODULE=nau_openedx_extensions.settings.test coverage run --source="." -m pytest ./nau_openedx_extensions
 	$(TOX) coverage report --fail-under=5
 
 quality:
