@@ -8,7 +8,7 @@ from django.conf import settings
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
 
 
-def ensure_cartao_cidadao_data(strategy, details, user, uid, *args, **kwargs):  # pylint: disable=unused-argument
+def ensure_cartao_cidadao_data(strategy, details, user, uid, *args, **kwargs):
     """
     The part of the pipeline that stores the information from the portuguese authentication service.
     """

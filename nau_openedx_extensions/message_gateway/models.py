@@ -5,10 +5,11 @@ from __future__ import absolute_import, unicode_literals
 
 import logging
 
-from nau_openedx_extensions.edxapp_wrapper.email_module import EMAIL_TARGETS, Target  # pylint: disable=import-error
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
 from django.db import models
 from opaque_keys.edx.django.models import CourseKeyField
+
+from nau_openedx_extensions.edxapp_wrapper.email_module import EMAIL_TARGETS, Target
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class NauCourseMessage(models.Model):
             # split target, to handle cohort:cohort_name and track:mode_slug
             target_split = target.split(":", 1)
             # Ensure our desired target exists
-            if target_split[0] not in EMAIL_TARGETS:
+            if target_split[0] not in EMAIL_TARGETS:  # lint-amnesty, pylint: disable=no-else-raise
                 fmt = 'Course message being sent to unrecognized target: "{target}" for "{course}"'
                 msg = fmt.format(target=target, course=course_id)
                 log.info(msg)
@@ -58,5 +59,5 @@ class NauCourseMessage(models.Model):
 
         return course_message
 
-    def __unicode__(self):
+    def __str__(self):
         return "<Nau Course Message from course {} with id {}>".format(self.course_id, self.id)

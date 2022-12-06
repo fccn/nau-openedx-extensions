@@ -52,7 +52,7 @@ def update_context_with_custom_form(user, custom_model, context):
     finally:
         for (
             field
-        ) in custom_model_instance._meta.fields:  # pylint: disable=protected-access
+        ) in custom_model_instance._meta.fields:
 
             if isinstance(
                 field, (models.BooleanField, models.CharField, models.TextField)
@@ -283,9 +283,9 @@ def update_context_with_interpolated_strings(
         for key, value in six.iteritems(interpolated_strings):
             try:
                 # Also try to translate the string if defined in platform .po
-                formatted_string = _(value).format(
+                formatted_string = _(value).format( # lint-amnesty, pylint: disable=translation-of-non-string
                     **context
-                )  # pylint: disable=translation-of-non-string
+                )
             except (ValueError, AttributeError, KeyError):
                 log.error(
                     "Failed to add value (%s) as formatted string in the certificate context",
