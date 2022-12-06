@@ -19,12 +19,12 @@ class NauUserExtendedModel(models.Model):
     Used during user registration as a form extension.
     """
 
-    STUDENT='Student'
-    UNEMPLOYED='Unemployed'
-    PUBLIC_SERVICE_CONTRACT='Public service contract'
-    PRIVATE_INSTITUTION_CONTRACT='Private institution contract'
-    SELF_EMPLOYED='Self employed entrepreneur'
-    OTHER='Other'
+    STUDENT = 'Student'
+    UNEMPLOYED = 'Unemployed'
+    PUBLIC_SERVICE_CONTRACT = 'Public service contract'
+    PRIVATE_INSTITUTION_CONTRACT = 'Private institution contract'
+    SELF_EMPLOYED = 'Self employed entrepreneur'
+    OTHER = 'Other'
 
     EMPLOYMENT_SITUATION_CHOICES = [
         (STUDENT, _('Student')),
@@ -88,7 +88,9 @@ class NauUserExtendedModel(models.Model):
 # This feature requires that additional properties be configured on `STUDENT_FEATURES` list on file
 # lms/djangoapps/instructor_analytics/basic.py
 #
-# Dynamic add properties to the User model so they could be added to the `student_profile_download_fields` site configuration
+# Dynamic add properties to the User model so they could be added to the
+# `student_profile_download_fields` site configuration
+
 
 def get_nau_user_extended_model_cc_nic(self):
     """
@@ -97,7 +99,11 @@ def get_nau_user_extended_model_cc_nic(self):
     if hasattr(self, "nauuserextendedmodel"):
         return self.nauuserextendedmodel.cc_nic
     return None
-setattr(User, 'nau_user_extended_model_cc_nic', property(get_nau_user_extended_model_cc_nic))  # lint-amnesty, pylint: disable=literal-used-as-attribute
+
+
+# lint-amnesty, pylint: disable=literal-used-as-attribute
+setattr(User, 'nau_user_extended_model_cc_nic', property(get_nau_user_extended_model_cc_nic))
+
 
 def get_nau_nif(self):
     """
@@ -108,10 +114,16 @@ def get_nau_nif(self):
         cc_nif = self.nauuserextendedmodel.cc_nif
         return nif if nif else cc_nif
     return None
+
+
 setattr(User, 'nau_nif', property(get_nau_nif))  # lint-amnesty, pylint: disable=literal-used-as-attribute
+
 
 def get_nau_user_extended_model_employment_situation(self):
     if hasattr(self, "nauuserextendedmodel"):
         return self.nauuserextendedmodel.employment_situation
     return None
-setattr(User, 'nau_user_extended_model_employment_situation', property(get_nau_user_extended_model_employment_situation)) # lint-amnesty, pylint: disable=literal-used-as-attribute
+
+
+setattr(User, 'nau_user_extended_model_employment_situation', property(
+    get_nau_user_extended_model_employment_situation))

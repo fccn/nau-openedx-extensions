@@ -3,7 +3,6 @@ Extension of course access role admin screen with export to csv action
 """
 from django.contrib import admin
 
-#from common.djangoapps.student.admin import CourseAccessRoleAdmin
 from nau_openedx_extensions.utils.admin import ExportCsvMixin
 
 from .models import CourseAccessRoleProxy

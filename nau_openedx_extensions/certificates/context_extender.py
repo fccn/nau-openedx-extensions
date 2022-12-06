@@ -283,7 +283,7 @@ def update_context_with_interpolated_strings(
         for key, value in six.iteritems(interpolated_strings):
             try:
                 # Also try to translate the string if defined in platform .po
-                formatted_string = _(value).format( # lint-amnesty, pylint: disable=translation-of-non-string
+                formatted_string = _(value).format(  # lint-amnesty, pylint: disable=translation-of-non-string
                     **context
                 )
             except (ValueError, AttributeError, KeyError):
