@@ -10,7 +10,8 @@ from django.http import HttpResponse
 class ExportCsvMixin:
     """
     Generic mixin that has an admin action that exports its data to CSV
-    optionally the ModelAdmin instance can define a tuple "csv_export_fields" with specific fields or functions to export
+    optionally the ModelAdmin instance can define a tuple "csv_export_fields"
+    with specific fields or functions to export
     """
 
     def export_as_csv(self, request, queryset):
@@ -20,7 +21,7 @@ class ExportCsvMixin:
         opts = self.model._meta
         orm_fields = opts.get_fields()
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename={}.csv'.format(opts.verbose_name.replace(' ','_'))
+        response['Content-Disposition'] = 'attachment; filename={}.csv'.format(opts.verbose_name.replace(' ', '_'))
         writer = csv.writer(response)
 
         def transform_field(csv_field):
@@ -30,7 +31,8 @@ class ExportCsvMixin:
                         return field
             return csv_field
 
-        fields = list(map(transform_field, list(self.csv_export_fields)) if hasattr(self, 'csv_export_fields') else orm_fields)
+        fields = list(map(transform_field, list(self.csv_export_fields))
+                      if hasattr(self, 'csv_export_fields') else orm_fields)
 
         print(str(fields))
 

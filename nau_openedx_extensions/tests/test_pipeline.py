@@ -16,12 +16,10 @@ from nau_openedx_extensions.filters.pipeline import FilterEnrollmentByDomain
 class FilterEnrollmentByDomainTest(TestCase):
     """Test the FilterEnrollmentByDomain that prevent enrollment if the email domain is not allowed."""
 
-
     def setUp(self):
         self.course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
         self.user = MagicMock(email="example@example.com")
         self.mode = "audit"
-
 
     def test_user_is_allowed_to_enroll_for_allowed_domain(self, get_other_course_settings_mock, fnmatch_mock):
         """Test the filter when user has a domain that is allowed in the other course settings.
@@ -50,8 +48,8 @@ class FilterEnrollmentByDomainTest(TestCase):
         fnmatch_mock.assert_called_once_with(user_domain, f"*{allowed_domains_list[0]}")
         self.assertEqual(response, {})
 
-
-    def test_user_is_allowed_to_enroll_for_allowed_domain_with_subdomain(self, get_other_course_settings_mock, fnmatch_mock):
+    def test_user_is_allowed_to_enroll_for_allowed_domain_with_subdomain(
+            self, get_other_course_settings_mock, fnmatch_mock):
         """Test the filter when user has a subdomain that is allowed in the other course settings.
 
         Expected result:
@@ -59,7 +57,8 @@ class FilterEnrollmentByDomainTest(TestCase):
         - The filter returns {} that means that the user is allowed to enroll."""
 
         allowed_domains_list = ["example.com"]
-        get_other_course_settings_mock.return_value = {"value": {"filter_enrollment_by_domain_list": allowed_domains_list}}
+        get_other_course_settings_mock.return_value = {
+            "value": {"filter_enrollment_by_domain_list": allowed_domains_list}}
         user = MagicMock(email="example@subdomain.example.com")
         fnmatch_mock.return_value = True
         user_domain = user.email.split("@")[1]
@@ -68,7 +67,6 @@ class FilterEnrollmentByDomainTest(TestCase):
 
         fnmatch_mock.assert_called_once_with(user_domain, f"*{allowed_domains_list[0]}")
         self.assertEqual(response, {})
-
 
     def test_user_is_allowed_to_enroll_for_no_other_course_setting(self, get_other_course_settings_mock, fnmatch_mock):
         """Test the filter when the course dont have other course settings for filter_enrollment_by_domain_list.
@@ -84,7 +82,6 @@ class FilterEnrollmentByDomainTest(TestCase):
         fnmatch_mock.assert_not_called()
         self.assertEqual(response, {})
 
-
     def test_user_is_not_allowed_to_enroll(self, get_other_course_settings_mock, fnmatch_mock):
         """Test the filter when exists the other course settings with filter_enrollment_by_domain_list,
         but the user is not allowed to enroll because the domain is not in the settings.
@@ -95,7 +92,8 @@ class FilterEnrollmentByDomainTest(TestCase):
         """
 
         allowed_domains_list = ["test.com"]
-        get_other_course_settings_mock.return_value = {"value": {"filter_enrollment_by_domain_list": allowed_domains_list}}
+        get_other_course_settings_mock.return_value = {
+            "value": {"filter_enrollment_by_domain_list": allowed_domains_list}}
         fnmatch_mock.return_value = False
         user_domain = self.user.email.split("@")[1]
 

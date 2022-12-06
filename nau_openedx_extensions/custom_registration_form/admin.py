@@ -7,6 +7,7 @@ from django.contrib import admin
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
 from nau_openedx_extensions.utils.admin import ExportCsvMixin
 
+
 @admin.register(NauUserExtendedModel)
 class NauUserExtendedModelAdmin(admin.ModelAdmin, ExportCsvMixin):
     """
@@ -29,10 +30,11 @@ class NauUserExtendedModelAdmin(admin.ModelAdmin, ExportCsvMixin):
     list_display = ("openedx_username", "openedx_email", "date_joined")
 
     # use this user date_joined field has an hierarchy to the user can search the last registries more rapid.
-    date_hierarchy= "user__date_joined"
+    date_hierarchy = "user__date_joined"
 
     # limit the fields that are exported to CSV to prevent export a CSV with information too personal like NIC
-    csv_export_fields = ("user", "openedx_email", "data_authorization", "employment_situation", "allow_newsletter", "date_joined",)
+    csv_export_fields = ("user", "openedx_email", "data_authorization",
+                         "employment_situation", "allow_newsletter", "date_joined",)
 
     # Add a new action to combo box that permit to export to csv the selected rows
     actions = ["export_as_csv"]
