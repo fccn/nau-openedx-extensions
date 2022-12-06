@@ -31,11 +31,12 @@ def get_fields(custom_model_instance):
             yield field
 
 
-def update_account_view(context, user, **kwargs):  # pylint: disable=unused-argument
+def update_account_view(context, user, **kwargs):
     """
     Updates the context from the student account view
     """
     extended_profile_fields = []
+    custom_model_instance = None
     try:
         custom_model_instance = NauUserExtendedModel.objects.get(user=user)
     except ObjectDoesNotExist:
@@ -55,10 +56,11 @@ def update_account_view(context, user, **kwargs):  # pylint: disable=unused-argu
     context["extended_profile_fields"].extend(extended_profile_fields)
 
 
-def update_account_serializer(data, user, **kwargs):  # pylint: disable=unused-argument
+def update_account_serializer(data, user, **kwargs):
     """
     Updates the data from the student account serializer
     """
+    custom_model_instance = None
     try:
         custom_model_instance = NauUserExtendedModel.objects.get(user=user)
     except ObjectDoesNotExist:
@@ -80,11 +82,12 @@ def update_account_serializer(data, user, **kwargs):  # pylint: disable=unused-a
         data["extended_profile"] = extended_profile
 
 
-def partial_update(update, user, **kwargs):  # pylint: disable=unused-argument
+def partial_update(update, user, **kwargs):
     """
     Saves the data from the student account when something changes
     """
     if "extended_profile" in update:
+        custom_model_instance = None
         try:
             custom_model_instance = NauUserExtendedModel.objects.get(user=user)
         except ObjectDoesNotExist:

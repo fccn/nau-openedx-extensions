@@ -5,9 +5,9 @@ from __future__ import absolute_import, unicode_literals
 
 import logging
 
-from celery import task
+from celery import task  # lint-amnesty, pylint: disable=import-error
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
 from opaque_keys.edx.keys import CourseKey
 
 from nau_openedx_extensions.message_gateway.backends import get_backend
@@ -90,7 +90,7 @@ def submit_course_message(message_id, recipients):
     """
     try:
         message = NauCourseMessage.objects.get(id=message_id)
-    except NauCourseMessage.DoesNotExist:
+    except NauCourseMessage.DoesNotExist:  # lint-amnesty, pylint: disable=try-except-raise
         raise
 
     backend = get_backend()

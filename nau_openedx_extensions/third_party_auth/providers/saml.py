@@ -29,7 +29,7 @@ class NauEdXSAMLIdentityProvider(EdXSAMLIdentityProvider):
         the corresponding SAML backend. A valid 'field_mapping_rules' must be defined
         in order to fully support custom field defintions.
         """
-        details = super(NauEdXSAMLIdentityProvider, self).get_user_details(attributes)
+        details = super().get_user_details(attributes)
         field_mapping_rules = self.conf.get("field_mapping_rules", [])
         try:
             details.update(
@@ -49,7 +49,7 @@ class NauEdXSAMLIdentityProvider(EdXSAMLIdentityProvider):
         return details
 
 
-def get_extended_saml_idp_choices(*args, **kwargs):  # pylint: disable=unused-argument
+def get_extended_saml_idp_choices(*args, **kwargs):
     """
     Returns a tuple with custom SAML idp choices. If an exception
     ocurs, it returns only the valid choices.
@@ -64,7 +64,7 @@ def get_extended_saml_idp_choices(*args, **kwargs):  # pylint: disable=unused-ar
     return kwargs["choices"]
 
 
-def extend_saml_idp_classes(*args, **kwargs):  # pylint: disable=unused-argument
+def extend_saml_idp_classes(*args, **kwargs):
     """
     Return a dict containing SAML valid idps classes
     """
@@ -84,7 +84,7 @@ def extend_saml_idp_classes(*args, **kwargs):  # pylint: disable=unused-argument
     return kwargs["choices"]
 
 
-def _apply_saml_overrides(*args, **kwargs):  # pylint: disable=unused-argument
+def _apply_saml_overrides(*args, **kwargs):
     """
     Applies custom saml override rules for custom
     registration forms

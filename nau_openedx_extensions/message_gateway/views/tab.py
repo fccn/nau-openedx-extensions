@@ -107,12 +107,10 @@ class NauMessageGatewayTabView(CourseTabView):
                 course_id,
             )
             raise Http404()
-        return super(NauMessageGatewayTabView, self).get(
-            request, course_id, "message_gw", **kwargs
-        )
+        return super().get(request, course_id, "message_gw", **kwargs)
 
     def render_to_fragment(
-        self, request, course=None, tab=None, page_context=None, **kwargs
+        self, request, course=None, tab=None, page_context=None, **kwargs  # pylint: disable=unused-argument
     ):
         """
         Fragment for this tab.

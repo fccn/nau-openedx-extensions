@@ -30,7 +30,7 @@ class NauUserExtendedModelAdmin(admin.ModelAdmin, ExportCsvMixin):
 
     # use this user date_joined field has an hierarchy to the user can search the last registries more rapid.
     date_hierarchy= "user__date_joined"
-    
+
     # limit the fields that are exported to CSV to prevent export a CSV with information too personal like NIC
     csv_export_fields = ("user", "openedx_email", "data_authorization", "employment_situation", "allow_newsletter", "date_joined",)
 
@@ -56,4 +56,3 @@ class NauUserExtendedModelAdmin(admin.ModelAdmin, ExportCsvMixin):
             return instance.user.username
         except Exception as error:
             return str(error)
-

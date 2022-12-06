@@ -1,3 +1,4 @@
+# pylint: disable=django-not-configured
 """
 Init for main nau openedx extensions app
 """

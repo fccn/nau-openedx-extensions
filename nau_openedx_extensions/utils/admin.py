@@ -2,15 +2,21 @@
 NAU admin extension
 """
 import csv
-from django.http import HttpResponse
 import datetime
+
+from django.http import HttpResponse
+
 
 class ExportCsvMixin:
     """
     Generic mixin that has an admin action that exports its data to CSV
     optionally the ModelAdmin instance can define a tuple "csv_export_fields" with specific fields or functions to export
     """
+
     def export_as_csv(self, request, queryset):
+        """
+        Export as csv file.
+        """
         opts = self.model._meta
         orm_fields = opts.get_fields()
         response = HttpResponse(content_type='text/csv')

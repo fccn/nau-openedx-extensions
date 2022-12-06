@@ -2,7 +2,7 @@
 Tests for the pipeline module used in nau_openex_extensions
 """
 
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from django.test import TestCase
 from opaque_keys.edx.keys import CourseKey

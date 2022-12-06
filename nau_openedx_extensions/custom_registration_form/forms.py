@@ -14,7 +14,7 @@ class NauUserExtendedForm(ModelForm):
     This form extends the user registration form
     """
 
-    class Meta(object):
+    class Meta:
         model = NauUserExtendedModel
         fields = [
             "data_authorization",
@@ -33,7 +33,7 @@ class NauUserExtendedForm(ModelForm):
         ]
 
     def __init__(self, *args, **kwargs):
-        super(NauUserExtendedForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields["data_authorization"].error_messages = {
             "required": _("Please authorize data processing")
         }

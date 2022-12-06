@@ -12,7 +12,7 @@ def get_other_course_settings(course_id):
     try:
         course = modulestore().get_course(course_id)
         other_course_settings = CourseMetadata.fetch_all(course).get('other_course_settings', {})
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         other_course_settings = {}
         log.error(f'Error fetching other_course_settings for {e}')
 
