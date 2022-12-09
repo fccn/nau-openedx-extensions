@@ -1,18 +1,20 @@
 """
 Script that adds a course message for the archived courses.
 """
-import json
 import datetime
+import json
 import logging
 
-from django.utils.translation import ugettext as _
-from django.utils import translation
-from common.djangoapps.status.models import CourseMessage, GlobalStatusMessage
+from common.djangoapps.status.models import (  # lint-amnesty, pylint: disable=import-error
+    CourseMessage,
+    GlobalStatusMessage,
+)
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.utils import timezone
+from django.utils import timezone, translation
+from django.utils.translation import ugettext as _
 from opaque_keys.edx.keys import CourseKey
-from xmodule.modulestore.django import modulestore
+from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=import-error
 
 log = logging.getLogger(__name__)
 
@@ -104,12 +106,13 @@ class Command(BaseCommand):
 
         default_message = None
         with translation.override(course.language):
-            default_message = _("This is an archived course and no longer allows "
-            "executing activities to obtain a certificate.")
+            default_message = _(
+                "This is an archived course and no longer allows executing activities to obtain a certificate.")
         if not default_message:
             with translation.override(settings.LANGUAGE_CODE):
-                default_message = _("This is an archived course and no longer allows "
-                "executing activities to obtain a certificate.")
+                default_message = _(
+                    "This is an archived course and no longer allows executing activities to obtain a certificate."
+                )
 
         new_message = messages.get(course.language, default_message)
         if new_message != cm.message:
