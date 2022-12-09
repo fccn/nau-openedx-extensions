@@ -11,7 +11,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.translation import ugettext as _
 
-from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
 from nau_openedx_extensions.edxapp_wrapper.grades import get_course_grades
 
 log = logging.getLogger(__name__)
@@ -23,6 +22,11 @@ def update_cert_context(context, user, course, **kwargs):
     the course context
     """
     nau_cert_settings = course.cert_html_view_overrides.get("nau_certs_settings")
+
+    # Need hear the import to facilitate the tests.
+    from nau_openedx_extensions.custom_registration_form.models import (  # pylint: disable=import-outside-toplevel
+        NauUserExtendedModel,
+    )
 
     update_context_with_custom_form(user, NauUserExtendedModel, context)
     if nau_cert_settings:
