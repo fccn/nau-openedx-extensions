@@ -11,8 +11,10 @@ jobs:
   create-virtualenv:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
     - uses: syphar/restore-virtualenv@v1
       id: cache-virtualenv
 
@@ -22,24 +24,29 @@ jobs:
     - run: pip install -r requirements/test.txt
       if: steps.cache-virtualenv.outputs.cache-hit != 'true'
 
-  linter:
+  test:
     needs: create-virtualenv
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
     - uses: syphar/restore-virtualenv@v1
       id: cache-virtualenv
 
-    - run: make quality
+    - run: make test
 
-  tests:
+  lint:
     needs: create-virtualenv
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
     - uses: syphar/restore-virtualenv@v1
       id: cache-virtualenv
 
-    - run: make python-test
+    - run: make lint
+
