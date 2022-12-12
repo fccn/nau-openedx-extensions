@@ -12,17 +12,29 @@ NAU Open edX extensions is a [django app plugin](https://github.com/edx/edx-plat
 
 ## Tests
 
-```
+To run the python tests execute:
+
+```bash
 virtualenv venv --python=python3.8
 . venv/bin/activate
-make python-test
+make test
+```
+
+## Lint
+
+To run the linters to check code quality.
+
+```bash
+virtualenv venv --python=python3.8
+. venv/bin/activate
+make lint
 ```
 
 ## Translations
 
 Run the translations target on a virtual environment.
 
-```
+```bash
 virtualenv --python=python3 venv
 . venv/bin/activate
 ```
