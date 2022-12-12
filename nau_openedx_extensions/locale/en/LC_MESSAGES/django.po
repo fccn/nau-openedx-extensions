@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2022-12-06 18:48+0000\n"
+"POT-Creation-Date: 2022-12-12 13:13+0000\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -22,85 +22,85 @@ msgstr ""
 msgid "Please authorize data processing"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:29
+#: nau_openedx_extensions/custom_registration_form/models.py:30
 msgid "Student"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:30
+#: nau_openedx_extensions/custom_registration_form/models.py:31
 msgid "Unemployed"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:31
+#: nau_openedx_extensions/custom_registration_form/models.py:32
 msgid "Public service contract"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:32
+#: nau_openedx_extensions/custom_registration_form/models.py:33
 msgid "Private institution contract"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:33
+#: nau_openedx_extensions/custom_registration_form/models.py:34
 msgid "Self employed entrepreneur"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:34
+#: nau_openedx_extensions/custom_registration_form/models.py:35
 msgid "Other"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:39
+#: nau_openedx_extensions/custom_registration_form/models.py:40
 msgid "I authorize data processing for this site "
 msgstr ""
 "I authorize data to be processed according to terms of service and "
 "privacy policy"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:42
+#: nau_openedx_extensions/custom_registration_form/models.py:43
 msgid "NIF"
 msgstr "NIF - Portuguese VAT identification number"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:45
+#: nau_openedx_extensions/custom_registration_form/models.py:46
 msgid "CC NIF"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:48
+#: nau_openedx_extensions/custom_registration_form/models.py:49
 msgid "CC NIC"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:51
+#: nau_openedx_extensions/custom_registration_form/models.py:52
 msgid "CC NIC Check Digit"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:54
+#: nau_openedx_extensions/custom_registration_form/models.py:55
 msgid "CC First name"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:56
+#: nau_openedx_extensions/custom_registration_form/models.py:57
 msgid "CC Last name"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:58
+#: nau_openedx_extensions/custom_registration_form/models.py:59
 msgid "CC Nacionality"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:61
+#: nau_openedx_extensions/custom_registration_form/models.py:62
 msgid "CC Zip code 3 digits"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:64
+#: nau_openedx_extensions/custom_registration_form/models.py:65
 msgid "CC Zip code 4 digits"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:67
+#: nau_openedx_extensions/custom_registration_form/models.py:68
 msgid "CC Document number"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:70
+#: nau_openedx_extensions/custom_registration_form/models.py:71
 msgid "CC Birth date"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:73
+#: nau_openedx_extensions/custom_registration_form/models.py:74
 msgid "Employment situation"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:76
+#: nau_openedx_extensions/custom_registration_form/models.py:77
 msgid "Allow newsletter"
 msgstr ""
 "I agree to receive information regarding the courses offered by NAU, as "
@@ -113,11 +113,11 @@ msgid ""
 "support"
 msgstr ""
 
-#: nau_openedx_extensions/management/commands/add_archived_course_message.py:106
-#: nau_openedx_extensions/management/commands/add_archived_course_message.py:110
+#: nau_openedx_extensions/management/commands/add_archived_course_message.py:109
+#: nau_openedx_extensions/management/commands/add_archived_course_message.py:113
 msgid ""
-"This is an archived course and no longer allows executing activities to "
-"obtain a certificate."
+"This is an archived course and no longer allows activities to be carried "
+"out in order to obtain a certificate."
 msgstr ""
 
 #: nau_openedx_extensions/templates/message_gateway/tab.html:15

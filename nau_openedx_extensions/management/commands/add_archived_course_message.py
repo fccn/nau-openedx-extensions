@@ -107,11 +107,13 @@ class Command(BaseCommand):
         default_message = None
         with translation.override(course.language):
             default_message = _(
-                "This is an archived course and no longer allows executing activities to obtain a certificate.")
+                "This is an archived course and no longer allows activities to be carried "
+                "out in order to obtain a certificate.")
         if not default_message:
             with translation.override(settings.LANGUAGE_CODE):
                 default_message = _(
-                    "This is an archived course and no longer allows executing activities to obtain a certificate."
+                    "This is an archived course and no longer allows activities to be carried "
+                    "out in order to obtain a certificate."
                 )
 
         new_message = messages.get(course.language, default_message)
