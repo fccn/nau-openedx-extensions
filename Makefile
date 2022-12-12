@@ -5,7 +5,7 @@
 ###############################################
 
 .DEFAULT_GOAL := help
-.PHONY: requirements
+.PHONY: help
 
 ifdef TOXENV
 TOX := tox -- #to isolate each tox environment if TOXENV is defined
@@ -21,6 +21,15 @@ clean: ## delete most git-ignored files
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
+	rm -rf venv +
+
+virtual_environment:
+	test -d venv || virtualenv venv --python=python3
+	. venv/bin/activate && python -m pip install -Ur requirements/base.txt
+	. venv/bin/activate && python -m pip install -Ur requirements/translations.txt
+	touch venv/touchfile
+	@echo "Run on your shell to activate the new virtual environment:"
+	@echo "  . venv/bin/activate"
 
 requirements: ## install environment requirements
 	pip install -r requirements/base.txt
@@ -65,10 +74,20 @@ create_translations_catalogs: | requirements_translations ## Create the initial 
         pybabel init -i conf/locale/django.pot -D django -d conf/locale/ -l $$lang ; \
     done
 
-update_translations: | requirements_translations ## update strings to be translated
+extract_translations:
 	pybabel extract -F conf/locale/babel.cfg -o conf/locale/django.pot nau_openedx_extensions
+
+update_translations_po_files:
 	pybabel update -N -D django -i conf/locale/django.pot -d conf/locale/
+
+clean_translations_intermediate:
 	rm conf/locale/django.pot
 
-compile_translations: | requirements_translations ## compile .mo files into .po files
+update_translations: | extract_translations update_translations_po_files clean_translations_intermediate compile_translations ## update strings to be translated
+
+compile_translations:
 	pybabel compile -f -D django -d conf/locale/
+
+check_miss_run_update_translations: | extract_translations update_translations_po_files clean_translations_intermediate ## Check if `make update_translations` should be run
+	git diff --numstat *.po | awk '{if ($$1>1 || $$2>1) { exit 1 } else { exit 0 }}'
+	@echo "OK"

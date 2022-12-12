@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2022-12-12 13:13+0000\n"
+"POT-Creation-Date: 2022-12-12 13:43+0000\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -114,7 +114,7 @@ msgid ""
 msgstr ""
 
 #: nau_openedx_extensions/management/commands/add_archived_course_message.py:109
-#: nau_openedx_extensions/management/commands/add_archived_course_message.py:113
+#: nau_openedx_extensions/management/commands/add_archived_course_message.py:114
 msgid ""
 "This is an archived course and no longer allows activities to be carried "
 "out in order to obtain a certificate."

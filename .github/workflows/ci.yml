@@ -24,6 +24,9 @@ jobs:
     - run: pip install -r requirements/test.txt
       if: steps.cache-virtualenv.outputs.cache-hit != 'true'
 
+    - run: pip install -r requirements/translations.txt
+      if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+
   test:
     needs: create-virtualenv
     runs-on: ubuntu-latest
@@ -50,3 +53,15 @@ jobs:
 
     - run: make lint
 
+  check_miss_run_update_translations:
+    needs: create-virtualenv
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+    - uses: syphar/restore-virtualenv@v1
+      id: cache-virtualenv
+
+    - run: make check_miss_run_update_translations
