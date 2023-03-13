@@ -30,12 +30,12 @@ class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public
     def run_filter(self, user, course_key, mode):   # pylint: disable=unused-argument, arguments-differ
         """Filter."""
 
-        user_domain = user.email.split("@")[1]
+        user_domain = user.email.split("@")[1].lower()
         other_course_settings = get_other_course_settings(course_key)
         domains_allowed = other_course_settings.get("value", {}).get("filter_enrollment_by_domain_list", [])
         allowed = False
         for domain in domains_allowed:
-            if fnmatch(user_domain, f"*{domain}"):
+            if user_domain == domain or fnmatch(user_domain, f"*.{domain}"):
                 allowed = True
                 break
         if domains_allowed and not allowed:
