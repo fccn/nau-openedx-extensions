@@ -31,6 +31,11 @@ class NauOpenEdxConfig(AppConfig):
                 "production": {"relative_path": "settings.production"},
             },
         },
+        "view_context_config": {
+            "lms.djangoapp":  {
+                "course_dashboard": "nau_openedx_extensions.multi_dashboard.context_processor.get_multi_dashboard_context"
+            },
+        },
     }
 
     def ready(self):
