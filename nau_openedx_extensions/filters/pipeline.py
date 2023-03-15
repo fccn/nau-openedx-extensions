@@ -39,6 +39,11 @@ class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public
                 allowed = True
                 break
         if domains_allowed and not allowed:
-            raise CourseEnrollmentStarted.PreventEnrollment(_("You can't enroll on this course because your email\
-                 domain is not allowed. If you think this is an error, contact the course support"))
+            custom_message = other_course_settings.get("value", {}).get(
+                "filter_enrollment_by_domain_custom_exception_message",
+                _("If you think this is an error, contact the course support."))
+            exception_msg = _("You can't enroll on this course because your email domain is not allowed. "
+                              "%(custom_message)s") % {
+                'custom_message': custom_message}
+            raise CourseEnrollmentStarted.PreventEnrollment(exception_msg)
         return {}
