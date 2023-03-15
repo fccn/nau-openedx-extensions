@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2022-12-12 13:43+0000\n"
+"POT-Creation-Date: 2023-03-15 22:15+0000\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -106,11 +106,15 @@ msgstr ""
 "I agree to receive information regarding the courses offered by NAU, as "
 "well as news associated with NAU, through email marketing and newsletter."
 
-#: nau_openedx_extensions/filters/pipeline.py:42
+#: nau_openedx_extensions/filters/pipeline.py:44
+msgid "If you think this is an error, contact the course support."
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:45
+#, python-format
 msgid ""
-"You can't enroll on this course because your email                 domain"
-" is not allowed. If you think this is an error, contact the course "
-"support"
+"You can't enroll on this course because your email domain is not allowed."
+" %(custom_message)s"
 msgstr ""
 
 #: nau_openedx_extensions/management/commands/add_archived_course_message.py:109

@@ -23,7 +23,7 @@ clean: ## delete most git-ignored files
 	find . -name '*~' -exec rm -f {} +
 	rm -rf venv +
 
-virtual_environment:
+virtual_environment: ## create virtual environment
 	test -d venv || virtualenv venv --python=python3
 	. venv/bin/activate && python -m pip install -Ur requirements/base.txt
 	. venv/bin/activate && python -m pip install -Ur requirements/translations.txt
