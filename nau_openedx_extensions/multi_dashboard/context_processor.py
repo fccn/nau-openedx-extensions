@@ -1,5 +1,13 @@
-from common.djangoapps.student.views.dashboard import get_course_enrollments
-from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
+"""
+Shared multi organization LMS dashboard. It allows to adds an other sites enrollment section in
+the dashboard, so the user can find other courses that he is already enrolled more easy.
+"""
+
+from common.djangoapps.student.views.dashboard import get_course_enrollments  # pylint: disable=import-error
+from common.djangoapps.student.views.dashboard import get_dashboard_course_limit  # pylint: disable=import-error
+from django.conf import settings
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers  # pylint: disable=import-error
+from organizations.api import get_organizations  # pylint: disable=import-error
 
 
 def get_multi_dashboard_context(existing_context, *args, **kwargs):
@@ -11,23 +19,39 @@ def get_multi_dashboard_context(existing_context, *args, **kwargs):
     Returns:
         dictionary of lists: dictionary with one enrollments
             dict["other_sites_enrollments"] = list of enrollment objects.
-            dict["lms_root_urls"] = dict with course_ids as keys and the LMS_ROOT of the site,
+            dict["lms_root_urls"] = dict with course_ids as keys and the LMS_ROOT_URL of the site,
                                     who's orgs_site_filter matches the course's .org.
-    """
+    """  # noqa
     additional_context = {}
     user = existing_context["user"]
 
-    org_blacklist = configuration_helpers.get_current_site_orgs()
-    org_whitelist = configuration_helpers.get_value('other_sites_orgs', [])
+    current_site_orgs = configuration_helpers.get_current_site_orgs()
+    orgs_with_site = configuration_helpers.get_all_orgs()
+    all_orgs = [(org["short_name"]) for org in get_organizations()]
 
-    other_sites_enrollments = list(get_course_enrollments(user, org_whitelist, org_blacklist))
+    if current_site_orgs:
+        org_whitelist = all_orgs
+        org_blacklist = current_site_orgs
+    else:
+        # primary site show by default all courses from all orgs without a site
+        # so we show all courses from orgs with site and black list all courses
+        # from orgs without a site.
+        org_whitelist = orgs_with_site
+        orgs_without_site = []
+        for org in all_orgs:
+            if org not in orgs_with_site:
+                orgs_without_site.append(org)
+        org_blacklist = orgs_without_site
+
+    other_sites_enrollments = list(get_course_enrollments(
+        user, org_whitelist, org_blacklist, get_dashboard_course_limit()))
 
     additional_context['other_sites_enrollments'] = other_sites_enrollments
 
     lms_root_urls = {}
-    for index, enrollment in enumerate(other_sites_enrollments):
+    for enrollment in other_sites_enrollments:
         lms_root_urls[enrollment.course_id] = configuration_helpers.get_value_for_org(
-            "enrollment.course.org", "LMS_ROOT"
+            enrollment.course.org, "LMS_ROOT_URL", settings.LMS_ROOT_URL
         )
 
     additional_context['lms_root_urls'] = lms_root_urls
