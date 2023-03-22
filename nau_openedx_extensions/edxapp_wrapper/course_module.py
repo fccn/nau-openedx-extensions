@@ -11,3 +11,11 @@ def get_other_course_settings(*args, **kwargs):
     backend = import_module(backend_module)
 
     return backend.get_other_course_settings(*args, **kwargs)
+
+
+def get_course_name(*args, **kwargs):
+    """ Get course name """
+    backend_module = settings.NAU_COURSE_MODULE
+    backend = import_module(backend_module)
+
+    return backend.get_course_name(*args, **kwargs)
