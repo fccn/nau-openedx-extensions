@@ -8,7 +8,7 @@ from django.test import TestCase
 from opaque_keys.edx.keys import CourseKey
 from openedx_filters.learning.filters import CourseEnrollmentStarted
 
-from nau_openedx_extensions.filters.pipeline import FilterEnrollmentByDomain
+from nau_openedx_extensions.filters.pipeline import FilterEnrollmentByDomain, FilterEnrollmentRequireUserActive
 
 
 @patch('nau_openedx_extensions.filters.pipeline.fnmatch')
@@ -119,3 +119,108 @@ class FilterEnrollmentByDomainTest(TestCase):
         with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment):
             FilterEnrollmentByDomain.run_filter(self, self.user, self.course_key, self.mode)
             fnmatch_mock.assert_called_once_with(user_domain, f"*.{allowed_domains_list[0]}")
+
+
+@patch('nau_openedx_extensions.filters.pipeline.get_course_name')
+@patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+class FilterEnrollmentRequireUserActiveTest(TestCase):
+    """Test the FilterEnrollmentRequireUserActive that prevent enrollment if user hasn't activate its email."""
+
+    def test_require_user_to_activate_account_for_enrollment_course_require_user_active(
+            self, get_other_course_settings_mock, get_course_name_mock):
+        """
+        Test the filter when the course has a configuration in the other course settings
+        that requires the user to activate its account to enroll in the course .
+        """
+        course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
+        user = MagicMock(email="example@example.com", is_active=True)
+        mode = "audit"
+
+        get_other_course_settings_mock.return_value = {
+            "value": {"filter_enrollment_require_user_active": True}}
+        get_course_name_mock.return_value = "Demo Course"
+        response = FilterEnrollmentRequireUserActive.run_filter(self, user, course_key, mode)
+        get_course_name_mock.assert_not_called()
+        self.assertEqual(response, {})
+
+    def test_require_user_to_activate_account_for_enrollment_course_require_user_inactive(
+            self, get_other_course_settings_mock, get_course_name_mock):
+        """
+        Test the filter when the course has a configuration in the other course settings
+        that requires the user to activate its account to enroll in the course .
+        """
+        course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
+        user = MagicMock(email="example@example.com", is_active=False)
+        mode = "audit"
+
+        get_other_course_settings_mock.return_value = {
+            "value": {"filter_enrollment_require_user_active": True}}
+        get_course_name_mock.return_value = "Demo Course"
+        with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment):
+            FilterEnrollmentRequireUserActive.run_filter(self, user, course_key, mode)
+            get_course_name_mock.assert_called_once()
+
+    def test_require_user_to_activate_account_for_enrollment_course_not_require_user_active(
+            self, get_other_course_settings_mock, get_course_name_mock):
+        """
+        Test the filter when the course has a configuration in the other course settings
+        that not requires the user to activate its account to enroll in the course.
+        """
+        course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
+        user = MagicMock(email="example@example.com", is_active=True)
+        mode = "audit"
+
+        get_other_course_settings_mock.return_value = {"value": {"filter_enrollment_require_user_active": False}}
+        get_course_name_mock.return_value = "Demo Course"
+        response = FilterEnrollmentRequireUserActive.run_filter(self, user, course_key, mode)
+        get_course_name_mock.assert_not_called()
+        self.assertEqual(response, {})
+
+    def test_require_user_to_activate_account_for_enrollment_course_not_require_user_inactive(
+            self, get_other_course_settings_mock, get_course_name_mock):
+        """
+        Test the filter when the course has a configuration in the other course settings
+        that not requires the user to activate its account to enroll in the course.
+        """
+        course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
+        user = MagicMock(email="example@example.com", is_active=False)
+        mode = "audit"
+
+        get_other_course_settings_mock.return_value = {
+            "value": {"filter_enrollment_require_user_active": False}}
+        get_course_name_mock.return_value = "Demo Course"
+        response = FilterEnrollmentRequireUserActive.run_filter(self, user, course_key, mode)
+        get_course_name_mock.assert_not_called()
+        self.assertEqual(response, {})
+
+    def test_require_user_to_activate_account_for_enrollment_course_no_config_user_active(
+            self, get_other_course_settings_mock, get_course_name_mock):
+        """
+        Test the filter when the course hasn't a configuration in the other course settings
+        and the user has an activated account.
+        """
+        course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
+        user = MagicMock(email="example@example.com", is_active=True)
+        mode = "audit"
+
+        get_other_course_settings_mock.return_value = {"value": {}}
+        get_course_name_mock.return_value = "Demo Course"
+        response = FilterEnrollmentRequireUserActive.run_filter(self, user, course_key, mode)
+        get_course_name_mock.assert_not_called()
+        self.assertEqual(response, {})
+
+    def test_require_user_to_activate_account_for_enrollment_course_no_config_user_inactive(
+            self, get_other_course_settings_mock, get_course_name_mock):
+        """
+        Test the filter when the course has a configuration in the other course settings
+        and the user hasn't an activated account.
+        """
+        course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
+        user = MagicMock(email="example@example.com", is_active=False)
+        mode = "audit"
+
+        get_other_course_settings_mock.return_value = {"value": {}}
+        get_course_name_mock.return_value = "Demo Course"
+        response = FilterEnrollmentRequireUserActive.run_filter(self, user, course_key, mode)
+        get_course_name_mock.assert_not_called()
+        self.assertEqual(response, {})

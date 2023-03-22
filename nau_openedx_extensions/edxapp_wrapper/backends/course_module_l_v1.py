@@ -17,3 +17,12 @@ def get_other_course_settings(course_id):
         log.error(f'Error fetching other_course_settings for {e}')
 
     return other_course_settings
+
+def get_course_name(course_id):
+    """Get the course name."""
+    try:
+        course = modulestore().get_course(course_id)
+        return course.display_name_with_default
+    except Exception as e:  # pylint: disable=broad-except
+        log.error(f'Error fetching course {course_id} for {e}')
+        return ""
