@@ -5,6 +5,7 @@ Tests for the pipeline module used in nau_openex_extensions
 from unittest.mock import MagicMock, Mock, patch
 
 from django.test import TestCase
+from django.test.utils import override_settings
 from opaque_keys.edx.keys import CourseKey
 from openedx_filters.learning.filters import CourseEnrollmentStarted
 
@@ -14,7 +15,9 @@ from nau_openedx_extensions.filters.pipeline import FilterEnrollmentByDomain, Fi
 @patch('nau_openedx_extensions.filters.pipeline.fnmatch')
 @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
 class FilterEnrollmentByDomainTest(TestCase):
-    """Test the FilterEnrollmentByDomain that prevent enrollment if the email domain is not allowed."""
+    """
+    Test the FilterEnrollmentByDomain that prevent enrollment if the email domain is not allowed.
+    """
 
     def setUp(self):
         self.course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
@@ -22,15 +25,16 @@ class FilterEnrollmentByDomainTest(TestCase):
         self.mode = "audit"
 
     def test_user_is_allowed_to_enroll_for_allowed_domain(self, get_other_course_settings_mock, fnmatch_mock):
-        """Test the filter when user has a domain that is allowed in the other course settings.
+        """
+        Test the filter when user has a domain that is allowed in the other course settings.
 
         Expected result:
         - The get other course settings is called once with the course key.
         - The other_course_settings.get is called once with value and {}
         - The other_course_settings.get calls get with filter_enrollment_by_domain_list and []
         - The function fnmatch is called with a user_domain and a domain
-        - The filter returns {} that means that the user is allowed to enroll."""
-
+        - The filter returns {} that means that the user is allowed to enroll.
+        """
         allowed_domains_list = ["example.com"]
         other_course_settings = Mock()
         get_other_course_settings_mock.return_value = other_course_settings
@@ -49,12 +53,13 @@ class FilterEnrollmentByDomainTest(TestCase):
 
     def test_user_is_allowed_to_enroll_for_allowed_domain_with_subdomain(
             self, get_other_course_settings_mock, fnmatch_mock):
-        """Test the filter when user has a subdomain that is allowed in the other course settings.
+        """
+        Test the filter when user has a subdomain that is allowed in the other course settings.
 
         Expected result:
         - The fnmatch is called with the all subdomain and a domain
-        - The filter returns {} that means that the user is allowed to enroll."""
-
+        - The filter returns {} that means that the user is allowed to enroll.
+        """
         allowed_domains_list = ["example.com"]
         get_other_course_settings_mock.return_value = {
             "value": {"filter_enrollment_by_domain_list": allowed_domains_list}}
@@ -82,7 +87,8 @@ class FilterEnrollmentByDomainTest(TestCase):
         self.assertEqual(response, {})
 
     def test_user_is_not_allowed_to_enroll(self, get_other_course_settings_mock, fnmatch_mock):
-        """Test the filter when exists the other course settings with filter_enrollment_by_domain_list,
+        """
+        Test the filter when exists the other course settings with filter_enrollment_by_domain_list,
         but the user is not allowed to enroll because the domain is not in the settings.
 
         Expected result:
@@ -101,7 +107,8 @@ class FilterEnrollmentByDomainTest(TestCase):
             fnmatch_mock.assert_called_once_with(user_domain, f"*.{allowed_domains_list[0]}")
 
     def test_user_is_not_allowed_to_enroll_similar_email(self, get_other_course_settings_mock, fnmatch_mock):
-        """Test the filter when exists the other course settings with filter_enrollment_by_domain_list,
+        """
+        Test the filter when exists the other course settings with filter_enrollment_by_domain_list,
         but the user is not allowed to enroll because the domain is not in the settings.
         Check it won't match for very similar domains, but it isn't a subdomain.
 
@@ -143,6 +150,7 @@ class FilterEnrollmentRequireUserActiveTest(TestCase):
         get_course_name_mock.assert_not_called()
         self.assertEqual(response, {})
 
+    @override_settings(PLATFORM_NAME='NAU')
     def test_require_user_to_activate_account_for_enrollment_course_require_user_inactive(
             self, get_other_course_settings_mock, get_course_name_mock):
         """
@@ -156,9 +164,13 @@ class FilterEnrollmentRequireUserActiveTest(TestCase):
         get_other_course_settings_mock.return_value = {
             "value": {"filter_enrollment_require_user_active": True}}
         get_course_name_mock.return_value = "Demo Course"
-        with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment):
+        with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment) as pe:
             FilterEnrollmentRequireUserActive.run_filter(self, user, course_key, mode)
             get_course_name_mock.assert_called_once()
+        self.assertEqual(pe.exception.message, (
+            "You need to activate your account before you can enroll in the course. "
+            "Check your example@example.com inbox for an account activation link from NAU."
+        ))
 
     def test_require_user_to_activate_account_for_enrollment_course_not_require_user_active(
             self, get_other_course_settings_mock, get_course_name_mock):
@@ -166,6 +178,7 @@ class FilterEnrollmentRequireUserActiveTest(TestCase):
         Test the filter when the course has a configuration in the other course settings
         that not requires the user to activate its account to enroll in the course.
         """
+
         course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
         user = MagicMock(email="example@example.com", is_active=True)
         mode = "audit"

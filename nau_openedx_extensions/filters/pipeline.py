@@ -4,10 +4,12 @@ Defined filters.
 
 from fnmatch import fnmatch
 
+from django.conf import settings
 from django.utils.translation import gettext as _
 from openedx_filters import PipelineStep
 from openedx_filters.learning.filters import CourseEnrollmentStarted
 
+from nau_openedx_extensions.edxapp_wrapper import site_configuration_helpers as configuration_helpers
 from nau_openedx_extensions.edxapp_wrapper.course_module import get_course_name, get_other_course_settings
 
 
@@ -71,7 +73,9 @@ class FilterEnrollmentRequireUserActive(PipelineStep):   # pylint: disable=too-f
         require_user_active = other_course_settings.get("value", {}).get("filter_enrollment_require_user_active", False)
         if require_user_active and not user.is_active:
             course_name = get_course_name(course_key)
-            exception_msg = _("You need to activate your account before you can enroll the course "
-                              "{course_name}.").format(course_name=course_name)
+            platform_name = configuration_helpers.get_value("platform_name", settings.PLATFORM_NAME)
+            exception_msg = _("You need to activate your account before you can enroll in the course. "
+                              "Check your {email} inbox for an account activation link from {platform_name}.").format(
+                course_name=course_name, email=user.email, platform_name=platform_name)
             raise CourseEnrollmentStarted.PreventEnrollment(exception_msg)
         return {}
