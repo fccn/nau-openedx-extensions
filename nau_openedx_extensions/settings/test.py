@@ -30,11 +30,15 @@ DATABASES = {
 }
 
 NAU_COURSE_MODULE = (
-        "nau_openedx_extensions.edxapp_wrapper.backends.course_module_l_v1_tests"
-    )
+    "nau_openedx_extensions.edxapp_wrapper.backends.course_module_l_v1_tests"
+)
 NAU_EMAIL_MODULE = (
-        "nau_openedx_extensions.edxapp_wrapper.backends.email_module_l_v1_tests"
-    )
+    "nau_openedx_extensions.edxapp_wrapper.backends.email_module_l_v1_tests"
+)
 
 # This is to avoid "initialized translation infrastructure before the apps registry is ready" issue in tests.
 USE_I18N = False
+
+NAU_SITE_CONFIGURATION_HELPERS_MODULE = (
+    "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_helpers_v1_tests"
+)
