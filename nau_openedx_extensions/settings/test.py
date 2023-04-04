@@ -40,5 +40,9 @@ NAU_EMAIL_MODULE = (
 USE_I18N = False
 
 NAU_SITE_CONFIGURATION_HELPERS_MODULE = (
-    "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_helpers_v1_tests"
+    "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_helpers_l_v1_tests"
+)
+
+NAU_STUDENT_MODULE = (
+    "nau_openedx_extensions.edxapp_wrapper.backends.student_l_v1_tests"
 )

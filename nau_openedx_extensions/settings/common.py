@@ -74,5 +74,8 @@ def plugin_settings(settings):
     settings.NAU_ACCOUNTS_CC_VISIBLE_FIELDS = ["employment_situation", "nif"]
     settings.SCORMXBLOCK_ASYNC_THRESHOLD = 500
     settings.NAU_SITE_CONFIGURATION_HELPERS_MODULE = (
-        "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_helpers_v1"
+        "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_helpers_l_v1"
+    )
+    settings.NAU_STUDENT_MODULE = (
+        "nau_openedx_extensions.edxapp_wrapper.backends.student_l_v1"
     )
