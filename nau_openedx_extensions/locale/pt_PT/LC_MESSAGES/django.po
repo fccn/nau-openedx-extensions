@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2023-04-04 16:28+0000\n"
+"POT-Creation-Date: 2023-04-12 16:51+0000\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -32,7 +32,7 @@ msgstr "Desempregado"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:32
 msgid "Public service contract"
-msgstr "Contrato em funções públicas"
+msgstr "Contrato em instituição pública"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:33
 msgid "Private institution contract"
