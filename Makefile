@@ -27,6 +27,7 @@ virtual_environment: ## create virtual environment
 	test -d venv || virtualenv venv --python=python3
 	. venv/bin/activate && python -m pip install -Ur requirements/base.txt
 	. venv/bin/activate && python -m pip install -Ur requirements/translations.txt
+	. venv/bin/activate && python -m pip install -Ur requirements/test.txt
 	touch venv/touchfile
 	@echo "Run on your shell to activate the new virtual environment:"
 	@echo "  . venv/bin/activate"
