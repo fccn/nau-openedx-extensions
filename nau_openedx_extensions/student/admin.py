@@ -77,3 +77,9 @@ class NAUCourseEnrollmentAdmin(DisableEnrollmentAdminMixin, admin.ModelAdmin):
 
     def email(self, obj):
         return obj.user.email
+
+    def get_search_results(self, request, queryset, search_term):
+        qs, use_distinct = super().get_search_results(request, queryset, search_term)
+        if not search_term or len(search_term) < 3:
+            qs = CourseEnrollment.objects.none()
+        return qs, use_distinct
