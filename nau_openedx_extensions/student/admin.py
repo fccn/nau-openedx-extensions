@@ -10,6 +10,7 @@ from common.djangoapps.student.models import (  # lint-amnesty, pylint: disable=
     CourseAccessRole,
     CourseEnrollment,
 )
+from common.djangoapps.util.query import use_read_replica_if_available  # lint-amnesty, pylint: disable=import-error
 from django.contrib import admin
 
 from nau_openedx_extensions.utils.admin import ExportCsvMixin
@@ -59,7 +60,9 @@ admin.site.unregister(CourseEnrollment)
 # Changes from upstream:
 # - remove the custom order by / sort;
 # - remove the select_related user;
+# - search only if search term has minimum 3 characters length;
 # - change search by user username or email;
+# - use `read_replica` database if available for search;
 @admin.register(CourseEnrollment)
 class NAUCourseEnrollmentAdmin(DisableEnrollmentAdminMixin, admin.ModelAdmin):
     """
@@ -80,4 +83,4 @@ class NAUCourseEnrollmentAdmin(DisableEnrollmentAdminMixin, admin.ModelAdmin):
         qs, use_distinct = super().get_search_results(request, queryset, search_term)
         if not search_term or len(search_term) < 3:
             qs = CourseEnrollment.objects.none()
-        return qs, use_distinct
+        return use_read_replica_if_available(qs), use_distinct
