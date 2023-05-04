@@ -2,47 +2,43 @@
 Extension of course access role admin screen with export to csv action
 """
 from common.djangoapps.student.admin import (  # lint-amnesty, pylint: disable=import-error
+    CourseAccessRoleAdmin,
     CourseEnrollmentForm,
     DisableEnrollmentAdminMixin,
 )
-from common.djangoapps.student.models import CourseEnrollment  # lint-amnesty, pylint: disable=import-error
+from common.djangoapps.student.models import (  # lint-amnesty, pylint: disable=import-error
+    CourseAccessRole,
+    CourseEnrollment,
+)
 from django.contrib import admin
 
 from nau_openedx_extensions.utils.admin import ExportCsvMixin
 
-from .models import CourseAccessRoleProxy
+# Unregister the default Django Admin screen for CourseAccessRole class.
+admin.site.unregister(CourseAccessRole)
 
 
-@admin.register(CourseAccessRoleProxy)
-class CourseAccessRoleProxyAdmin(admin.ModelAdmin, ExportCsvMixin):
+@admin.register(CourseAccessRole)
+class NAUCourseAccessRoleAdmin(CourseAccessRoleAdmin, ExportCsvMixin):
     """
-    Admin screen for the proxy class of openedx CourseAccessRole.
+    NAU custom Admin screen for the class of openedx CourseAccessRole.
+    Improve with:
+      1. export to csv
+      2. add user email to the user interface
+      3. add filter by role and organization
     """
     list_display = ('id', 'user', 'openedx_email', 'org', 'course_id', 'role',)
+    list_filter = [
+        ('role'),
+        ('org'),
+        # ('course_id', admin.EmptyFieldListFilter), # need minimum Django 3.1
+    ]
 
     # Add a new action to combo box that permit to export to csv the selected rows
     actions = ["export_as_csv"]
 
     # redefine so email is included
     csv_export_fields = ('id', 'user', 'openedx_email', 'org', 'course_id', 'role',)
-
-    def has_add_permission(self, request, obj=None):  # lint-amnesty, pylint: disable=unused-argument
-        """
-        Disable add functionality
-        """
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        """
-        Disable change/edit functionality
-        """
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        """
-        Disable change/edit functionality
-        """
-        return False
 
     def openedx_email(self, instance):
         """
@@ -56,7 +52,6 @@ class CourseAccessRoleProxyAdmin(admin.ModelAdmin, ExportCsvMixin):
 
 
 # Unregister the default Django Admin screen for CourseEnrollment class.
-# Because the upstream version has performance problems.
 admin.site.unregister(CourseEnrollment)
 
 
@@ -67,7 +62,10 @@ admin.site.unregister(CourseEnrollment)
 # - change search by user username or email;
 @admin.register(CourseEnrollment)
 class NAUCourseEnrollmentAdmin(DisableEnrollmentAdminMixin, admin.ModelAdmin):
-    """ Admin interface for the CourseEnrollment model. """
+    """
+    NAU custom admin interface for the CourseEnrollment model.
+    The upstream version has performance problems.
+    """
     list_display = ('id', 'user', 'email', 'course_id', 'mode', 'is_active',)
     list_filter = ('mode', 'is_active',)
     raw_id_fields = ('user',)
