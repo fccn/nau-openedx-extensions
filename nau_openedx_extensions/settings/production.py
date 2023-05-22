@@ -76,3 +76,11 @@ def plugin_settings(settings):
     settings.SCORMXBLOCK_ASYNC_THRESHOLD = getattr(settings, "ENV_TOKENS", {}).get(
         "SCORMXBLOCK_ASYNC_THRESHOLD", settings.SCORMXBLOCK_ASYNC_THRESHOLD
     )
+
+    settings.NAU_SCORM_XBLOCK_STORAGE = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_SCORM_XBLOCK_STORAGE", None
+    )
+    from nau_openedx_extensions.scorm.storage import scorm_xblock_storage  # pylint: disable=import-outside-toplevel
+    settings.XBLOCK_SETTINGS["ScormXBlock"] = {
+        "STORAGE_FUNC": scorm_xblock_storage,
+    }
