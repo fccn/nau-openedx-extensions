@@ -9,9 +9,9 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.translation import ugettext as _
-from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers  # pylint: disable=import-error
 
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
+from nau_openedx_extensions.edxapp_wrapper import site_configuration_helpers as configuration_helpers
 
 log = logging.getLogger(__name__)
 
