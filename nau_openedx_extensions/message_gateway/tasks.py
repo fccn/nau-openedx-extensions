@@ -5,7 +5,7 @@ from __future__ import absolute_import, unicode_literals
 
 import logging
 
-from celery import task  # lint-amnesty, pylint: disable=import-error
+from celery import shared_task  # lint-amnesty, pylint: disable=import-error
 from django.conf import settings
 from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
 from opaque_keys.edx.keys import CourseKey
@@ -16,7 +16,7 @@ from nau_openedx_extensions.message_gateway.models import NauCourseMessage
 log = logging.getLogger(__name__)
 
 
-@task
+@shared_task
 def submit_bulk_course_message(message_id, course_id):
     """
     Submit course messages. This will create the subtasks that submits
@@ -83,7 +83,7 @@ def _iterate_over_recipients(combined_set, batch_size):
         num_items_queued += len(recipients)
 
 
-@task
+@shared_task
 def submit_course_message(message_id, recipients):
     """
     Send course message to the recipients given.
