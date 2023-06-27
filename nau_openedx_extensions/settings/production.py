@@ -84,3 +84,9 @@ def plugin_settings(settings):
     settings.XBLOCK_SETTINGS["ScormXBlock"] = {
         "STORAGE_FUNC": scorm_xblock_storage,
     }
+
+    #### Custom Courses for EDX (CCX) configuration
+    # Allow to increase the maximum number of studends allowed in a CCX (Custom Courses for edX).
+    settings.CCX_MAX_STUDENTS_ALLOWED = getattr(settings, "ENV_TOKENS", {}).get(
+        "CCX_MAX_STUDENTS_ALLOWED", settings.CCX_MAX_STUDENTS_ALLOWED
+    )
