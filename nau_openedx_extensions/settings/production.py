@@ -88,5 +88,5 @@ def plugin_settings(settings):
     #### Custom Courses for EDX (CCX) configuration
     # Allow to increase the maximum number of studends allowed in a CCX (Custom Courses for edX).
     settings.CCX_MAX_STUDENTS_ALLOWED = getattr(settings, "ENV_TOKENS", {}).get(
-        "CCX_MAX_STUDENTS_ALLOWED", settings.CCX_MAX_STUDENTS_ALLOWED
+        "CCX_MAX_STUDENTS_ALLOWED", 200
     )
