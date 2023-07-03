@@ -4,6 +4,8 @@ Settings for nau_openedx_extensions
 
 from __future__ import absolute_import, unicode_literals
 
+from django.utils.translation import ugettext_lazy as _
+
 SECRET_KEY = "a-not-to-be-trusted-secret-key"
 INSTALLED_APPS = (
     "django.contrib.auth",
@@ -79,3 +81,7 @@ def plugin_settings(settings):
     settings.NAU_STUDENT_MODULE = (
         "nau_openedx_extensions.edxapp_wrapper.backends.student_l_v1"
     )
+
+    # Overwrite the default certificate name
+    settings.CERT_NAME_SHORT = _("Certificate")
+    settings.CERT_NAME_LONG = _("Certificate of Achievement")
