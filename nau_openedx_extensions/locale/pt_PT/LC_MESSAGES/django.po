@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2023-04-12 16:51+0000\n"
+"POT-Creation-Date: 2023-07-03 17:12+0100\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -138,6 +138,14 @@ msgid ""
 msgstr ""
 "Este curso encontra-se arquivado e já não permite a realização de "
 "atividades para obtenção de certificado."
+
+#: nau_openedx_extensions/settings/common.py:86
+msgid "Certificate"
+msgstr "Certificado"
+
+#: nau_openedx_extensions/settings/common.py:87
+msgid "Certificate of Achievement"
+msgstr "Certificado de Conclusão"
 
 #: nau_openedx_extensions/templates/message_gateway/tab.html:15
 msgid "Send to:"
