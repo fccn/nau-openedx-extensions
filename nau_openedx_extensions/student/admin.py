@@ -71,7 +71,7 @@ class NAUCourseEnrollmentAdmin(DisableEnrollmentAdminMixin, admin.ModelAdmin):
     """
     list_display = ('id', 'user', 'email', 'course_id', 'mode', 'is_active',)
     list_filter = ('mode', 'is_active',)
-    raw_id_fields = ('user',)
+    raw_id_fields = ('user', 'course')
     search_fields = ('user__username', 'user__email')
     form = CourseEnrollmentForm
     search_help_text = "Search by user username or email"
