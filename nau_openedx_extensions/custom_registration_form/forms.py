@@ -4,7 +4,7 @@ Nau openedx extension custom forms module
 from __future__ import absolute_import, unicode_literals
 
 from django.forms import ModelForm
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
 

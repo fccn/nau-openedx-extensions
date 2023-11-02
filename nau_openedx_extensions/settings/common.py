@@ -4,7 +4,7 @@ Settings for nau_openedx_extensions
 
 from __future__ import absolute_import, unicode_literals
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 SECRET_KEY = "a-not-to-be-trusted-secret-key"
 INSTALLED_APPS = (
