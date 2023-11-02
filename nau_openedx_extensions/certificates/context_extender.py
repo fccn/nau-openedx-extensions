@@ -9,7 +9,7 @@ import six
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from nau_openedx_extensions.edxapp_wrapper.grades import get_course_grades
 

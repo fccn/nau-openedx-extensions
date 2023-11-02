@@ -9,7 +9,7 @@ import six
 from django.http import Http404
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils.translation import ugettext_noop
+from django.utils.translation import gettext_noop
 from web_fragments.fragment import Fragment
 
 from nau_openedx_extensions.edxapp_wrapper.fragments import (
@@ -35,7 +35,7 @@ class NauMessageGatewayTab(TabFragmentViewMixin, EnrolledTab):
 
     type = "message_gw"
     name = "message_gw"
-    title = ugettext_noop("NAU Message Gateway")
+    title = gettext_noop("NAU Message Gateway")
     view_name = "nau-openedx-extensions:nau_tools"
     fragment_view_name = "nau_openedx_extensions.course_tab.views.NauToolsFragmentView"
     is_dynamic = True

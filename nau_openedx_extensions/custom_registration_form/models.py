@@ -7,7 +7,7 @@ from __future__ import absolute_import, unicode_literals
 from django.conf import settings
 from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 # Backwards compatible settings.AUTH_USER_MODEL
 USER_MODEL = getattr(settings, "AUTH_USER_MODEL", "auth.User")  # lint-amnesty, pylint: disable=hard-coded-auth-user
