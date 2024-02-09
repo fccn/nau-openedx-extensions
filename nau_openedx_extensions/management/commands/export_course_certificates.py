@@ -77,7 +77,9 @@ class Command(BaseCommand):
                 [
                     "course_id",
                     "student email",
+                    "student username",
                     "student name",
+                    "certificate created date",
                     "certificate verify_uuid",
                     "certificate_web_link_url",
                     "certificate_download_pdf_link",
@@ -97,7 +99,9 @@ class Command(BaseCommand):
                     [
                         course_id,
                         certificate.user.email,
+                        certificate.user.username,
                         certificate.name,
+                        certificate.created_date,
                         certificate.verify_uuid,
                         certificate_web_link_url,
                         certificate_download_pdf_link,
