@@ -65,8 +65,8 @@ class Command(BaseCommand):
             )
 
             course_key = CourseKey.from_string(course_id)
-            lms_base = SiteConfiguration.get_value_for_org(
-                course_key.org, "LMS_BASE", settings.LMS_BASE
+            lms_root_url = SiteConfiguration.get_value_for_org(
+                course_key.org, "LMS_ROOT_URL", settings.LMS_ROOT_URL
             )
 
             # prepare output
@@ -89,7 +89,7 @@ class Command(BaseCommand):
             # iterate each certificate and append each certificate as a row
             for certificate in course_generated_certificates:
                 certificate_web_link_url = (
-                    "https://" + lms_base + "/certificates/" + certificate.verify_uuid
+                    f"{lms_root_url}/certificates/{certificate.verify_uuid}"
                 )
                 certificate_download_pdf_link = (
                     certificate_download_pdf_url + certificate.verify_uuid
@@ -116,7 +116,7 @@ class Command(BaseCommand):
             )
 
             lms_instructor_data_download_url = (
-                f"https://{lms_base}/courses/{course_id}/instructor#view-data_download"
+                f"{lms_root_url}/courses/{course_id}/instructor#view-data_download"
             )
             self.log_msg(
                 f"You can confirm the existence of the file on: {lms_instructor_data_download_url}"

@@ -155,11 +155,11 @@ class Command(BaseCommand):
                 )
             delete_recursive(course_certificate_folder)
 
-            lms_base = SiteConfiguration.get_value_for_org(
-                course_key.org, "LMS_BASE", settings.LMS_BASE
+            lms_root_url = SiteConfiguration.get_value_for_org(
+                course_key.org, "LMS_ROOT_URL", settings.LMS_ROOT_URL
             )
             lms_instructor_data_download_url = (
-                f"https://{lms_base}/courses/{course_id}/instructor#view-data_download"
+                f"{lms_root_url}/courses/{course_id}/instructor#view-data_download"
             )
             self.log_msg(
                 f"You can confirm the existence of the file on: {lms_instructor_data_download_url}"
