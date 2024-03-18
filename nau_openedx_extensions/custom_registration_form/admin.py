@@ -4,6 +4,7 @@ Admin for nau user extended model
 
 from __future__ import absolute_import, unicode_literals
 
+from common.djangoapps.util.query import use_read_replica_if_available  # lint-amnesty, pylint: disable=import-error
 from django.contrib import admin
 
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
@@ -19,9 +20,6 @@ class NauUserExtendedModelAdmin(admin.ModelAdmin, ExportCsvMixin):
     search_fields = (
         "user__email",
         "user__username",
-        "cc_nif",
-        "cc_first_name",
-        "cc_last_name",
     )
     readonly_fields = (
         "openedx_username",
@@ -60,3 +58,9 @@ class NauUserExtendedModelAdmin(admin.ModelAdmin, ExportCsvMixin):
             return instance.user.username
         except Exception as error:
             return str(error)
+
+    def get_search_results(self, request, queryset, search_term):
+        qs, use_distinct = super().get_search_results(request, queryset, search_term)
+        if not search_term or len(search_term) < 3:
+            qs = NauUserExtendedModel.objects.none()
+        return use_read_replica_if_available(qs), use_distinct
