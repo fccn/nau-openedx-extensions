@@ -15,7 +15,7 @@ USER_MODEL = getattr(settings, "AUTH_USER_MODEL", "auth.User")  # lint-amnesty, 
 
 class NauUserExtendedModel(models.Model):
     """
-    Holds data autorization field
+    Holds data authorization field
     Used during user registration as a form extension.
     """
 
@@ -37,7 +37,10 @@ class NauUserExtendedModel(models.Model):
 
     user = models.OneToOneField(USER_MODEL, on_delete=models.CASCADE, null=True)
     data_authorization = models.BooleanField(
-        verbose_name=_("I authorize data processing for this site "), default=False
+        verbose_name=_(
+            "I have read and understood the <a href='https://www.nau.edu.pt/legal/politica-de-privacidade/' "
+            "rel='noopener' target='_blank'>Privacy Policy</a>"
+        ), default=False
     )
     nif = models.CharField(
         verbose_name=_("NIF"), max_length=9, blank=True, null=True

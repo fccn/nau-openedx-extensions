@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2023-07-03 17:12+0100\n"
+"POT-Creation-Date: 2024-04-12 17:27+0100\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -47,60 +47,63 @@ msgid "Other"
 msgstr "Outro"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:40
-msgid "I authorize data processing for this site "
+msgid ""
+"I have read and understood the <a href='https://www.nau.edu.pt/legal"
+"/politica-de-privacidade/' rel='noopener' target='_blank'>Privacy "
+"Policy</a>"
 msgstr ""
-"Autorizo que os dados sejam processados segundo os termos de serviço e "
-"política de privacidade"
+"Li e compreendi a <a href='https://www.nau.edu.pt/legal/politica-de-"
+"privacidade/' rel='noopener' target='_blank'>Política de Privacidade</a>"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:43
+#: nau_openedx_extensions/custom_registration_form/models.py:46
 msgid "NIF"
 msgstr "NIF - Nº de Identificação Fiscal"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:46
+#: nau_openedx_extensions/custom_registration_form/models.py:49
 msgid "CC NIF"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:49
+#: nau_openedx_extensions/custom_registration_form/models.py:52
 msgid "CC NIC"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:52
+#: nau_openedx_extensions/custom_registration_form/models.py:55
 msgid "CC NIC Check Digit"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:55
+#: nau_openedx_extensions/custom_registration_form/models.py:58
 msgid "CC First name"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:57
+#: nau_openedx_extensions/custom_registration_form/models.py:60
 msgid "CC Last name"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:59
+#: nau_openedx_extensions/custom_registration_form/models.py:62
 msgid "CC Nacionality"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:62
+#: nau_openedx_extensions/custom_registration_form/models.py:65
 msgid "CC Zip code 3 digits"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:65
+#: nau_openedx_extensions/custom_registration_form/models.py:68
 msgid "CC Zip code 4 digits"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:68
+#: nau_openedx_extensions/custom_registration_form/models.py:71
 msgid "CC Document number"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:71
+#: nau_openedx_extensions/custom_registration_form/models.py:74
 msgid "CC Birth date"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:74
+#: nau_openedx_extensions/custom_registration_form/models.py:77
 msgid "Employment situation"
 msgstr "Situação profissional"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:77
+#: nau_openedx_extensions/custom_registration_form/models.py:80
 msgid "Allow newsletter"
 msgstr ""
 "Aceito receber informações no âmbito dos cursos disponibilizados pela "
