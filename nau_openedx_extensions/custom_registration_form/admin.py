@@ -61,6 +61,6 @@ class NauUserExtendedModelAdmin(admin.ModelAdmin, ExportCsvMixin):
 
     def get_search_results(self, request, queryset, search_term):
         qs, use_distinct = super().get_search_results(request, queryset, search_term)
-        if not search_term or len(search_term) < 3:
+        if search_term and len(search_term) > 0 and len(search_term) < 3:
             qs = NauUserExtendedModel.objects.none()
         return use_read_replica_if_available(qs), use_distinct
