@@ -6,6 +6,7 @@ import datetime
 
 from common.djangoapps.util.query import use_read_replica_if_available  # lint-amnesty, pylint: disable=import-error
 from django.http import HttpResponse
+from django.utils.translation import gettext_lazy as _
 
 
 class ExportCsvMixin:
@@ -59,4 +60,4 @@ class ExportCsvMixin:
 
         return response
 
-    export_as_csv.short_description = "Export Selected"
+    export_as_csv.short_description = _("Export Selected to CSV")
