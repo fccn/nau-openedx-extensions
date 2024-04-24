@@ -4,6 +4,7 @@ NAU admin extension
 import csv
 import datetime
 
+from common.djangoapps.util.query import use_read_replica_if_available  # lint-amnesty, pylint: disable=import-error
 from django.http import HttpResponse
 
 
@@ -39,7 +40,7 @@ class ExportCsvMixin:
         # Write a first row with header information
         writer.writerow([field.verbose_name if hasattr(field, 'verbose_name') else str(field) for field in fields])
         # Write data rows
-        for obj in queryset:
+        for obj in use_read_replica_if_available(queryset):
             data_row = []
             for field in fields:
                 if not isinstance(field, str):
