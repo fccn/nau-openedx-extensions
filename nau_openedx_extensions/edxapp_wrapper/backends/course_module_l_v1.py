@@ -3,7 +3,7 @@
 import logging
 
 from cms.djangoapps.models.settings.course_metadata import CourseMetadata  # pylint: disable=import-error
-from common.lib.xmodule.xmodule.modulestore.django import modulestore  # pylint: disable=import-error
+from xmodule.modulestore.django import modulestore  # pylint: disable=import-error
 
 log = logging.getLogger(__name__)
 
