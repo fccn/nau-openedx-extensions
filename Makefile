@@ -21,7 +21,8 @@ clean: ## delete most git-ignored files
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
-	rm -rf venv +
+	echo "cleaned"
+# rm -rf venv +
 
 virtual_environment: ## create virtual environment
 	test -d venv || virtualenv venv --python=python3
