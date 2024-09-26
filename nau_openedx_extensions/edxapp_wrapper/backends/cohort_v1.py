@@ -1,8 +1,9 @@
 """
 Cohort abstraction backend
 """
-from common.djangoapps.student.models import get_user_by_username_or_email
-from openedx.core.djangoapps.course_groups.cohorts import get_cohort as edxapp_get_cohort  # pylint: disable=import-error
+from common.djangoapps.student.models import get_user_by_username_or_email  # pylint: disable=import-error
+from openedx.core.djangoapps.course_groups.cohorts import \
+    get_cohort as edxapp_get_cohort  # pylint: disable=import-error
 
 
 def get_cohort(username, course_key):

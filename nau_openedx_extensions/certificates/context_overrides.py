@@ -1,6 +1,7 @@
 """
 This file defines overrides of the context render of course certificates using an Open edX Filters pipeline step.
 """
+
 import logging
 
 from openedx_filters import PipelineStep
@@ -8,6 +9,7 @@ from openedx_filters import PipelineStep
 from nau_openedx_extensions.edxapp_wrapper.cohort import get_cohort
 
 log = logging.getLogger(__name__)
+
 
 class CertificatesContextCohortOverride(PipelineStep):
     """
@@ -37,23 +39,34 @@ class CertificatesContextCohortOverride(PipelineStep):
         }
     """
 
-    def run_filter(self, context, custom_template):  # pylint: disable=unused-argument, arguments-differ
+    def run_filter(self, context, custom_template):  # pylint: disable=arguments-differ
         """
         The filter logic.
         """
-        username = context['username']
-        course_key = context['course_id']
-        if 'cohort_overrides' in context:
+        username = context["username"]
+        course_key = context["course_id"]
+        if "cohort_overrides" in context:
             cohort = get_cohort(username, course_key)
             if cohort:
-                if cohort.name in context['cohort_overrides']:
-                    cohort_override_dict = context['cohort_overrides'][cohort.name]
+                if cohort.name in context["cohort_overrides"]:
+                    cohort_override_dict = context["cohort_overrides"][cohort.name]
                     context.update(cohort_override_dict)
                 else:
-                    log.info("The user '%s' enrollment on course '%s' doesn't have a cohort certificate context overrides configured for the cohort '%s'.", username, course_key, cohort.name)
+                    log.info(
+                        "The user '%s' enrollment on course '%s' doesn't have a cohort "
+                        "certificate context overrides configured for the cohort '%s'.",
+                        username,
+                        course_key,
+                        cohort.name,
+                    )
             else:
-                log.info("User '%s' not in a cohort on course '%s'", username, course_key)
+                log.info(
+                    "User '%s' not in a cohort on course '%s'", username, course_key
+                )
         else:
-            log.info("No Certificates context cohort_overrides defined on course '%s'", course_key)
+            log.info(
+                "No Certificates context cohort_overrides defined on course '%s'",
+                course_key,
+            )
 
         return {"context": context, "custom_template": custom_template}

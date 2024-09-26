@@ -13,4 +13,3 @@ def get_cohort(*args, **kwargs):
     backend = import_module(backend_module)
 
     return backend.get_cohort(*args, **kwargs)
-
