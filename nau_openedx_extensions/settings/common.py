@@ -81,6 +81,9 @@ def plugin_settings(settings):
     settings.NAU_STUDENT_MODULE = (
         "nau_openedx_extensions.edxapp_wrapper.backends.student_l_v1"
     )
+    settings.NAU_COHORT_MODULE = (
+        "nau_openedx_extensions.edxapp_wrapper.backends.cohort_v1"
+    )
 
     # Overwrite the default certificate name
     settings.CERT_NAME_SHORT = _("Certificate")

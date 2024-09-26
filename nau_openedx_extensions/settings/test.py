@@ -46,3 +46,7 @@ NAU_SITE_CONFIGURATION_HELPERS_MODULE = (
 NAU_STUDENT_MODULE = (
     "nau_openedx_extensions.edxapp_wrapper.backends.student_l_v1_tests"
 )
+
+NAU_COHORT_MODULE = (
+    "nau_openedx_extensions.edxapp_wrapper.backends.cohort_v1_tests"
+)
