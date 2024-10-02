@@ -31,6 +31,10 @@ def plugin_settings(settings):
     See: https://github.com/edx/edx-platform/blob/master/openedx/core/djangoapps/plugins/README.rst
     """
 
+    # Overwrite the default certificate name
+    settings.CERT_NAME_SHORT = _("Certificate")
+    settings.CERT_NAME_LONG = _("Certificate of Achievement")
+
     settings.NAU_CUSTOM_SAML_IDENTITY_PROVIDERS = [
         {
             "provider_key": "nau_custom_saml_provider",
@@ -84,7 +88,6 @@ def plugin_settings(settings):
     settings.NAU_COHORT_MODULE = (
         "nau_openedx_extensions.edxapp_wrapper.backends.cohort_v1"
     )
-
-    # Overwrite the default certificate name
-    settings.CERT_NAME_SHORT = _("Certificate")
-    settings.CERT_NAME_LONG = _("Certificate of Achievement")
+    settings.NAU_VERIFY_STUDENT_MODULE = (
+        "nau_openedx_extensions.edxapp_wrapper.backends.verify_student_v1"
+    )

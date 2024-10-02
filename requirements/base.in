@@ -5,3 +5,4 @@ six
 future; python_version < "3.0"
 web-fragments
 openedx-filters==0.7.0
+openedx-events==0.8.1
