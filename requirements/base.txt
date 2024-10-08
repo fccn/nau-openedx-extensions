@@ -11,6 +11,7 @@ django==2.2.25            # via -c requirements/constraints.txt, edx-opaque-keys
 edx-opaque-keys[django]==2.2.0  # via -c requirements/constraints.txt, -r requirements/base.in
 kombu==4.6.11             # via celery
 openedx-filters==1.8.1    # via -c requirements/constraints.txt, -r requirements/base.in
+openedx-events==0.8.1
 pbr==5.10.0               # via stevedore
 pymongo==4.2.0            # via edx-opaque-keys
 pytz==2022.2.1            # via celery, django
