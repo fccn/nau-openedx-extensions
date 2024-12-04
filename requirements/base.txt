@@ -4,19 +4,19 @@
 #
 #    make upgrade
 #
-amqp==2.6.1               # via kombu
-billiard==3.6.4.0         # via celery
-celery==4.4.7             # via -c requirements/constraints.txt, -r requirements/base.in
+amqp==5.2.0               # via kombu
+billiard==4.2.0           # via celery
+celery==5.4.0             # via -c requirements/constraints.txt, -r requirements/base.in
 django==2.2.25            # via -c requirements/constraints.txt, edx-opaque-keys, openedx-filters
 edx-opaque-keys[django]==2.2.0  # via -c requirements/constraints.txt, -r requirements/base.in
-kombu==4.6.11             # via celery
+kombu==5.3.4              # via celery
 openedx-filters==1.8.1    # via -c requirements/constraints.txt, -r requirements/base.in
-openedx-events==9.10.0
+openedx-events==9.15.0
 pbr==5.10.0               # via stevedore
 pymongo==4.2.0            # via edx-opaque-keys
 pytz==2022.2.1            # via celery, django
 six==1.16.0               # via -r requirements/base.in
 sqlparse==0.4.2           # via django
 stevedore==4.0.0          # via edx-opaque-keys
-vine==1.3.0               # via amqp, celery
+vine==5.1.0               # via amqp, celery
 web-fragments==2.0.0      # via -r requirements/base.in
