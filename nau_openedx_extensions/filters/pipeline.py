@@ -77,3 +77,37 @@ class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public
             if user_domain == domain or fnmatch(user_domain, f"*.{domain}"):
                 return True
         return False
+
+
+class FilterUsersWithAllowedNewsletter(PipelineStep):
+    """
+    Filter users with allowed newsletter.
+
+    Example usage:
+
+    Add the following configurations to your configuration file:
+
+    OPEN_EDX_FILTERS_CONFIG = {
+        "org.openedx.learning.schedule.nudge.email.started.v1": {
+            "fail_silently": False,
+            "pipeline": [
+                "nau_openedx_extensions.filters.pipeline.FilterUsersWithAllowedNewsletter",
+            ],
+        },
+    }
+    """
+
+    def run_filter(self, schedules) -> dict:  # pylint: disable=arguments-differ
+        """
+        Execute filter that filters users with allowed newsletter.
+
+        Arguments:
+            schedules (QuerySet): Queryset of schedules to be sent.
+
+        Returns:
+            dict: Dictionary with the filtered schedules.
+        """
+        schedules = schedules.filter(enrollment__user__nauuserextendedmodel__allow_newsletter=True)
+        return {
+            "schedules": schedules,
+        }
