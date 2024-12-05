@@ -6,7 +6,7 @@ from openedx_filters.tooling import OpenEdxPublicFilter
 from django.db.models.query import QuerySet
 
 
-class ScheduleQuerysetRequested(OpenEdxPublicFilter):
+class ScheduleQuerySetRequested(OpenEdxPublicFilter):
     """
     Custom class used to create schedule queryset filters filters and its custom methods.
     """
@@ -17,6 +17,16 @@ class ScheduleQuerysetRequested(OpenEdxPublicFilter):
         """
         Custom class used to stop the schedule queryset request process.
         """
+
+        def __init__(self, message: str, schedules: QuerySet):
+            """
+            Override init that defines specific arguments used in the schedule queryset request process.
+
+            Arguments:
+                message (str): error message for the exception.
+                schedules (QuerySet): Queryset of schedules to be sent
+            """
+            super().__init__(message, schedules=schedules)
 
     @classmethod
     def run_filter(cls, schedules: QuerySet) -> QuerySet:
