@@ -3,31 +3,23 @@
 from openedx_filters.exceptions import OpenEdxFilterException
 from openedx_filters.tooling import OpenEdxPublicFilter
 
+from django.db.models.query import QuerySet
 
-class ScheduleNudgeEmailStarted(OpenEdxPublicFilter):
+
+class ScheduleQuerysetRequested(OpenEdxPublicFilter):
     """
-    Custom class used to create schedule email filters and its custom methods.
+    Custom class used to create schedule queryset filters filters and its custom methods.
     """
 
-    filter_type = "org.openedx.learning.schedule.nudge.email.started.v1"
+    filter_type = "org.openedx.learning.schedule.queryset.requested.v1"
 
-    class InvalidSchedule(OpenEdxFilterException):
+    class PreventScheduleQuerysetRequest(OpenEdxFilterException):
         """
-        Custom class used to stop the submission view render process.
+        Custom class used to stop the schedule queryset request process.
         """
-
-        def __init__(self, message: str, schedules):
-            """
-            Override init that defines specific arguments used in the submission view render process.
-
-            Arguments:
-                message (str): error message for the exception.
-                schedules (QuerySet): schedules to be sent.
-            """
-            super().__init__(message, schedules=schedules)
 
     @classmethod
-    def run_filter(cls, schedules):
+    def run_filter(cls, schedules: QuerySet) -> QuerySet:
         """
         Execute a filter with the signature specified.
 
