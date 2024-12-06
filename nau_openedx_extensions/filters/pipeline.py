@@ -5,6 +5,7 @@ Defined filters.
 from fnmatch import fnmatch
 
 from django.conf import settings
+from django.core.exceptions import FieldError
 from django.db.models.query import QuerySet
 from django.utils.translation import gettext as _
 from openedx_filters import PipelineStep
@@ -121,8 +122,9 @@ class FilterUsersWithAllowedNewsletter(PipelineStep):
             return {
                 "schedules": filtered_schedules,
             }
-        except AttributeError:
+        except FieldError:
             raise ScheduleQuerySetRequested.PreventScheduleQuerysetRequest(
                 "The filter can't be applied because the user model "
-                "doesn't have the attribute 'nauuserextendedmodel'."
+                "doesn't have the attribute 'nauuserextendedmodel'.",
+                schedules,
             )
