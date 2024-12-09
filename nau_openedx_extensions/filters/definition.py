@@ -13,7 +13,7 @@ class ScheduleQuerySetRequested(OpenEdxPublicFilter):
 
     filter_type = "org.openedx.learning.schedule.queryset.requested.v1"
 
-    class PreventScheduleQuerysetRequest(OpenEdxFilterException):
+    class PreventScheduleQuerySetRequest(OpenEdxFilterException):
         """
         Custom class used to stop the schedule queryset request process.
         """
@@ -35,6 +35,9 @@ class ScheduleQuerySetRequested(OpenEdxPublicFilter):
 
         Arguments:
             schedules (QuerySet): Queryset of schedules to be sent.
+
+        Returns:
+            QuerySet: Schedules to be sent.
         """
         data = super().run_pipeline(schedules=schedules)
         return data.get("schedules")
