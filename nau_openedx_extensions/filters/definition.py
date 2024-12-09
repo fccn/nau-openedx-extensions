@@ -1,9 +1,8 @@
 """Filters definition module."""
 
+from django.db.models.query import QuerySet
 from openedx_filters.exceptions import OpenEdxFilterException
 from openedx_filters.tooling import OpenEdxPublicFilter
-
-from django.db.models.query import QuerySet
 
 
 class ScheduleQuerySetRequested(OpenEdxPublicFilter):
