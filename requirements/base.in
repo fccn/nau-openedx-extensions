@@ -4,5 +4,5 @@ edx-opaque-keys[django]
 six
 future; python_version < "3.0"
 web-fragments
-openedx-filters==1.8.1
-openedx-events==9.10.0
+openedx-filters==1.11.0
+openedx-events==9.15.0
