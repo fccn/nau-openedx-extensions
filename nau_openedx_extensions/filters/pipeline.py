@@ -102,7 +102,7 @@ class FilterUsersWithAllowedNewsletter(PipelineStep):
     ```
     """
 
-    def run_filter(self, schedules: QuerySet) -> dict:
+    def run_filter(self, schedules: QuerySet) -> dict:  # pylint: disable=arguments-differ
         """
         Execute filter that filters users with allowed newsletter.
 
@@ -122,9 +122,9 @@ class FilterUsersWithAllowedNewsletter(PipelineStep):
             return {
                 "schedules": filtered_schedules,
             }
-        except FieldError:
-            raise ScheduleQuerySetRequested.PreventScheduleQuerysetRequest(
+        except FieldError as exc:
+            raise ScheduleQuerySetRequested.PreventScheduleQuerySetRequest(
                 "The filter can't be applied because the user model "
                 "doesn't have the attribute 'nauuserextendedmodel'.",
                 schedules,
-            )
+            ) from exc
