@@ -27,7 +27,7 @@ def get_fields(custom_model_instance):
     for field in custom_fields:
         if field.name not in allowed_fields:
             continue
-        if isinstance(field, (models.CharField, models.TextField, models.BooleanField)):
+        if isinstance(field, (models.CharField, models.TextField)):
             yield field
 
 
