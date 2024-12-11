@@ -44,14 +44,21 @@ def update_account_view(context, user, **kwargs):
         custom_model_instance = NauUserExtendedModel()
     finally:
         for field in get_fields(custom_model_instance):
-            extended_profile_fields.append(
-                {
-                    "field_name": _(field.name),  # pylint: disable=translation-of-non-string
-                    "field_label": _(field.verbose_name),  # pylint: disable=translation-of-non-string
-                    "field_type": "TextField" if not field.choices else "ListField",
-                    "field_options": [] if not field.choices else field.choices,
-                }
-            )
+            extended_profile_field = {
+                "field_name": _(field.name), # pylint: disable=translation-of-non-string
+                "field_label": _(field.verbose_name), # pylint: disable=translation-of-non-string
+            }
+            if isinstance(field, models.BooleanField):
+                extended_profile_field["field_type"] = "CheckboxField"
+                extended_profile_field["field_options"] = []
+            elif field.choices:
+                extended_profile_field["field_type"] = "ListField"
+                extended_profile_field["field_options"] = field.choices
+            else:
+                extended_profile_field["field_type"] = "TextField"
+                extended_profile_field["field_options"] = []
+
+            extended_profile_fields.append(extended_profile_field)
 
     context["extended_profile_fields"].extend(extended_profile_fields)
 
