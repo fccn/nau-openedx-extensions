@@ -45,8 +45,8 @@ def update_account_view(context, user, **kwargs):
     finally:
         for field in get_fields(custom_model_instance):
             extended_profile_field = {
-                "field_name": _(field.name), # pylint: disable=translation-of-non-string
-                "field_label": _(field.verbose_name), # pylint: disable=translation-of-non-string
+                "field_name": _(field.name),  # pylint: disable=translation-of-non-string
+                "field_label": _(field.verbose_name),  # pylint: disable=translation-of-non-string
             }
             if isinstance(field, models.BooleanField):
                 extended_profile_field["field_type"] = "CheckboxField"
