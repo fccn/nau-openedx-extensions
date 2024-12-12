@@ -9,12 +9,11 @@ from django.core.exceptions import FieldError
 from django.db.models.query import QuerySet
 from django.utils.translation import gettext as _
 from openedx_filters import PipelineStep
-from openedx_filters.learning.filters import CourseEnrollmentStarted
+from openedx_filters.learning.filters import CourseEnrollmentStarted, ScheduleQuerySetRequested
 
 from nau_openedx_extensions.edxapp_wrapper import site_configuration_helpers as configuration_helpers
 from nau_openedx_extensions.edxapp_wrapper.course_module import get_other_course_settings
 from nau_openedx_extensions.edxapp_wrapper.student import get_student_course_enrollment_allowed
-from nau_openedx_extensions.filters.definition import ScheduleQuerySetRequested
 
 
 class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public-methods
