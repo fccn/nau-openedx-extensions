@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2024-10-02 13:56+0100\n"
+"POT-Creation-Date: 2024-12-12 12:58-0500\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -110,7 +110,7 @@ msgstr ""
 "href='https://www.nau.edu.pt/legal/consentimento-para-o-envio-de-"
 "newsletters/'>consentimento para o envio de newsletters</a>"
 
-#: nau_openedx_extensions/filters/pipeline.py:50
+#: nau_openedx_extensions/filters/pipeline.py:51
 msgid ""
 "You need to activate your account before you can enroll in the course. "
 "Check your {email} inbox for an account activation link from "
@@ -120,11 +120,11 @@ msgstr ""
 "Verifique no seu e-mail {email} o link de ativação da conta "
 "{platform_name}."
 
-#: nau_openedx_extensions/filters/pipeline.py:62
+#: nau_openedx_extensions/filters/pipeline.py:63
 msgid "If you think this is an error, contact the course support."
 msgstr "Se achar que se trata de um erro, contacte o suporte."
 
-#: nau_openedx_extensions/filters/pipeline.py:63
+#: nau_openedx_extensions/filters/pipeline.py:64
 #, python-format
 msgid ""
 "You can't enroll on this course because your email domain is not allowed."
