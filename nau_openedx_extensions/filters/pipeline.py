@@ -5,11 +5,10 @@ Defined filters.
 from fnmatch import fnmatch
 
 from django.conf import settings
-from django.core.exceptions import FieldError
 from django.db.models.query import QuerySet
 from django.utils.translation import gettext as _
 from openedx_filters import PipelineStep
-from openedx_filters.learning.filters import CourseEnrollmentStarted, ScheduleQuerySetRequested
+from openedx_filters.learning.filters import CourseEnrollmentStarted
 
 from nau_openedx_extensions.edxapp_wrapper import site_configuration_helpers as configuration_helpers
 from nau_openedx_extensions.edxapp_wrapper.course_module import get_other_course_settings
@@ -83,7 +82,10 @@ class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public
 
 class FilterUsersWithAllowedNewsletter(PipelineStep):
     """
-    Filter users with allowed newsletter.
+    Filter the Schedules QuerySet to only keep those whose associated user has
+    the `allow_newsletter` field set to `True`. If the user does not have the
+    `allow_newsletter` field set to `True`, or if the field does not exist, the
+    Schedule will be filtered out.
 
     Example usage:
 
@@ -108,22 +110,7 @@ class FilterUsersWithAllowedNewsletter(PipelineStep):
         Arguments:
             schedules (QuerySet): Queryset of schedules to be sent.
 
-        Raises:
-            PreventScheduleQuerysetRequest: If the filter can't be applied.
-
         Returns:
             dict: Dictionary with the filtered schedules.
         """
-        try:
-            filtered_schedules = schedules.filter(
-                enrollment__user__nauuserextendedmodel__allow_newsletter=True,
-            )
-            return {
-                "schedules": filtered_schedules,
-            }
-        except FieldError as exc:
-            raise ScheduleQuerySetRequested.PreventScheduleQuerySetRequest(
-                "The filter can't be applied because the user model "
-                "doesn't have the attribute 'nauuserextendedmodel'.",
-                schedules,
-            ) from exc
+        return {"schedules": schedules.filter(enrollment__user__nauuserextendedmodel__allow_newsletter=True)}
