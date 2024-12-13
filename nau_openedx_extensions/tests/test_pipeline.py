@@ -4,12 +4,13 @@ Tests for the pipeline module used in nau_openex_extensions
 
 from unittest.mock import MagicMock, Mock, patch
 
+from django.db.models import QuerySet
 from django.test import TestCase
 from django.test.utils import override_settings
 from opaque_keys.edx.keys import CourseKey
 from openedx_filters.learning.filters import CourseEnrollmentStarted
 
-from nau_openedx_extensions.filters.pipeline import FilterEnrollmentByDomain
+from nau_openedx_extensions.filters.pipeline import FilterEnrollmentByDomain, FilterUsersWithAllowedNewsletter
 
 
 class FilterEnrollmentByDomainTest(TestCase):
@@ -246,3 +247,34 @@ class FilterEnrollmentByDomainTest(TestCase):
             "You need to activate your account before you can enroll in the course. "
             "Check your example@example.com inbox for an account activation link from NAU."
         ))
+
+
+class TestFilterUsersWithAllowedNewsletter(TestCase):
+    """Test the FilterUsersWithAllowedNewsletter class that filters users who have allowed newsletters."""
+
+    def test_run_filter_with_allowed_newsletter_users(self):
+        """
+        Test that the filter returns only schedules for users who have allowed newsletters.
+        """
+        mock_schedules = Mock(spec=QuerySet)
+        mock_schedules.filter.return_value = mock_schedules
+
+        result = FilterUsersWithAllowedNewsletter.run_filter(self, mock_schedules)
+
+        mock_schedules.filter.assert_called_once_with(enrollment__user__nauuserextendedmodel__allow_newsletter=True)
+        self.assertIsInstance(result, dict)
+        self.assertIn("schedules", result)
+        self.assertEqual(result["schedules"], mock_schedules)
+
+    def test_run_filter_with_empty_queryset(self):
+        """
+        Test that the filter works correctly with an empty queryset.
+        """
+        mock_schedules = Mock(spec=QuerySet)
+        mock_schedules.filter.return_value = mock_schedules
+
+        result = FilterUsersWithAllowedNewsletter.run_filter(self, mock_schedules)
+
+        mock_schedules.filter.assert_called_once_with(enrollment__user__nauuserextendedmodel__allow_newsletter=True)
+        self.assertIsInstance(result, dict)
+        self.assertIn("schedules", result)
