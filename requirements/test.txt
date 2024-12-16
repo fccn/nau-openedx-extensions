@@ -50,3 +50,5 @@ typing-extensions==4.3.0  # via astroid, pylint
 vine==5.1.0               # via -r requirements/base.txt, amqp, celery
 web-fragments==2.0.0      # via -r requirements/base.txt
 wrapt==1.14.1             # via astroid
+django_mock_queries==2.3.0  # via -r requirements/test.in
+model-bakery==1.5.0       # via django_mock_queries
