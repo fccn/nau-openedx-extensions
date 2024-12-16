@@ -4,9 +4,9 @@ Tests for the pipeline module used in nau_openex_extensions
 
 from unittest.mock import MagicMock, Mock, patch
 
-from django.db.models import QuerySet
 from django.test import TestCase
 from django.test.utils import override_settings
+from django_mock_queries.query import MockModel, MockSet
 from opaque_keys.edx.keys import CourseKey
 from openedx_filters.learning.filters import CourseEnrollmentStarted
 
@@ -250,31 +250,35 @@ class FilterEnrollmentByDomainTest(TestCase):
 
 
 class TestFilterUsersWithAllowedNewsletter(TestCase):
-    """Test the FilterUsersWithAllowedNewsletter class that filters users who have allowed newsletters."""
+    """
+    Test the FilterUsersWithAllowedNewsletter class that filters users who have allowed newsletters.
+    """
 
-    def test_run_filter_with_allowed_newsletter_users(self):
+    def test_run_filter(self):
         """
         Test that the filter returns only schedules for users who have allowed newsletters.
+
+        Expected result:
+        - The filter returns a dictionary with the key schedules and a queryset of schedules.
+        - The schedules queryset has only one schedule that has a user with allow_newsletter=True.
+        - The other schedules that have a user with allow_newsletter=False or without allow_newsletter
+            are not in the queryset.
         """
-        mock_schedules = Mock(spec=QuerySet)
-        mock_schedules.filter.return_value = mock_schedules
+        mock_schedules = MockSet(
+            MockModel(
+                mock_name="allow_newsletter_true",
+                enrollment=MockModel(user=MockModel(nauuserextendedmodel=MockModel(allow_newsletter=True))),
+            ),
+            MockModel(
+                mock_name="allow_newsletter_false",
+                enrollment=MockModel(user=MockModel(nauuserextendedmodel=MockModel(allow_newsletter=False))),
+            ),
+            MockModel(mock_name="without_allow_newsletter", enrollment=MockModel(user=MockModel())),
+        )
 
         result = FilterUsersWithAllowedNewsletter.run_filter(self, mock_schedules)
 
-        mock_schedules.filter.assert_called_once_with(enrollment__user__nauuserextendedmodel__allow_newsletter=True)
         self.assertIsInstance(result, dict)
         self.assertIn("schedules", result)
-        self.assertEqual(result["schedules"], mock_schedules)
-
-    def test_run_filter_with_empty_queryset(self):
-        """
-        Test that the filter works correctly with an empty queryset.
-        """
-        mock_schedules = Mock(spec=QuerySet)
-        mock_schedules.filter.return_value = mock_schedules
-
-        result = FilterUsersWithAllowedNewsletter.run_filter(self, mock_schedules)
-
-        mock_schedules.filter.assert_called_once_with(enrollment__user__nauuserextendedmodel__allow_newsletter=True)
-        self.assertIsInstance(result, dict)
-        self.assertIn("schedules", result)
+        self.assertEqual(len(result["schedules"]), 1)
+        self.assertEqual(result["schedules"][0].mock_name, "allow_newsletter_true")
