@@ -87,6 +87,10 @@ class FilterUsersWithAllowedNewsletter(PipelineStep):
     `allow_newsletter` field set to `True`, or if the field does not exist, the
     Schedule will be filtered out.
 
+    The Schedules QuerySet is used to send recurring nudges emails to users.
+    This filter allows excluding users who have opted out of receiving these
+    emails.
+
     Example usage:
 
     Add the following configurations to your configuration file:
