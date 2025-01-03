@@ -40,7 +40,7 @@ def event_receiver_no_id_verify_for_enrollment_modes(enrollment: CourseEnrollmen
         if verification_active:
             log.info("User %d already has an ID verification", user_id)
         else:
-            expiration_date = now + timedelta(days=36500)  # 100 years
+            expiration_date = now + timedelta(days=365 * 100 + 100/4)  # 365 days * 100 years + leap year days
             log.info("Create user ID Verification for %d", user_id)
             create_user_id_verification(
                 user_id,
