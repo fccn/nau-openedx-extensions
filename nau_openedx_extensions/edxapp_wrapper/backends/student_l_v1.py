@@ -1,18 +1,29 @@
 """
 Real implementation on getting a student course enrollment allowed.
 """
-from common.djangoapps.student.models import CourseEnrollmentAllowed  # pylint: disable=import-error
+from common.djangoapps.student.models import CourseEnrollment, CourseEnrollmentAllowed  # pylint: disable=import-error
 
 
 def get_student_course_enrollment_allowed(user, course_id, *args, **kwargs):
     """
-    Return configuration value for the key specified as name argument.
+    Get the student CourseEnrollmentAllowed class instance from the edx-platform.
 
     Args:
-        val_name (str): Name of the key for which to return configuration value.
-        default: default value tp return if key is not found in the configuration
+        user: The user id to find the CourseEnrollmentAllowed instance.
+        course_id: The course id to find the CourseEnrollmentAllowed instance.
 
     Returns:
-        Configuration value for the given key.
+        A CourseEnrollmentAllowed instance or None
     """
     return CourseEnrollmentAllowed.for_user(user).filter(course_id=course_id).first()
+
+def get_enrollment(user, course_key, *args, **kwargs):
+    """
+    Gets the student CourseEnrollment class from the edx-platform.
+    This class represents an user enrolled in a course.
+
+    Args:
+        user: The user id to find the Enrollment.
+        course_key: The course key to find the Enrollment.
+    """
+    return CourseEnrollment.get_enrollment(user, course_key)
