@@ -12,7 +12,7 @@ from openedx_filters.learning.filters import CourseEnrollmentStarted
 
 from nau_openedx_extensions.edxapp_wrapper import site_configuration_helpers as configuration_helpers
 from nau_openedx_extensions.edxapp_wrapper.course_module import get_other_course_settings
-from nau_openedx_extensions.edxapp_wrapper.student import get_student_course_enrollment_allowed
+from nau_openedx_extensions.edxapp_wrapper.student import get_enrollment, get_student_course_enrollment_allowed
 
 
 class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public-methods
@@ -56,7 +56,8 @@ class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public
 
             cea = get_student_course_enrollment_allowed(user, course_key)
             # if the student is allowed to enroll, skip checking the email domain
-            if not cea:
+            # validate the email domain if user is not already enrolled
+            if not cea and not get_enrollment(user, course_key):
                 if not FilterEnrollmentByDomain._is_user_email_allowed(user, domains_allowed):
                     custom_message = other_course_settings.get("value", {}).get(
                         "filter_enrollment_by_domain_custom_exception_message",

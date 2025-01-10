@@ -10,12 +10,29 @@ from django.conf import settings
 
 def get_student_course_enrollment_allowed(user, course_id, *args, **kwargs):
     """
-    Gets the student CourseEnrollmentAllowed class from the edx-platform.
-    This class represents an user represented by its email address that is
-    allowed to enroll in a course.
-    """
+    Get the student CourseEnrollmentAllowed class instance from the edx-platform.
 
+    Args:
+        user: The user id to find the CourseEnrollmentAllowed instance.
+        course_id: The course id to find the CourseEnrollmentAllowed instance.
+
+    Returns:
+        A CourseEnrollmentAllowed instance or None
+    """
     backend_module = settings.NAU_STUDENT_MODULE
     backend = import_module(backend_module)
-
     return backend.get_student_course_enrollment_allowed(user, course_id, *args, **kwargs)
+
+
+def get_enrollment(user, course_key, *args, **kwargs):
+    """
+    Gets the student CourseEnrollment class from the edx-platform.
+    This class represents an user enrolled in a course.
+
+    Args:
+        user: The user id to find the Enrollment.
+        course_key: The course key to find the Enrollment.
+    """
+    backend_module = settings.NAU_STUDENT_MODULE
+    backend = import_module(backend_module)
+    return backend.get_enrollment(user, course_key, *args, **kwargs)
