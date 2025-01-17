@@ -12,7 +12,7 @@ Export multiple courses:
   python manage.py cms export_course_content_async --username <my_username> <course_id_1>,<course_id_2>,<course_id_3>
 
 Export all courses:
-  python manage.py cms export_course_content_async
+  python manage.py cms export_course_content_async --username <my_username>
 """
 from django.contrib.auth import get_user_model
 from django.conf import settings
