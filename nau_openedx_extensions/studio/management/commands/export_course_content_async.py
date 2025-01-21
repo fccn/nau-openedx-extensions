@@ -14,6 +14,7 @@ Export multiple courses:
 Export all courses:
   python manage.py cms export_course_content_async --username <my_username>
 """
+
 from cms.djangoapps.contentstore.tasks import export_olx  # lint-amnesty, pylint: disable=import-error
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -33,9 +34,24 @@ class Command(BaseCommand):
     """
 
     def add_arguments(self, parser):
-        parser.add_argument("--username", type=str, help="The username of the user to export the course content")
-        parser.add_argument("--index", type=int, default=0, help="Start index of the course ids to begin exporting")
-        parser.add_argument("course_ids", nargs="*", metavar="course_id", default=None, help="Course ids to export or if omitted, all courses will be exported")
+        parser.add_argument(
+            "--username",
+            type=str,
+            help="The username of the user to export the course content",
+        )
+        parser.add_argument(
+            "--index",
+            type=int,
+            default=0,
+            help="Start index of the course ids to begin exporting",
+        )
+        parser.add_argument(
+            "course_ids",
+            nargs="*",
+            metavar="course_id",
+            default=None,
+            help="Course ids to export or if omitted, all courses will be exported",
+        )
 
     def log_msg(self, msg):
         self.stdout.write(msg)
@@ -60,7 +76,9 @@ class Command(BaseCommand):
         courses_count = len(course_ids)
         for index in range(start_index, courses_count):
             course_id = course_ids[index]
-            self.log_msg(f"Exporting {index+1} of {courses_count} - exporting {course_id}")
+            self.log_msg(
+                f"Exporting {index+1} of {courses_count} - exporting {course_id}"
+            )
             try:
                 course_key = CourseKey.from_string(course_id)
 
@@ -69,9 +87,7 @@ class Command(BaseCommand):
                 cms_root_url = SiteConfiguration.get_value_for_org(
                     course_key.org, "CMS_ROOT_URL", settings.CMS_ROOT_URL
                 )
-                to_download_url = (
-                    f"{cms_root_url}/export/{course_id}"
-                )
+                to_download_url = f"{cms_root_url}/export/{course_id}"
                 self.log_msg(
                     f"You can confirm the existence of the file on: {to_download_url}"
                 )
@@ -79,5 +95,6 @@ class Command(BaseCommand):
                 self.log_msg(f"Error exporting course {course_id}: {e}")
                 # print stacktrace and continue
                 import traceback
+
                 self.log_msg(traceback.format_exc())
                 continue
