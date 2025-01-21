@@ -46,8 +46,9 @@ lint: ## Run linters to check code style
 	$(TOX) pycodestyle ./nau_openedx_extensions
 	$(TOX) isort --check-only --diff ./nau_openedx_extensions
 
-isort: ## Fix Python import sort
+lint-fix: ## Fix Python import sort
 	$(TOX) isort ./nau_openedx_extensions
+	$(TOX) autopep8 --in-place --aggressive --aggressive ./nau_openedx_extensions/*.py
 
 
 # Define PIP_COMPILE_OPTS=-v to get more information during make upgrade.

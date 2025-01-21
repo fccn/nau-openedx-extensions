@@ -12,25 +12,24 @@ Export multiple courses:
 Export all courses:
   python manage.py cms transfer_export_course_content --username <my_username>
 """
-import os
-from path import Path as path
 import base64
-from django.contrib.auth import get_user_model
+import os
+
+from cms.djangoapps.contentstore.storage import course_import_export_storage
+from cms.djangoapps.contentstore.views.import_export import _latest_task_status
+from common.djangoapps.util.file import course_filename_prefix_generator  # lint-amnesty, pylint: disable=import-error
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
+from lms.djangoapps.instructor_task.models import ReportStore  # lint-amnesty, pylint: disable=import-error
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.djangoapps.site_configuration.models import (  # lint-amnesty, pylint: disable=import-error
     SiteConfiguration,
 )
-from xmodule.modulestore.django import modulestore
-
-from lms.djangoapps.instructor_task.models import ReportStore  # lint-amnesty, pylint: disable=import-error
-from common.djangoapps.util.file import course_filename_prefix_generator  # lint-amnesty, pylint: disable=import-error
-from cms.djangoapps.contentstore.views.import_export import _latest_task_status
-from cms.djangoapps.contentstore.storage import course_import_export_storage
+from path import Path as path
 from user_tasks.models import UserTaskArtifact, UserTaskStatus
-
-from django.core.files.base import ContentFile
+from xmodule.modulestore.django import modulestore
 
 User = get_user_model()
 
@@ -75,7 +74,8 @@ def upload_tar_gz(file_name, name, course_key, timestamp, config_name="GRADES_DO
         )
         path = report_store.path_to(course_key, report_name, '')
 
-        import subprocess, os
+        import os
+        import subprocess
         my_env = os.environ.copy()
         my_env["AWS_ACCESS_KEY_ID"] = AWS_ACCESS_KEY_ID
         my_env["AWS_SECRET_ACCESS_KEY"] = AWS_SECRET_ACCESS_KEY
@@ -88,7 +88,8 @@ def upload_tar_gz(file_name, name, course_key, timestamp, config_name="GRADES_DO
 
 
 def zip_a_file(inpath, outpath):
-    import os, zipfile
+    import os
+    import zipfile
     with zipfile.ZipFile(outpath, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         zf.write(inpath, os.path.basename(inpath))
 
