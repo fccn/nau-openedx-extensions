@@ -14,16 +14,15 @@ Export multiple courses:
 Export all courses:
   python manage.py cms export_course_content_async --username <my_username>
 """
-from django.contrib.auth import get_user_model
+from cms.djangoapps.contentstore.tasks import export_olx  # lint-amnesty, pylint: disable=import-error
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.djangoapps.site_configuration.models import (  # lint-amnesty, pylint: disable=import-error
     SiteConfiguration,
 )
 from xmodule.modulestore.django import modulestore
-
-from cms.djangoapps.contentstore.tasks import export_olx  # lint-amnesty, pylint: disable=import-error
 
 User = get_user_model()
 

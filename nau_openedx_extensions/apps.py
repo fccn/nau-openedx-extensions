@@ -32,7 +32,7 @@ class NauOpenEdxConfig(AppConfig):
             },
         },
         "view_context_config": {
-            "lms.djangoapp":  {
+            "lms.djangoapp": {
                 "course_dashboard": "nau_openedx_extensions.multi_dashboard.context_processor.get_multi_dashboard_context"  # lint-amnesty, pylint: disable=line-too-long # noqa
             },
         },

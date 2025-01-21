@@ -21,11 +21,14 @@ log = get_task_logger(__name__)
 
 User = get_user_model()
 
+
 class MockRequest():
     def __init__(self, user):
         self.user = user
 
+
 FILE_READ_CHUNK = 1024  # bytes
+
 
 def upload_tar_gz_to_report_store(file, name, course_id, timestamp, config_name="GRADES_DOWNLOAD"):
     """
@@ -49,9 +52,12 @@ def upload_tar_gz(file_name, name, course_key, timestamp, config_name="GRADES_DO
     The ReportStore sometimes fails to upload some files, so we use aws cli as primary upload method.    """
     bucket = settings.GRADES_DOWNLOAD.get('BUCKET')
     if bucket:
-        AWS_ACCESS_KEY_ID = settings.GRADES_DOWNLOAD.get('STORAGE_KWARGS', {}).get('access_key') or settings.AWS_ACCESS_KEY_ID
-        AWS_SECRET_ACCESS_KEY = settings.GRADES_DOWNLOAD.get('STORAGE_KWARGS', {}).get('secret_key') or settings.AWS_SECRET_ACCESS_KEY
-        AWS_S3_ENDPOINT_URL = settings.GRADES_DOWNLOAD.get('STORAGE_KWARGS', {}).get('endpoint_url') or settings.AWS_S3_ENDPOINT_URL
+        AWS_ACCESS_KEY_ID = settings.GRADES_DOWNLOAD.get(
+            'STORAGE_KWARGS', {}).get('access_key') or settings.AWS_ACCESS_KEY_ID
+        AWS_SECRET_ACCESS_KEY = settings.GRADES_DOWNLOAD.get(
+            'STORAGE_KWARGS', {}).get('secret_key') or settings.AWS_SECRET_ACCESS_KEY
+        AWS_S3_ENDPOINT_URL = settings.GRADES_DOWNLOAD.get(
+            'STORAGE_KWARGS', {}).get('endpoint_url') or settings.AWS_S3_ENDPOINT_URL
 
         report_store = ReportStore.from_config(config_name)
         report_name = "{course_prefix}_{name}_{timestamp_str}.tar.gz".format(
@@ -64,10 +70,16 @@ def upload_tar_gz(file_name, name, course_key, timestamp, config_name="GRADES_DO
         my_env = os.environ.copy()
         my_env["AWS_ACCESS_KEY_ID"] = AWS_ACCESS_KEY_ID
         my_env["AWS_SECRET_ACCESS_KEY"] = AWS_SECRET_ACCESS_KEY
-        returncode = subprocess.call(['aws', f"--endpoint={AWS_S3_ENDPOINT_URL}", 's3', 'cp', str(file_name), f"s3://{bucket}/{path}"], env=my_env)
+        returncode = subprocess.call(['aws',
+                                      f"--endpoint={AWS_S3_ENDPOINT_URL}",
+                                      's3',
+                                      'cp',
+                                      str(file_name),
+                                      f"s3://{bucket}/{path}"],
+                                     env=my_env)
         if returncode != 0:
             raise Exception(f"Failed to upload file to S3. Return code: {returncode}")
-    else: 
+    else:
         with open(file_name, mode="r", encoding="utf-8") as file:
             upload_tar_gz_to_report_store(file, name, course_key, timestamp, config_name)
 
@@ -120,13 +132,14 @@ def transfer_course_content(self, user_id, course_key_string, language):
             if artifact:
                 artifact.file.close()
 
-        log.info("Start downloading the file of the course: %s from: %s now uploading to: %s", course_key_string, cms_export_download_url, lms_instructor_data_download_url)
+        log.info("Start downloading the file of the course: %s from: %s now uploading to: %s",
+                 course_key_string, cms_export_download_url, lms_instructor_data_download_url)
         upload_tar_gz(temp_filepath, "export_course_content", course_key, artifact.created)
 
-        log.info("Sent export to report store with success of the course: %s from: %s to: %s", course_key_string, cms_export_download_url, lms_instructor_data_download_url)
+        log.info("Sent export to report store with success of the course: %s from: %s to: %s",
+                 course_key_string, cms_export_download_url, lms_instructor_data_download_url)
         os.remove(temp_filepath)
         return course_key_string, True
     else:
         log.error("No export found for course %s", course_key_string)
         return course_key_string, False
-
