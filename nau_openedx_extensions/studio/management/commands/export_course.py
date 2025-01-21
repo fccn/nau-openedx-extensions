@@ -104,3 +104,6 @@ class Command(BaseCommand):
                 failed_courses.append(course_id)
         
         self.log_msg(f"Tasks completed, successful count: {len(successfull_courses)}, failed, {len(failed_courses)}")
+
+        for failed_course in failed_courses:
+            self.log_msg(f"Failed course: {failed_course}")
