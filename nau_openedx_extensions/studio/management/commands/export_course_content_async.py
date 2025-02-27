@@ -15,11 +15,15 @@ Export all courses:
   python manage.py cms export_course_content_async --username <my_username>
 """
 
+import datetime
+
+import pytz
 from cms.djangoapps.contentstore.tasks import export_olx  # lint-amnesty, pylint: disable=import-error
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from opaque_keys.edx.keys import CourseKey
+from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangoapps.site_configuration.models import (  # lint-amnesty, pylint: disable=import-error
     SiteConfiguration,
 )
@@ -46,6 +50,12 @@ class Command(BaseCommand):
             help="Start index of the course ids to begin exporting",
         )
         parser.add_argument(
+            "--skip-archived",
+            type=bool,
+            default=False,
+            help="Skip archived courses",
+        )
+        parser.add_argument(
             "course_ids",
             nargs="*",
             metavar="course_id",
@@ -61,6 +71,8 @@ class Command(BaseCommand):
         """
         Execute the command
         """
+        now = datetime.datetime.now(pytz.UTC)
+
         course_ids = options.get("course_ids", None)
         if not course_ids:
             module_store = modulestore()
@@ -76,6 +88,20 @@ class Command(BaseCommand):
         courses_count = len(course_ids)
         for index in range(start_index, courses_count):
             course_id = course_ids[index]
+
+            if options.get("skip-archived", False):
+                course_overview = CourseOverview.get_from_id(course_id)
+                is_archived = (
+                    course_overview is not None
+                    and course_overview.end is not None
+                    and now > course_overview.end
+                )
+                if is_archived:
+                    self.log_msg(
+                        f"Skipping {index+1} of {courses_count} - exporting {course_id} because it is archived"
+                    )
+                    continue
+
             self.log_msg(
                 f"Exporting {index+1} of {courses_count} - exporting {course_id}"
             )
