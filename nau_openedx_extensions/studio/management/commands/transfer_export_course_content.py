@@ -3,14 +3,17 @@ Before executing this command run: export_course_content_async.py
 Then run this command to transfer the exported course content from User Tasks to GRADES_DOWNLOAD storage.
 Making the backup of the course more easily available to the teams.
 
-Export a specific course:
+Transfer a specific course:
   python manage.py cms transfer_export_course_content --username <my_username> <course_id>
 
-Export multiple courses:
+Transfer multiple courses:
   python manage.py cms transfer_export_course_content --username <my_username> <course_id_1>,<course_id_2>,<course_id_3>
 
-Export all courses:
+Transfer all courses:
   python manage.py cms transfer_export_course_content --username <my_username>
+
+Transfer not archived courses:
+  python manage.py cms transfer_export_course_content --username <my_username> --skip-archived
 """
 
 import base64
@@ -33,6 +36,8 @@ from openedx.core.djangoapps.site_configuration.models import (  # lint-amnesty,
 from path import Path as path
 from user_tasks.models import UserTaskArtifact, UserTaskStatus
 from xmodule.modulestore.django import modulestore
+
+from nau_openedx_extensions.utils.course import is_course_archived
 
 User = get_user_model()
 
@@ -146,8 +151,7 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--skip-archived",
-            type=bool,
-            default=False,
+            action="store_true",
             help="Skip archived courses",
         )
         parser.add_argument(
@@ -186,18 +190,12 @@ class Command(BaseCommand):
         for index in range(start_index, courses_count):
             course_id = course_ids[index]
 
-            if options.get("skip-archived", False):
-                course_overview = CourseOverview.get_from_id(course_id)
-                is_archived = (
-                    course_overview is not None
-                    and course_overview.end is not None
-                    and now > course_overview.end
+            # The `-` caracter of `--skip-archived` is converted to `_` underscore
+            if options.get("skip_archived") and is_course_archived(course_id):
+                self.log_msg(
+                    f"Skipping {index+1} of {courses_count} - exporting {course_id} because it is archived"
                 )
-                if is_archived:
-                    self.log_msg(
-                        f"Skipping {index+1} of {courses_count} - exporting {course_id} because it is archived"
-                    )
-                    continue
+                continue
 
             self.log_msg(
                 f"Processing {index+1} of {courses_count} - exporting {course_id}"
