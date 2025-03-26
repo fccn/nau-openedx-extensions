@@ -1,7 +1,6 @@
 """
 Script that adds a course message for the archived courses.
 """
-import datetime
 import json
 import logging
 
@@ -11,10 +10,12 @@ from common.djangoapps.status.models import (  # lint-amnesty, pylint: disable=i
 )
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.utils import timezone, translation
+from django.utils import translation
 from django.utils.translation import gettext as _
 from opaque_keys.edx.keys import CourseKey
 from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=import-error
+
+from nau_openedx_extensions.utils.course import is_course_archived
 
 log = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ class Command(BaseCommand):
             print("Handling course_id: " + course_id)
             course_key = CourseKey.from_string(course_id)
             course = modulestore().get_course(course_key)
-            if Command.is_archived_course(course, days):
+            if is_course_archived(course, days=days):
                 Command.add_course_message(course, messages)
             else:
                 Command.remove_course_message(course)
@@ -164,13 +165,6 @@ class Command(BaseCommand):
             # We don't have a course-specific message, so pass.
             pass
         return course_home_message
-
-    @staticmethod
-    def is_archived_course(course, days: int) -> bool:
-        """
-        Check if a course is archived.
-        """
-        return course.end and (course.end + datetime.timedelta(days) < timezone.now())
 
     @staticmethod
     def delete_status_messages():
