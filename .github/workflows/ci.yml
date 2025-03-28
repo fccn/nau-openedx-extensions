@@ -8,57 +8,39 @@ on:
 
 
 jobs:
-  create-virtualenv:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    - uses: syphar/restore-virtualenv@v1
-      id: cache-virtualenv
-
-    - uses: syphar/restore-pip-download-cache@v1
-      if: steps.cache-virtualenv.outputs.cache-hit != 'true'
-
-    - run: make requirements
-      if: steps.cache-virtualenv.outputs.cache-hit != 'true'
 
   test:
-    needs: create-virtualenv
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-    - uses: syphar/restore-virtualenv@v1
-      id: cache-virtualenv
-
+        cache: 'pip' # caching pip dependencies
+        cache-dependency-path: requirements/*.txt
+    - run: make requirements
     - run: make test
 
   lint:
-    needs: create-virtualenv
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-    - uses: syphar/restore-virtualenv@v1
-      id: cache-virtualenv
-
+        cache: 'pip' # caching pip dependencies
+        cache-dependency-path: requirements/*.txt
+    - run: make requirements
     - run: make lint
 
   check_miss_run_update_translations:
-    needs: create-virtualenv
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-    - uses: syphar/restore-virtualenv@v1
-      id: cache-virtualenv
-
+        cache: 'pip' # caching pip dependencies
+        cache-dependency-path: requirements/*.txt
+    - run: make requirements
     - run: make check_miss_run_update_translations
