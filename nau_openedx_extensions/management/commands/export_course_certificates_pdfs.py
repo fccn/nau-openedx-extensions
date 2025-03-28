@@ -1,15 +1,5 @@
 """
-Export all PDF course certificates to a zip file and upload it to the `GRADES_DOWNLOAD` storage.
-
-You can skip the `certificate_download_domain` parameter on production environment.
-
-To manually develop the script you can edit it on the fly and execute it.
-    docker cp export_course_certificates_pdfs.py \
-        openedx_lms:/openedx/venv/lib/python3.8/site-packages/nau_openedx_extensions/management/\
-            commands/export_course_certificates_pdfs.py && docker exec -i openedx_lms python \
-                manage.py lms export_course_certificates_pdfs \
-                    --certificate_download_domain course-certificate.dev.nau.fccn.pt \
-                        course-v1:FCT+CTC101x+2020_T2
+Export all PDF course certificates to a zip file and upload it to the 'GRADES_DOWNLOAD' storage.
 """
 import os
 import shutil
@@ -28,6 +18,7 @@ from openedx.core.djangoapps.site_configuration.models import (  # lint-amnesty,
     SiteConfiguration,
 )
 from pytz import UTC
+from requests.adapters import HTTPAdapter
 
 
 def delete_recursive(folder):
@@ -65,7 +56,14 @@ def download_file(base_folder, url):
     Download a file from an URL to a folder, by default use the filename header as the name of the
     file.
     """
-    response = requests.get(url, timeout=60)
+    # create an HTTP adapter with the retry configuration
+    adapter = HTTPAdapter(max_retries=3)
+    # create a new session object
+    session = requests.Session()
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+
+    response = session.get(url, timeout=60)
     filename = base_folder + "/"
     if "content-disposition" in response.headers:
         content_disposition = response.headers["content-disposition"]
@@ -80,7 +78,7 @@ def download_file(base_folder, url):
 class Command(BaseCommand):
     """
     Export all PDF course certificates with its links to a csv file and upload it to the
-    `GRADES_DOWNLOAD` storage.
+    'GRADES_DOWNLOAD' storage.
     """
 
     output_base_folder = getattr(
