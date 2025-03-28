@@ -15,7 +15,7 @@ import os
 import shutil
 from datetime import datetime
 
-import requests  # lint-amnesty, pylint: disable=import-error
+import requests
 from common.djangoapps.util.query import use_read_replica_if_available  # lint-amnesty, pylint: disable=import-error
 from django.conf import settings
 from django.core.management.base import BaseCommand

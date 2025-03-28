@@ -5,7 +5,7 @@ from __future__ import absolute_import, unicode_literals
 
 import logging
 
-from celery import shared_task  # lint-amnesty, pylint: disable=import-error
+from celery import shared_task
 from django.conf import settings
 from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
 from opaque_keys.edx.keys import CourseKey
