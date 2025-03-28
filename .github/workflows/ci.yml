@@ -21,10 +21,7 @@ jobs:
     - uses: syphar/restore-pip-download-cache@v1
       if: steps.cache-virtualenv.outputs.cache-hit != 'true'
 
-    - run: pip install -r requirements/test.txt
-      if: steps.cache-virtualenv.outputs.cache-hit != 'true'
-
-    - run: pip install -r requirements/translations.txt
+    - run: make requirements
       if: steps.cache-virtualenv.outputs.cache-hit != 'true'
 
   test:
