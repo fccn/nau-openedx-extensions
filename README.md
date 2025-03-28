@@ -9,12 +9,20 @@ NAU Open edX extensions is a [django app plugin](https://github.com/edx/edx-plat
 [Usage details](docs/usage.rst).
 
 ## Virtual environment
+
 Create a python virtual environment.
 ```bash
-make virtual_environment
+python -m venv venv
 ```
+
 And activate it.
 Further steps should be run inside this virtual environment.
+
+## Install requirements
+
+```bash
+make requirements
+```
 
 ## Tests
 
@@ -34,17 +42,12 @@ make lint
 
 ## Translations
 
-Run the translations target on a virtual environment.
+To extract, update translations files and to compile, simply run.
 
-```bash
-virtualenv --python=python3 venv
-. venv/bin/activate
-```
+`make translations`
 
-To extract strings to be translated from the source code.
-`make update_translations`
+To translate, change the conf/locale/<lang>/LC_MESSAGES/django.po files.
 
-Then translate by changing the conf/locale/<lang>/LC_MESSAGES/django.po files.
-Then recompile them executing the same makefile target.
-`make update_translations`
+Then to compile, just execute the same Makefile target.
 
+`make translations`
