@@ -29,7 +29,6 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from lms.djangoapps.instructor_task.models import ReportStore  # lint-amnesty, pylint: disable=import-error
 from opaque_keys.edx.keys import CourseKey
-from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangoapps.site_configuration.models import (  # lint-amnesty, pylint: disable=import-error
     SiteConfiguration,
 )

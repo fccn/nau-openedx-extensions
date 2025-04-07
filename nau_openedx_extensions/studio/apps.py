@@ -20,3 +20,10 @@ class NauOpenCmsConfig(AppConfig):
             },
         },
     }
+
+    def ready(self):
+        """
+        Method to perform actions after apps registry is ended
+        """
+        from nau_openedx_extensions.studio import \
+            signals  # pylint: disable=import-outside-toplevel,unused-import # noqa
