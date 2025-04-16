@@ -8,6 +8,11 @@ NAU Open edX extensions is a [django app plugin](https://github.com/edx/edx-plat
 ## Usage
 [Usage details](docs/usage.rst).
 
+## Python
+
+This package requires the same Python version of the edx-platform.
+For redwood Python 3.11.
+
 ## Virtual environment
 
 Create a python virtual environment.
@@ -51,3 +56,14 @@ To translate, change the conf/locale/<lang>/LC_MESSAGES/django.po files.
 Then to compile, just execute the same Makefile target.
 
 `make translations`
+
+## VSCode
+
+To make VSCode detect the edx-platform code, add this to your project settings.
+
+```json
+{
+    "python.autoComplete.extraPaths": ["${workspaceFolder}/../edx-platform"],
+    "python.analysis.extraPaths": ["${workspaceFolder}/../edx-platform"],
+}
+```
