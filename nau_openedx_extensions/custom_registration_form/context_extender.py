@@ -108,4 +108,8 @@ def partial_update(update, user, **kwargs):
                 new_value = field["field_value"]
                 setattr(custom_model_instance, field_name, new_value)
 
+            # Save the custom model instance
+            # This is necessary to trigger the validation of the fields
+            # and to ensure that the data is saved correctly
+            custom_model_instance.full_clean()
             custom_model_instance.save()
