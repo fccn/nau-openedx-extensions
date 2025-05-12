@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2025-03-28 17:34+0000\n"
+"POT-Creation-Date: 2025-05-13 10:01+0100\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -22,31 +22,36 @@ msgstr ""
 msgid "Please authorize data processing"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:30
+#: nau_openedx_extensions/custom_registration_form/models.py:25
+#: nau_openedx_extensions/custom_registration_form/models.py:29
+msgid "Invalid NIF"
+msgstr "NIF inválido"
+
+#: nau_openedx_extensions/custom_registration_form/models.py:53
 msgid "Student"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:31
+#: nau_openedx_extensions/custom_registration_form/models.py:54
 msgid "Unemployed"
 msgstr "Desempregado"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:32
+#: nau_openedx_extensions/custom_registration_form/models.py:55
 msgid "Public service contract"
 msgstr "Contrato em instituição pública"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:33
+#: nau_openedx_extensions/custom_registration_form/models.py:56
 msgid "Private institution contract"
 msgstr "Contrato em instituição privada"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:34
+#: nau_openedx_extensions/custom_registration_form/models.py:57
 msgid "Self employed entrepreneur"
 msgstr "Trabalhador independente/empresário"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:35
+#: nau_openedx_extensions/custom_registration_form/models.py:58
 msgid "Other"
 msgstr "Outro"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:40
+#: nau_openedx_extensions/custom_registration_form/models.py:63
 msgid ""
 "I have read and understood the <a href='https://www.nau.edu.pt/legal"
 "/politica-de-privacidade/' rel='noopener' target='_blank'>Privacy "
@@ -55,55 +60,55 @@ msgstr ""
 "Li e compreendi a <a href='https://www.nau.edu.pt/legal/politica-de-"
 "privacidade/' rel='noopener' target='_blank'>Política de Privacidade</a>"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:46
+#: nau_openedx_extensions/custom_registration_form/models.py:69
 msgid "NIF"
 msgstr "NIF - Nº de Identificação Fiscal"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:49
+#: nau_openedx_extensions/custom_registration_form/models.py:72
 msgid "CC NIF"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:52
+#: nau_openedx_extensions/custom_registration_form/models.py:75
 msgid "CC NIC"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:55
+#: nau_openedx_extensions/custom_registration_form/models.py:78
 msgid "CC NIC Check Digit"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:58
+#: nau_openedx_extensions/custom_registration_form/models.py:81
 msgid "CC First name"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:60
+#: nau_openedx_extensions/custom_registration_form/models.py:83
 msgid "CC Last name"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:62
+#: nau_openedx_extensions/custom_registration_form/models.py:85
 msgid "CC Nacionality"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:65
+#: nau_openedx_extensions/custom_registration_form/models.py:88
 msgid "CC Zip code 3 digits"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:68
+#: nau_openedx_extensions/custom_registration_form/models.py:91
 msgid "CC Zip code 4 digits"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:71
+#: nau_openedx_extensions/custom_registration_form/models.py:94
 msgid "CC Document number"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:74
+#: nau_openedx_extensions/custom_registration_form/models.py:97
 msgid "CC Birth date"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:77
+#: nau_openedx_extensions/custom_registration_form/models.py:100
 msgid "Employment situation"
 msgstr "Situação profissional"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:80
+#: nau_openedx_extensions/custom_registration_form/models.py:103
 msgid "Allow newsletter"
 msgstr ""
 "Li e aceito prestar o meu <a target='_blank' "

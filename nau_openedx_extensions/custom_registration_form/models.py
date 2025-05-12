@@ -8,9 +8,32 @@ from django.conf import settings
 from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from openedx.core.djangoapps.user_api.errors import AccountValidationError  # pylint: disable=import-error
+
+from nau_openedx_extensions.utils.nif import is_nif_valid
 
 # Backwards compatible settings.AUTH_USER_MODEL
 USER_MODEL = getattr(settings, "AUTH_USER_MODEL", "auth.User")  # lint-amnesty, pylint: disable=hard-coded-auth-user
+
+
+class NifValidator:
+    """
+    NIF Django validator
+    """
+
+    def __init__(self, message=None):
+        self.message = message or _("Invalid NIF")
+
+    def __call__(self, value):
+        if not is_nif_valid(value):
+            message = _("Invalid NIF")
+            raise AccountValidationError({
+                # the 'extended_profile' instead of 'nif' is an hack to show the error in the Django UI
+                'extended_profile': {
+                    "developer_message": message,
+                    "user_message": message,
+                }
+            })
 
 
 class NauUserExtendedModel(models.Model):
@@ -43,7 +66,7 @@ class NauUserExtendedModel(models.Model):
         ), default=False
     )
     nif = models.CharField(
-        verbose_name=_("NIF"), max_length=9, blank=True, null=True
+        verbose_name=_("NIF"), max_length=9, blank=True, null=True, validators=[NifValidator()]
     )
     cc_nif = models.CharField(
         verbose_name=_("CC NIF"), max_length=9, blank=True, null=True
