@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2025-05-13 11:20+0100\n"
+"POT-Creation-Date: 2025-05-13 14:30+0100\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Generated-By: Babel 2.9.0\n"
 
 #: nau_openedx_extensions/custom_registration_form/forms.py:38
-msgid "Please authorize data processing"
+msgid "You must read and understood the Privacy Policy"
 msgstr ""
 
 #: nau_openedx_extensions/custom_registration_form/models.py:25

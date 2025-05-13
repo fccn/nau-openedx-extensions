@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2025-05-13 11:20+0100\n"
+"POT-Creation-Date: 2025-05-13 14:30+0100\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -19,8 +19,8 @@ msgstr ""
 "Generated-By: Babel 2.9.0\n"
 
 #: nau_openedx_extensions/custom_registration_form/forms.py:38
-msgid "Please authorize data processing"
-msgstr ""
+msgid "You must read and understood the Privacy Policy"
+msgstr "Deverá ler e compreender a Politica de Privacidade"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:25
 #: nau_openedx_extensions/custom_registration_form/models.py:29
@@ -29,7 +29,7 @@ msgstr "NIF inválido"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:53
 msgid "Student"
-msgstr ""
+msgstr "Estudante"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:54
 msgid "Unemployed"
@@ -66,43 +66,43 @@ msgstr "NIF - Nº de Identificação Fiscal"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:72
 msgid "CC NIF"
-msgstr ""
+msgstr "CC NIF"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:75
 msgid "CC NIC"
-msgstr ""
+msgstr "CC NIC"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:78
 msgid "CC NIC Check Digit"
-msgstr ""
+msgstr "CC NIC Dígito de controlo"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:81
 msgid "CC First name"
-msgstr ""
+msgstr "Nome próprio do Cartão de Cidadão"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:83
 msgid "CC Last name"
-msgstr ""
+msgstr "Apelido do Cartão de Cidadão"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:85
 msgid "CC Nacionality"
-msgstr ""
+msgstr "Nacionalidade do Cartão de Cidadão"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:88
 msgid "CC Zip code 3 digits"
-msgstr ""
+msgstr "Código postal 3 dígitos do Cartão de Cidadão"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:91
 msgid "CC Zip code 4 digits"
-msgstr ""
+msgstr "Código postal 4 dígitos do Cartão de Cidadão"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:94
 msgid "CC Document number"
-msgstr ""
+msgstr "Número do documento do Cartão de Cidadão"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:97
 msgid "CC Birth date"
-msgstr ""
+msgstr "Data de nascimento do Cartão de Cidadão"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:100
 msgid "Employment situation"
