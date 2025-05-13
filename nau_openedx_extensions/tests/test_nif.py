@@ -61,3 +61,7 @@ class TestNifValidation(TestCase):
     def test_nif_with_special_characters(self):
         """Test NIF with special characters"""
         self.assertFalse(is_nif_valid("123-456-789"), "NIF with special characters should be invalid")
+
+    def test_nif_with_none(self):
+        """Test NIF with None"""
+        self.assertFalse(is_nif_valid(None), "NIF with no value has None should be invalid")

@@ -9,7 +9,7 @@ import string
 LEN_NIF = 9
 
 
-def is_nif_valid(ans):
+def is_nif_valid(nif_value):
     """
     Portuguese VATIN - NIF validator
     Reference: https://gist.github.com/dreispt/024dd11c160af58268e2b44019080bbf
@@ -56,7 +56,9 @@ def is_nif_valid(ans):
             _sum += dig * (9 - pos)
         # verificar soma de controlo
         return (_sum % 11 and (11 - _sum % 11) % 10) == num[-1]
-    try:
-        return controlNIF(ans)
-    except ValueError:
-        return False
+    if nif_value:
+        try:
+            return controlNIF(nif_value)
+        except ValueError:
+            return False
+    return False
