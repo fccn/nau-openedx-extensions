@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2025-05-13 10:01+0100\n"
+"POT-Creation-Date: 2025-05-13 11:20+0100\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -113,22 +113,28 @@ msgstr ""
 "href='https://www.nau.edu.pt/legal/consentimento-para-o-envio-de-"
 "newsletters/'>consent to the sending of newsletters</a>"
 
-#: nau_openedx_extensions/filters/pipeline.py:51
+#: nau_openedx_extensions/filters/pipeline.py:55
 msgid ""
 "You need to activate your account before you can enroll in the course. "
 "Check your {email} inbox for an account activation link from "
 "{platform_name}."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:64
+#: nau_openedx_extensions/filters/pipeline.py:68
 msgid "If you think this is an error, contact the course support."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:65
+#: nau_openedx_extensions/filters/pipeline.py:69
 #, python-format
 msgid ""
 "You can't enroll on this course because your email domain is not allowed."
 " %(custom_message)s"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:121
+msgid ""
+"You need to associate Autenticação Gov to your account or add NIF to your"
+" account."
 msgstr ""
 
 #: nau_openedx_extensions/management/commands/add_archived_course_message.py:110

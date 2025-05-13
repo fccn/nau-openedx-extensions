@@ -10,7 +10,11 @@ from django_mock_queries.query import MockModel, MockSet
 from opaque_keys.edx.keys import CourseKey
 from openedx_filters.learning.filters import CourseEnrollmentStarted
 
-from nau_openedx_extensions.filters.pipeline import FilterEnrollmentByDomain, FilterUsersWithAllowedNewsletter
+from nau_openedx_extensions.filters.pipeline import (
+    FilterEnrollmentByDomain,
+    FilterEnrollmentRequireNIF,
+    FilterUsersWithAllowedNewsletter,
+)
 
 
 class FilterEnrollmentByDomainTest(TestCase):
@@ -249,7 +253,93 @@ class FilterEnrollmentByDomainTest(TestCase):
         ))
 
 
-class TestFilterUsersWithAllowedNewsletter(TestCase):
+class FilterEnrollmentRequireNIFTest(TestCase):
+    """
+    Test the FilterEnrollmentRequireNIF class that prevents enrollment if the user doesn't have a NIF
+    on its account.
+    """
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_user_is_allowed_to_enroll_with_valid_nif(self, get_other_course_settings_mock):
+        """
+        Test the filter when user has a valid NIF.
+
+        Expected result:
+        - The get other course settings is called once with the course key.
+        - The other_course_settings.get is called once with value and {}
+        - The other_course_settings.get calls get with filter_enrollment_require_nif and True
+        - The filter returns {} that means that the user is allowed to enroll.
+        """
+        course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
+        user = MockModel(email="example@example.com", is_active=True, nau_nif='123456789')
+        mode = "audit"
+
+        other_course_settings = Mock()
+        get_other_course_settings_mock.return_value = other_course_settings
+        other_course_settings_get = Mock()
+        other_course_settings.get.return_value = other_course_settings_get
+        other_course_settings_get.get.return_value = True
+
+        response = FilterEnrollmentRequireNIF.run_filter(self, user, course_key, mode)
+
+        get_other_course_settings_mock.assert_called_once_with(course_key)
+        other_course_settings.get.assert_called_once_with("value", {})
+        other_course_settings_get.get.assert_called_once_with("filter_enrollment_require_nif")
+        self.assertEqual(response, {})
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_user_is_allowed_to_enroll_no_nif(self, get_other_course_settings_mock):
+        """
+        Test the filter when user has't a NIF.
+        """
+        course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
+        user = MockModel(email="example@example.com", is_active=True, nau_nif=None)
+        mode = "audit"
+
+        other_course_settings = Mock()
+        get_other_course_settings_mock.return_value = other_course_settings
+        other_course_settings_get = Mock()
+        other_course_settings.get.return_value = other_course_settings_get
+        other_course_settings_get.get.return_value = True
+
+        with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment) as pe:
+            FilterEnrollmentRequireNIF.run_filter(self, user, course_key, mode)
+
+        get_other_course_settings_mock.assert_called_once_with(course_key)
+        other_course_settings.get.assert_called_once_with("value", {})
+        other_course_settings_get.get.assert_called_once_with("filter_enrollment_require_nif")
+        self.assertEqual(pe.exception.message, (
+            "You need to associate Autenticação Gov to your account or add NIF to your account."
+        ))
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_user_is_allowed_to_enroll_with_invalid_nif(self, get_other_course_settings_mock):
+        """
+        Test the filter when user has an invalid NIF, for example before introducing the NIF
+        validation feature.
+        """
+        course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
+        user = MockModel(email="example@example.com", is_active=True, nau_nif='999')
+        mode = "audit"
+
+        other_course_settings = Mock()
+        get_other_course_settings_mock.return_value = other_course_settings
+        other_course_settings_get = Mock()
+        other_course_settings.get.return_value = other_course_settings_get
+        other_course_settings_get.get.return_value = True
+
+        with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment) as pe:
+            FilterEnrollmentRequireNIF.run_filter(self, user, course_key, mode)
+
+        get_other_course_settings_mock.assert_called_once_with(course_key)
+        other_course_settings.get.assert_called_once_with("value", {})
+        other_course_settings_get.get.assert_called_once_with("filter_enrollment_require_nif")
+        self.assertEqual(pe.exception.message, (
+            "You need to associate Autenticação Gov to your account or add NIF to your account."
+        ))
+
+
+class FilterUsersWithAllowedNewsletterTest(TestCase):
     """
     Test the FilterUsersWithAllowedNewsletter class that filters users who have allowed newsletters.
     """

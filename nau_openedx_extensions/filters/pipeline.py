@@ -13,6 +13,7 @@ from openedx_filters.learning.filters import CourseEnrollmentStarted
 from nau_openedx_extensions.edxapp_wrapper import site_configuration_helpers as configuration_helpers
 from nau_openedx_extensions.edxapp_wrapper.course_module import get_other_course_settings
 from nau_openedx_extensions.edxapp_wrapper.student import get_enrollment, get_student_course_enrollment_allowed
+from nau_openedx_extensions.utils.nif import is_nif_valid
 
 
 class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public-methods
@@ -23,9 +24,12 @@ class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public
     It also allows instructor to override the filter. The user can enroll even if its email
     domain doesn't be one of the allowed if the instructor has added its email as one of the
     Course Enrolment Allowed. A race condition can raise an error, if the user account already
-    exist and is inactive, in this case the instructor couldn't add manualy the custom user to
+    exist and is inactive, in this case the instructor couldn't add manually the custom user to
     the course. If this happens, the user needs to activate their account before the instructor
     could create the enrollment.
+
+    To activate it, the course needs to have the setting `filter_enrollment_by_domain_list` set
+    to a list of email domains inside the course other settings on the advanced settings.
 
     Example usage:
     Add the following configurations to your configuration file:
@@ -79,6 +83,47 @@ class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public
             if user_domain == domain or fnmatch(user_domain, f"*.{domain}"):
                 return True
         return False
+
+
+class FilterEnrollmentRequireNIF(PipelineStep):
+    """
+    Stop enrollment process raising PreventEnrollment exception if the user has not
+    a NIF and/or CC NIF on its account.
+    This makes the course enrollment process to be blocked until the user fills in
+    a NIF.
+    This filter needs to be configured on the course level, so it can be
+    configured on the course settings.
+
+    To activate it, the course needs to have the setting `filter_enrollment_require_nif` with
+    a value to 'true' inside the course other settings on the advanced settings.
+
+    Example usage:
+    Add the following configurations to your configuration file:
+        "OPEN_EDX_FILTERS_CONFIG": {
+            "org.openedx.learning.course.enrollment.started.v1": {
+                "fail_silently": false,
+                "pipeline": [
+                    "nau_openedx_extensions.filters.pipeline.FilterEnrollmentRequireNIF"
+                ]
+            }
+        }
+    """
+
+    def run_filter(self, user, course_key, mode):   # pylint: disable=unused-argument, arguments-differ
+        """Filter implementation."""
+
+        other_course_settings = get_other_course_settings(course_key)
+        filter_by_nif = other_course_settings.get("value", {}).get("filter_enrollment_require_nif")
+        if filter_by_nif:
+            # use the 'nau_nif' attr that already has a decorator to get the NIF
+            nif = user.nau_nif
+            if not is_nif_valid(nif):
+                exception_msg = _(
+                    "You need to associate Autenticação Gov to your account or add NIF to your account."
+                )
+                raise CourseEnrollmentStarted.PreventEnrollment(exception_msg)
+
+        return {}
 
 
 class FilterUsersWithAllowedNewsletter(PipelineStep):
