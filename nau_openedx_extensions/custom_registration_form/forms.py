@@ -35,5 +35,5 @@ class NauUserExtendedForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["data_authorization"].error_messages = {
-            "required": _("Please authorize data processing")
+            "required": _("You must read and understood the Privacy Policy")
         }
