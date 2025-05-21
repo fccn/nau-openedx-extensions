@@ -142,7 +142,7 @@ class FilterCertificateExportTab(PipelineStep):
     def run_filter(self, context, template_name):
         logging.warning("EJECUTANDO FILTRO CERTIFICATE EXPORT")
         course = context["course"]
-        template = Template(self.resource_string("static/html/certificate_export.html"))
+        template = Template(self.resource_string("static/nau_openedx_extensions/html/certificate_export.html"))
 
         # Si necesitas el usuario actual:
         request = get_current_request()
@@ -168,7 +168,7 @@ class FilterCertificateExportTab(PipelineStep):
             "section_key": BLOCK_CATEGORY,
             "section_display_name": _("Certificate Export"),
             "course_id": str(course.id),
-            "template_path_prefix": TEMPLATE_ABSOLUTE_PATH,  # <--- Cambia esto
+            "template_path_prefix": TEMPLATE_ABSOLUTE_PATH,
         }
         logging.warning("ANTES DE APPEND: %s", context["sections"])
         context["sections"].append(section_data)

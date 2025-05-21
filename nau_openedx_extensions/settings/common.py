@@ -5,6 +5,8 @@ Settings for nau_openedx_extensions
 from __future__ import absolute_import, unicode_literals
 
 from django.utils.translation import gettext_lazy as _
+import os
+from os.path import dirname, abspath, join
 
 SECRET_KEY = "a-not-to-be-trusted-secret-key"
 INSTALLED_APPS = (
@@ -24,6 +26,11 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# Encuentra la ruta base del paquete (donde está tu app)
+BASE_DIR = dirname(dirname(abspath(__file__)))  # sube dos niveles desde common.py
+
+
+
 
 def plugin_settings(settings):
     """
@@ -34,6 +41,8 @@ def plugin_settings(settings):
     # Overwrite the default certificate name
     settings.CERT_NAME_SHORT = _("Certificate")
     settings.CERT_NAME_LONG = _("Certificate of Achievement")
+
+    settings.MAKO_TEMPLATE_DIRS_BASE.append(join(BASE_DIR, "templates"))
 
     settings.NAU_CUSTOM_SAML_IDENTITY_PROVIDERS = [
         {
