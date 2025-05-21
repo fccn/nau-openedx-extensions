@@ -4,6 +4,8 @@ Defined filters.
 
 from fnmatch import fnmatch
 
+from django.urls import reverse
+
 from django.conf import settings
 from django.db.models.query import QuerySet
 from django.utils.translation import gettext as _
@@ -13,6 +15,15 @@ from openedx_filters.learning.filters import CourseEnrollmentStarted
 from nau_openedx_extensions.edxapp_wrapper import site_configuration_helpers as configuration_helpers
 from nau_openedx_extensions.edxapp_wrapper.course_module import get_other_course_settings
 from nau_openedx_extensions.edxapp_wrapper.student import get_enrollment, get_student_course_enrollment_allowed
+
+from web_fragments.fragment import Fragment
+from django.template import Context, Template
+import pkg_resources
+from crum import get_current_request
+import logging
+
+TEMPLATE_ABSOLUTE_PATH = "/instructor_dashboard/"
+BLOCK_CATEGORY = "certificate_export"
 
 
 class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public-methods
@@ -43,7 +54,10 @@ class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public
         """Filter."""
 
         other_course_settings = get_other_course_settings(course_key)
-        domains_allowed = other_course_settings.get("value", {}).get("filter_enrollment_by_domain_list")
+        domains_allowed = (
+            other_course_settings.get("value", {}).get("filter_enrollment_by_domain_list") or
+            other_course_settings.get("value", {}).get("filterEnrollmentByDomainList")
+        )
 
         if domains_allowed:
             if not user.is_active:
@@ -119,3 +133,54 @@ class FilterUsersWithAllowedNewsletter(PipelineStep):
             dict: Dictionary with the filtered schedules.
         """
         return {"schedules": schedules.filter(enrollment__user__nauuserextendedmodel__allow_newsletter=True)}
+
+
+class FilterCertificateExportTab(PipelineStep):
+    """
+    Add a Certificate export tab to the instructor dashboard.
+    """
+    def run_filter(self, context, template_name):
+        logging.warning("EJECUTANDO FILTRO CERTIFICATE EXPORT")
+        course = context["course"]
+        template = Template(self.resource_string("static/html/certificate_export.html"))
+
+        # Si necesitas el usuario actual:
+        request = get_current_request()
+        # Puedes agregar lógica de permisos aquí si lo deseas
+
+        # Puedes actualizar el contexto con datos adicionales si lo necesitas
+        context.update({
+            "certificate_export_url": getattr(settings, "CERTIFICATE_EXPORT_URL", ""),
+            # ...otros datos...
+        })
+
+        logging.warning("Sections context: %s", context["sections"])
+
+        html = template.render(Context(context))
+        frag = Fragment(html)
+
+        # Si tienes CSS/JS específicos para este tab:
+        # frag.add_css(self.resource_string("static/css/certificate_export.css"))
+        # frag.add_javascript(self.resource_string("static/js/certificate_export.js"))
+
+        section_data = {
+            "fragment": frag,
+            "section_key": BLOCK_CATEGORY,
+            "section_display_name": _("Certificate Export"),
+            "course_id": str(course.id),
+            "template_path_prefix": TEMPLATE_ABSOLUTE_PATH,  # <--- Cambia esto
+        }
+        logging.warning("ANTES DE APPEND: %s", context["sections"])
+        context["sections"].append(section_data)
+        logging.warning("DESPUES DE APPEND: %s", context["sections"])
+        logging.warning("RETURN CONTEXT: %s", context)
+        return {
+            "context": context,
+        }
+
+    def resource_string(self, path):
+        """Helper to get resources from the extension package."""
+        data = pkg_resources.resource_string(
+            "nau_openedx_extensions", path
+        )
+        return data.decode("utf8")
