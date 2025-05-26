@@ -1,6 +1,33 @@
-
 <div class="certificate-export-section">
-  <h2>Certificate Export</h2>
-  <p>Este es un tab de prueba para la exportación de certificados.</p>
-  <p>Tab de certificados visible correctamentteeee.</p>
+  <p>In this section you can export the course certificates in different formats.</p>
+
+  <div class="certificate-export-controls">
+    <h3>Export options</h3>
+
+    <div class="action-item">
+      <div class="action-item-content">
+        <p>Download a CSV file with the details of all certificates generated for this course.</p>
+        <button class="btn btn-primary" id="export-csv-certificates" data-endpoint="${certificate_export_url}/csv">
+          Export certificates CSV
+        </button>
+      </div>
+    </div>
+
+    <div class="action-item">
+      <div class="action-item-content">
+        <p>Download a ZIP file containing all certificates in PDF format for this course.</p>
+        <button class="btn btn-primary" id="export-zip-certificates" data-endpoint="${certificate_export_url}/zip">
+          Export certificates PDF as ZIP
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="certificate-export-status" style="display:none;">
+    <div class="message-status error" style="display:none;"></div>
+    <div class="message-status success" style="display:none;"></div>
+    <div class="message-status info" style="display:none;"></div>
+    <div class="message-status warning" style="display:none;"></div>
+  </div>
 </div>
+

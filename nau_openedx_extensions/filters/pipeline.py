@@ -140,28 +140,22 @@ class FilterCertificateExportTab(PipelineStep):
     Add a Certificate export tab to the instructor dashboard.
     """
     def run_filter(self, context, template_name):
-        logging.warning("EJECUTANDO FILTRO CERTIFICATE EXPORT")
+
         course = context["course"]
         template = Template(self.resource_string("static/nau_openedx_extensions/html/certificate_export.html"))
 
-        # Si necesitas el usuario actual:
         request = get_current_request()
-        # Puedes agregar lógica de permisos aquí si lo deseas
 
-        # Puedes actualizar el contexto con datos adicionales si lo necesitas
         context.update({
             "certificate_export_url": getattr(settings, "CERTIFICATE_EXPORT_URL", ""),
-            # ...otros datos...
         })
-
-        logging.warning("Sections context: %s", context["sections"])
 
         html = template.render(Context(context))
         frag = Fragment(html)
 
         # Si tienes CSS/JS específicos para este tab:
-        # frag.add_css(self.resource_string("static/css/certificate_export.css"))
-        # frag.add_javascript(self.resource_string("static/js/certificate_export.js"))
+        frag.add_css(self.resource_string("static/nau_openedx_extensions/css/certificate_export.css"))
+        frag.add_javascript(self.resource_string("static/nau_openedx_extensions/js/certificate_export.js"))
 
         section_data = {
             "fragment": frag,
@@ -170,10 +164,9 @@ class FilterCertificateExportTab(PipelineStep):
             "course_id": str(course.id),
             "template_path_prefix": TEMPLATE_ABSOLUTE_PATH,
         }
-        logging.warning("ANTES DE APPEND: %s", context["sections"])
+
         context["sections"].append(section_data)
-        logging.warning("DESPUES DE APPEND: %s", context["sections"])
-        logging.warning("RETURN CONTEXT: %s", context)
+
         return {
             "context": context,
         }
