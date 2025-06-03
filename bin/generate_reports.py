@@ -19,13 +19,12 @@
     python3 generate_reports.py -h
 
 **Example Request**
-    Each user will receive an email with the course information and a link to access it.
-    The users will be enrolled in the course when they have finished creating its own account.
-    If the user already has an account, the script is going to still send an email inform him
-    that he/she was enrolled on the course by the course team.
+    To generate reports for multiple courses, fill in your email and password details,
+    while making sure that you have the necessary permissions to access the courses as a data_researcher.
+    You can specify a single course ID or a file containing multiple course IDs.
 
     python3 generate_reports.py --email <email> --password <password> \
-        --lms_url https://lms.nau.edu.pt --auto_enroll --email_students \
+        --lms_url https://lms.nau.edu.pt --course_id course-v1:FCT+TPag+2024_T3 \ 
         --course_ids_file courses.txt --report get_students_profile
 
 **Courses File**
@@ -81,8 +80,8 @@ def generate_report_url_data(course_id, lms_url, report, additional_info):
     Generate the data for the report URL.
     :param course_id: The course ID to generate reports for
     :param lms_url: The LMS URL (e.g. https://lms.example.com)
-    :param report: The report name to generate
-    :param additional_info: Additional information to be used in the report
+    :param report: The report type to generate
+    :param additional_info: Additional information, mainly IDs for problems
     :return: A dictionary with the data for the report URL
     """
     if report == "get_students_profile":
@@ -121,7 +120,7 @@ def generate_report_for_course(session, csrftoken, lms_url, course_id, report, a
     :param auth_email: The email of the user with course team permissions
     :param auth_password: The password of the user with course team permissions
     :param course_id: The course ID to generate reports for
-    :param report: The report name to generate
+    :param report: The report type to generate
     :param additional_info: Additional information to be used in the report
     :raises RuntimeError: If the report generation fails
     """
@@ -156,9 +155,9 @@ def main():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("--email", "--user",
-                        required=True, help="The course team email that will enroll users")
+                        required=True, help="The course team email with data_researcher permissions")
     parser.add_argument("--password", "--pass",
-                        required=True, help="The course team password that will enroll users")
+                        required=True, help="The course team password")
     parser.add_argument("--lms_url", required=True, help="Your LMS URL (e.g. https://lms.example.com)")
     parser.add_argument("--course_id",
                         help="The course ID to enroll users in")
@@ -166,7 +165,7 @@ def main():
                         help="The course ID files to generate reports for",
                         type=argparse.FileType('r', encoding='UTF-8'))
     parser.add_argument("--report",
-                        help="Report name to generate", required=True, choices=[
+                        help="Report type to be generated", required=True, choices=[
                             "get_students_profile",
                             "get_students_who_may_enroll",
                             "get_student_anonymized_ids",
