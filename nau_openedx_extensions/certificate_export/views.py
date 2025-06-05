@@ -7,6 +7,6 @@ class CertificateExportAPIView(APIView):
     API endpoint to start the certificate export task.
     """
     def post(self, request, course_id):
-        # Lógica para iniciar la tarea de exportación
+        # Initilize the export task with the course_id
         export_course_certificates_task.delay(course_id)
         return Response({"success": True, "message": "CSV export task started successfully."})
