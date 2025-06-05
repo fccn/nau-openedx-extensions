@@ -1,17 +1,7 @@
 const button = document.querySelector("#export-csv-certificates");
 if (button) {
     button.addEventListener("click", function () {
-        // Extraer el course_id desde la URL actual
-        const pathParts = window.location.pathname.split("/");
-        const courseId = pathParts.find(part => part.startsWith("course-v1"));
-
-        if (!courseId) {
-            console.error("No se pudo encontrar el course_id en la URL.");
-            return;
-        }
-
-        // Construye la URL correctamente con el prefijo nau-openedx-extensions
-        const endpoint = `/nau-openedx-extensions/certificate_export/courses/${courseId}/certificate_export/csv`;
+        const endpoint = this.dataset.endpoint; // The endpoint URL is stored in a data attribute
 
         function getCookie(name) {
             let cookieValue = null;
@@ -34,11 +24,8 @@ if (button) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-CSRFToken": csrftoken, // Agrega el token CSRF
+                "X-CSRFToken": csrftoken, // add CSRF token for security
             },
-            body: JSON.stringify({
-                course_id: courseId, // Pasa el course_id en el cuerpo de la solicitud
-            }),
         })
         .then(response => response.json())
         .then(data => {
@@ -52,6 +39,4 @@ if (button) {
             console.error("Error starting CSV export task:", error);
         });
     });
-} else {
-    console.error("El botón export-csv-certificates no existe en el DOM.");
 }

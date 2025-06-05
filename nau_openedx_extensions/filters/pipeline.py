@@ -146,15 +146,18 @@ class FilterCertificateExportTab(PipelineStep):
 
         request = get_current_request()
 
+        # Ensure the request is available in the context and the url is correctly formed
         context.update({
-            "certificate_export_url": getattr(settings, "CERTIFICATE_EXPORT_URL", ""),
+            "certificate_export_url": reverse(
+                "nau-openedx-extensions:nau_export_certificates_csv", 
+                kwargs={"course_id": course.id}
+            ),
             "course": course,  # Ensure the course object is passed
         })
 
         html = template.render(Context(context))
         frag = Fragment(html)
 
-        # Si tienes CSS/JS específicos para este tab:
         frag.add_css(self.resource_string("static/nau_openedx_extensions/css/certificate_export.css"))
         frag.add_javascript(self.resource_string("static/nau_openedx_extensions/js/certificate_export.js"))
 
