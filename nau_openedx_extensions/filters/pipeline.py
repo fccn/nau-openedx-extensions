@@ -148,6 +148,7 @@ class FilterCertificateExportTab(PipelineStep):
 
         context.update({
             "certificate_export_url": getattr(settings, "CERTIFICATE_EXPORT_URL", ""),
+            "course": course,  # Ensure the course object is passed
         })
 
         html = template.render(Context(context))

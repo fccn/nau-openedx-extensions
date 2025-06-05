@@ -1,25 +1,14 @@
-"""
-Celery tasks for certificate export functionality.
-"""
-import logging
-from celery import task
-from django.core.management import call_command
+from celery import shared_task
+from nau_openedx_extensions.management.commands.export_course_certificates import Command
 
-log = logging.getLogger(__name__)
-
-@task(name='nau_openedx_extensions.certificate_export.tasks.export_csv')
-def export_course_certificates_csv_task(course_id):
+@shared_task
+def export_course_certificates_task(course_id, certificate_download_domain="course-certificate.nau.edu.pt"):
     """
-    Run the export_course_certificates management command asynchronously.
-
-    Args:
-        course_id (str): The course ID to export certificates for.
+    Celery task to export course certificates as a CSV file.
     """
-    log.info(f"Starting certificate CSV export for course {course_id}")
-    try:
-        call_command('export_course_certificates', course_id)
-        log.info(f"Certificate CSV export completed for course {course_id}")
-        return True
-    except Exception as e:
-        log.error(f"Error exporting certificates CSV for course {course_id}: {str(e)}")
-        raise
+    command = Command()
+    options = {
+        "certificate_download_domain": certificate_download_domain,
+        "course_ids": [course_id],
+    }
+    command.handle(**options)
