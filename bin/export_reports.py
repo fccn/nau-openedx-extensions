@@ -65,6 +65,9 @@ REPORT_TO_DOCUMENT = {
     "ora_data_report": "ORA_data",
     "ora_summary_report": "ORA_summary",
     "get_problem_responses": "student_state_from",
+    # NAU custom reports
+    "export_course_certificates": "export_course_certificates",
+    "export_course_certificates_pdfs": "export_course_certificates_pdfs",
 }
 
 
@@ -202,16 +205,7 @@ def main():
                         help="The course IDs file to extract the reports files for",
                         type=argparse.FileType('r', encoding='UTF-8'))
     parser.add_argument("--report",
-                        help="Report name to extract", required=True, choices=[
-                            "get_students_profile",
-                            "get_students_who_may_enroll",
-                            "get_student_anonymized_ids",
-                            "grade_report",
-                            "problem_grade_report",
-                            "ora_data_report",
-                            "ora_summary_report",
-                            "get_problem_responses",
-                        ])
+                        help="Report name to extract", required=True, choices=REPORT_TO_DOCUMENT.keys())
     parser.add_argument("--output_dir", default=Path.cwd(), type=dir_path,
                         help="The directory to save the report files to. Defaults to the current directory")
     parser.add_argument("--days_ago", type=int, default=1,
