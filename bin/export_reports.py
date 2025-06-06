@@ -19,20 +19,20 @@
 
 **Help**
     To view the command line arguments:
-    python3 export_reports_to_csv.py -h
+    python3 export_reports.py -h
 
 **Example Request**
     Download all student profiles from the course course-v1:FCT+TPag+2024_T3
     from the last 30 days.
 
-    python3 export_reports_to_csv.py --email <email> --password <password> \
+    python3 export_reports.py --email <email> --password <password> \
         --lms_url https://lms.nau.edu.pt --course_id course-v1:FCT+TPag+2024_T3 \
         --report get_students_profile --days_ago 30
     
     Download the most recent grade report from the all courses in the courses.txt file.
     In this case you can omit the days_ago argument.
 
-    python3 export_reports_to_csv.py --email <email> --password <password> \
+    python3 export_reports.py --email <email> --password <password> \
         --lms_url https://lms.nau.edu.pt --course_ids_file courses.txt \
         --report grade_report
 
