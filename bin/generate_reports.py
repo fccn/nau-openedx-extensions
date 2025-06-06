@@ -215,8 +215,7 @@ def main():
         # if course_id is provided, add it to the list
         course_ids_add_info.append((course_id, []))
 
-    print(f"Using {len(course_ids_add_info)} courses from the command line arguments")
-    print(f"course_ids_add_info {course_ids_add_info}")
+    print(f"Using {len(course_ids_add_info)} courses")
 
     session, csrftoken = login_to_lms(lms_url, auth_email, auth_password)
     print(f"Logged in as {auth_email} to {lms_url}")
