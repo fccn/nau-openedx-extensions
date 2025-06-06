@@ -48,12 +48,13 @@
     course-v1:FCT+Teste+2024_T3 block-v1:FCT+Teste+2024_T3+type@problem+block@1
 """
 import argparse
+import datetime
+import os
+from pathlib import Path
 import re
 import sys
-import datetime
-import requests
-from pathlib import Path
 
+import requests
 
 REPORT_TO_DOCUMENT = {
     "get_students_profile": "student_profile_info",
@@ -96,7 +97,10 @@ def login_to_lms(lms_url, auth_email, auth_password):
             f'Invalid login, check your user/pass arguments {response}')
     return session, csrftoken
 
-def download_report(session, csrftoken, lms_url, course_id, report, additional_info, output_dir, days_ago):
+
+def download_report(
+        session, csrftoken, lms_url, course_id, report, additional_info, output_dir,
+        days_ago, stop_on_missing_report=False):
     """
     Download a generated report from the LMS.
     :param session: The logged in session object
@@ -107,14 +111,17 @@ def download_report(session, csrftoken, lms_url, course_id, report, additional_i
     :param additional_info: Additional information to be added to the report name
     :return: The report file
     """
+    from_date = datetime.datetime.now() - datetime.timedelta(days=days_ago)
     block_id = None
 
     downloads_list_url = f"{lms_url}/courses/{course_id}/instructor/api/list_report_downloads"
 
     if additional_info:
         block_id = additional_info[0].replace(":", "_").replace("@", "\\@").replace("+", "\\+")
-    
-    print(f"Downloading report '{report}' for course '{course_id}'")
+
+    print("=" * 60)
+    print(
+        f"Downloading report '{report}' for course '{course_id}' from {from_date.strftime('%Y-%m-%d %H:%M')} until now")
     downloads_list_r = session.post(
         downloads_list_url,
         headers={
@@ -132,32 +139,56 @@ def download_report(session, csrftoken, lms_url, course_id, report, additional_i
             f"""Invalid download list request, check your course_id arguments {response}.
             Check if you have access to the Instructor Data Download tab inside the course {lms_url}/courses/{course_id}/instructor#view-data_download
             """)
-        
+
     # Filter and download the report file to the current directory
-    report_files = _filter_by_report(report, course_id, downloads_list_r.json(), days_ago, block_id)
-    if not report_files:
-        raise RuntimeError(
-            f"Report '{report}' not found for course '{course_id}'")
-    
-    for file in report_files:
+    files_list = downloads_list_r.json()["downloads"]
+    report_files = _filter_by_report(report, course_id, files_list, from_date, block_id)
+    file = next(report_files, None)
+    if file:
         print(f"Downloading file {file['name']} for course {course_id}")
-        response = requests.get(file["url"], stream=True)
+        response = requests.get(file["url"], stream=True, timeout=60)
         response.raise_for_status()
-        
         filename = file["name"]
-        if output_dir:
-            filepath = Path.cwd() / output_dir / course_id / filename
+        write_file(response, course_id, filename, output_dir)
+    else:
+        if stop_on_missing_report:
+            raise RuntimeError(
+                f"Report '{report}' not found for course '{course_id}'")
         else:
-            filepath = Path.cwd() / course_id / filename
-        filepath.parent.mkdir(parents=True, exist_ok=True)
-        with open(filepath, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-    
+            print(f"Warning: Report '{report}' not found for course '{course_id}'. Skipping download.")
+
+
+def write_file(response, course_id, filename, output_dir):
+    """
+    Write the response content to a file.
+    :param response: The response object from the request
+    :param course_id: The course ID to be used in the file name
+    :param filename: The name of the file to be written
+    :param output_dir: The directory to save the report files to
+    """
+    filepath = Path(os.path.join(output_dir, course_id, filename))
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    with open(filepath, "wb") as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            f.write(chunk)
+
+
+def dir_path(string):
+    """
+    Check if the given string is a valid directory path.
+    :param string: The directory path to check
+    :return: The directory path if it is valid
+    :raises NotADirectoryError: If the given string is not a valid directory path
+    """
+    if os.path.isdir(string):
+        return string
+    else:
+        raise NotADirectoryError(string)
+
 
 def main():
     """
-    Main function to extract course csv reports from Open edX.
+    Main function to extract course reports from Open edX.
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("--email", "--user",
@@ -181,11 +212,13 @@ def main():
                             "ora_summary_report",
                             "get_problem_responses",
                         ])
-    parser.add_argument("--output_dir",
+    parser.add_argument("--output_dir", default=Path.cwd(), type=dir_path,
                         help="The directory to save the report files to. Defaults to the current directory")
     parser.add_argument("--days_ago", type=int, default=1,
                         help="Number of days ago to extract the report files for")
-    
+    parser.add_argument("--stop_on_missing_report", default=False, action='store_true',
+                        help="Stop right away if some report is missing")
+
     try:
         args = parser.parse_args()
     except SystemExit:
@@ -199,15 +232,16 @@ def main():
     course_ids_file = args.course_ids_file
     report = args.report
     days_ago = args.days_ago
+    stop_on_missing_report = args.stop_on_missing_report
     output_dir = args.output_dir
-    
+
     if not course_id and not course_ids_file:
         print("Error: You must provide a course_id or a course_ids_file")
         sys.exit(1)
     if course_id and course_ids_file:
         print("Error: You must provide only one of course_id or course_ids_file")
         sys.exit(1)
-    
+
     course_ids_add_info = []
     if course_ids_file:
         # read course ids from the file
@@ -222,42 +256,45 @@ def main():
         if not course_ids_add_info:
             print("Error: The course_ids_file is empty")
             sys.exit(1)
-        print(f"Using {len(course_ids_add_info)} courses from the file")
     else:
         # if course_id is provided, add it to the list
         course_ids_add_info.append((course_id, []))
 
-    print(f"Using {len(course_ids_add_info)} courses from the command line arguments")
-    print(f"course_ids_add_info {course_ids_add_info}")
+    print(f"Using {len(course_ids_add_info)} courses")
 
     session, csrftoken = login_to_lms(lms_url, auth_email, auth_password)
     print(f"Logged in as {auth_email} to {lms_url}")
-    
+
     for course_id, additional_info in course_ids_add_info:
-        download_report(session, csrftoken, lms_url, course_id, report, additional_info, output_dir, days_ago)
+        download_report(session, csrftoken, lms_url, course_id, report,
+                        additional_info, output_dir, days_ago, stop_on_missing_report)
+
 
 def _normalize_course_id(course_id):
     return course_id.split(':')[1].replace('+', '_')
 
-def _filter_by_report(report, course_id, files, days_ago, block_id=None):
-    today = datetime.datetime.now()
-    end_date = today - datetime.timedelta(days=days_ago)
+
+def _filter_by_report(report, course_id, files, from_date, block_id=None):
+    """
+    Filter the list of files by report name and date range.
+    """
     doc_course_id = _normalize_course_id(course_id)
 
-    print("=" * 60)
-    print(f"Downloading {report} reports from {end_date.strftime('%Y-%m-%d %H:%M')} to {today.strftime('%Y-%m-%d %H:%M')}")
-    print("=" * 60)
-    
-    if block_id:
-        regex_expression = fr'{doc_course_id}_{REPORT_TO_DOCUMENT[report]}_{block_id}_(\d{{4}}-\d{{2}}-\d{{2}}-\d{{4}})\.csv$'
+    if block_id and 'get_problem_responses' in report:
+        regex_expression = fr'{doc_course_id}_{REPORT_TO_DOCUMENT[report]}_{block_id}_(\d{{4}}-\d{{2}}-\d{{2}}-\d{{4}})\.[^.]+$'
     else:
-        regex_expression = fr'{doc_course_id}_{REPORT_TO_DOCUMENT[report]}_(\d{{4}}-\d{{2}}-\d{{2}}-\d{{4}})\.csv$'
+        regex_expression = fr'{doc_course_id}_{REPORT_TO_DOCUMENT[report]}_(\d{{4}}-\d{{2}}-\d{{2}}-\d{{4}})\.[^.]+$'
 
-    doc_name_pattern = re.compile(regex_expression)
-    
-    return [f for f in files["downloads"]
-            if (match := doc_name_pattern.match(f["name"])) and \
-            datetime.datetime.strptime(match.group(1), "%Y-%m-%d-%H%M") >= end_date]
+    regex_compiled = re.compile(regex_expression)
+
+    for f in files:
+        file_name = f["name"]
+        regex_match = regex_compiled.match(file_name)
+        if regex_match:
+            file_date_time = datetime.datetime.strptime(regex_match.group(1), "%Y-%m-%d-%H%M")
+            if file_date_time and from_date <= file_date_time:
+                yield f
+
 
 if __name__ == "__main__":
     main()
