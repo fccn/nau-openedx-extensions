@@ -100,7 +100,7 @@ def login_to_lms(lms_url, auth_email, auth_password):
 
 def download_report(
         session, csrftoken, lms_url, course_id, report, additional_info, output_dir,
-        days_ago, stop_on_missing_report=False):
+        days_ago, skip_missing):
     """
     Download a generated report from the LMS.
     :param session: The logged in session object
@@ -151,11 +151,11 @@ def download_report(
         filename = file["name"]
         write_file(response, course_id, filename, output_dir)
     else:
-        if stop_on_missing_report:
+        if skip_missing:
+            print(f"Warning: Report '{report}' not found for course '{course_id}'. Skipping download.")
+        else:
             raise RuntimeError(
                 f"Report '{report}' not found for course '{course_id}'")
-        else:
-            print(f"Warning: Report '{report}' not found for course '{course_id}'. Skipping download.")
 
 
 def write_file(response, course_id, filename, output_dir):
@@ -216,8 +216,8 @@ def main():
                         help="The directory to save the report files to. Defaults to the current directory")
     parser.add_argument("--days_ago", type=int, default=1,
                         help="Number of days ago to extract the report files for")
-    parser.add_argument("--stop_on_missing_report", default=False, action='store_true',
-                        help="Stop right away if some report is missing")
+    parser.add_argument("--skip_missing", default=False, action='store_true',
+                        help="Skip if report is absent and don't raise an error")
 
     try:
         args = parser.parse_args()
@@ -232,7 +232,7 @@ def main():
     course_ids_file = args.course_ids_file
     report = args.report
     days_ago = args.days_ago
-    stop_on_missing_report = args.stop_on_missing_report
+    skip_missing = args.skip_missing
     output_dir = args.output_dir
 
     if not course_id and not course_ids_file:
@@ -267,7 +267,7 @@ def main():
 
     for course_id, additional_info in course_ids_add_info:
         download_report(session, csrftoken, lms_url, course_id, report,
-                        additional_info, output_dir, days_ago, stop_on_missing_report)
+                        additional_info, output_dir, days_ago, skip_missing)
 
 
 def _normalize_course_id(course_id):
