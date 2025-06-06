@@ -35,6 +35,13 @@
     python3 export_reports.py --email <email> --password <password> \
         --lms_url https://lms.nau.edu.pt --course_ids_file courses.txt \
         --report grade_report
+        
+    Alternatively, you can setup the directory to save the reports in the 
+    output_dir argument.
+
+    python3 export_reports.py --email <email> --password <password> \
+        --lms_url https://lms.nau.edu.pt --course_ids_file courses.txt \
+        --report grade_report --output_dir /home/myuser/reports
 
 **Courses File**
     The courses file should contain one line per course. For example:
@@ -44,8 +51,8 @@
     
     Or one line with the additional block to be used by 'get_problem_responses' report. Example:
 
-    course-v1:FCT+TPag+2024_T3 block-v1:FCT+TPag+2024_T3+type@problem+block@ac87b7d6c48e343e94b7
-    course-v1:FCT+Teste+2024_T3 block-v1:FCT+Teste+2024_T3+type@problem+block@1
+    course-v1:FCT+TPag+2024_T3;block-v1:FCT+TPag+2024_T3+type@problem+block@ac87b7d6c48e343e94b7
+    course-v1:FCT+Teste+2024_T3;block-v1:FCT+Teste+2024_T3+type@problem+block@1
 """
 import argparse
 import datetime
@@ -112,6 +119,9 @@ def download_report(
     :param course_id: The course ID to extract the report files for
     :param report: The report name to extract
     :param additional_info: Additional information to be added to the report name
+    :param output_dir: The directory to save the report files to
+    :param days_ago: Number of days ago to extract the report files for
+    :param skip_missing: Skip if report is absent and don't raise an error
     :return: The report file
     """
     from_date = datetime.datetime.now() - datetime.timedelta(days=days_ago)
