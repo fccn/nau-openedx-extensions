@@ -6,6 +6,8 @@ from __future__ import absolute_import, unicode_literals
 
 from django.utils.translation import gettext_lazy as _
 
+from nau_openedx_extensions import ROOT_DIRECTORY
+
 SECRET_KEY = "a-not-to-be-trusted-secret-key"
 INSTALLED_APPS = (
     "django.contrib.auth",
@@ -34,6 +36,8 @@ def plugin_settings(settings):
     # Overwrite the default certificate name
     settings.CERT_NAME_SHORT = _("Certificate")
     settings.CERT_NAME_LONG = _("Certificate of Achievement")
+
+    settings.MAKO_TEMPLATE_DIRS_BASE.append(ROOT_DIRECTORY / "templates")
 
     settings.NAU_CUSTOM_SAML_IDENTITY_PROVIDERS = [
         {

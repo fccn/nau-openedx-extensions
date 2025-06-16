@@ -9,20 +9,18 @@ docker cp export_course_certificates.py \
     docker exec -i openedx_lms python manage.py lms export_course_certificates \
         course-v1:FCT+CTC101x+2020_T2
 """
+
 from datetime import datetime
 
-from common.djangoapps.util.query import use_read_replica_if_available  # lint-amnesty, pylint: disable=import-error
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from lms.djangoapps.certificates.models import GeneratedCertificate  # lint-amnesty, pylint: disable=import-error
-from lms.djangoapps.instructor_task.tasks_helper.utils import (  # lint-amnesty, pylint: disable=import-error
-    upload_csv_to_report_store,
-)
 from opaque_keys.edx.keys import CourseKey
-from openedx.core.djangoapps.site_configuration.models import (  # lint-amnesty, pylint: disable=import-error
-    SiteConfiguration,
-)
 from pytz import UTC
+
+from nau_openedx_extensions.edxapp_wrapper.certificates import GeneratedCertificate
+from nau_openedx_extensions.edxapp_wrapper.instructor_task import upload_csv_to_report_store
+from nau_openedx_extensions.edxapp_wrapper.site_configuration import SiteConfiguration
+from nau_openedx_extensions.edxapp_wrapper.util import use_read_replica_if_available
 
 
 class Command(BaseCommand):
@@ -33,9 +31,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--certificate_download_domain",
-            default="course-certificate.nau.edu.pt",
+            "--certificate-download-url",
             help="The domain to use to download the certificates",
+            required=False,
         )
         parser.add_argument("course_ids", nargs="*", metavar="course_id")
 
@@ -47,13 +45,8 @@ class Command(BaseCommand):
         """
         Execute the command
         """
-        certificate_download_domain = options["certificate_download_domain"]
+        certificate_download_url = options.get("certificate_download_url") or settings.NAU_CERTIFICATE_DOWNLOAD_URL
         course_ids = options["course_ids"]
-        certificate_download_pdf_url = getattr(
-            settings,
-            "NAU_CERTIFICATE_DOWNLOAD_PDF_URL",
-            f"https://{certificate_download_domain}/attachment/certificates/",
-        )
 
         for course_id in course_ids:
             course_key = CourseKey.from_string(course_id)
@@ -65,9 +58,7 @@ class Command(BaseCommand):
             )
 
             course_key = CourseKey.from_string(course_id)
-            lms_root_url = SiteConfiguration.get_value_for_org(
-                course_key.org, "LMS_ROOT_URL", settings.LMS_ROOT_URL
-            )
+            lms_root_url = SiteConfiguration.get_value_for_org(course_key.org, "LMS_ROOT_URL", settings.LMS_ROOT_URL)
 
             # prepare output
             rows = []
@@ -88,12 +79,8 @@ class Command(BaseCommand):
 
             # iterate each certificate and append each certificate as a row
             for certificate in course_generated_certificates:
-                certificate_web_link_url = (
-                    f"{lms_root_url}/certificates/{certificate.verify_uuid}"
-                )
-                certificate_download_pdf_link = (
-                    certificate_download_pdf_url + certificate.verify_uuid
-                )
+                certificate_web_link_url = f"{lms_root_url}/certificates/{certificate.verify_uuid}"
+                certificate_download_pdf_link = certificate_download_url + certificate.verify_uuid
 
                 rows.append(
                     [
@@ -115,9 +102,5 @@ class Command(BaseCommand):
                 start_date,
             )
 
-            lms_instructor_data_download_url = (
-                f"{lms_root_url}/courses/{course_id}/instructor#view-data_download"
-            )
-            self.log_msg(
-                f"You can confirm the existence of the file on: {lms_instructor_data_download_url}"
-            )
+            lms_instructor_data_download_url = f"{lms_root_url}/courses/{course_id}/instructor#view-data_download"
+            self.log_msg(f"You can confirm the existence of the file on: {lms_instructor_data_download_url}")

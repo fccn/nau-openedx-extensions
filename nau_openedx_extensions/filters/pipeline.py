@@ -4,16 +4,23 @@ Defined filters.
 
 from fnmatch import fnmatch
 
+import pkg_resources
 from django.conf import settings
 from django.db.models.query import QuerySet
+from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils.translation import gettext as _
 from openedx_filters import PipelineStep
 from openedx_filters.learning.filters import CourseEnrollmentStarted
+from web_fragments.fragment import Fragment
 
 from nau_openedx_extensions.edxapp_wrapper import site_configuration_helpers as configuration_helpers
 from nau_openedx_extensions.edxapp_wrapper.course_module import get_other_course_settings
 from nau_openedx_extensions.edxapp_wrapper.student import get_enrollment, get_student_course_enrollment_allowed
 from nau_openedx_extensions.utils.nif import is_nif_valid
+
+TEMPLATE_ABSOLUTE_PATH = "/instructor_dashboard/"
+BLOCK_CATEGORY = "certificate_export"
 
 
 class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public-methods
@@ -164,3 +171,48 @@ class FilterUsersWithAllowedNewsletter(PipelineStep):
             dict: Dictionary with the filtered schedules.
         """
         return {"schedules": schedules.filter(enrollment__user__nauuserextendedmodel__allow_newsletter=True)}
+
+
+class FilterCertificateExportTab(PipelineStep):
+    """
+    Add a Certificate export tab to the instructor dashboard.
+    """
+
+    def run_filter(self, context, template_name):  # pylint: disable=unused-argument, arguments-differ
+        course = context["course"]
+
+        # Ensure the request is available in the context and the URL is correctly formed
+        context.update(
+            {
+                "certificate_export_url": reverse(
+                    "nau-openedx-extensions:nau_export_certificates_csv", kwargs={"course_id": course.id}
+                ),
+                "course": course,  # Ensure the course object is passed
+            }
+        )
+
+        # Render the template using Django's template loader
+        html = render_to_string("certificate_export/certificate_export.html", context)
+
+        frag = Fragment(html)
+        frag.add_css(self.resource_string("static/nau_openedx_extensions/css/certificate_export.css"))
+        frag.add_javascript(self.resource_string("static/nau_openedx_extensions/js/certificate_export.js"))
+
+        section_data = {
+            "fragment": frag,
+            "section_key": BLOCK_CATEGORY,
+            "section_display_name": _("Certificate Export"),
+            "course_id": str(course.id),
+            "template_path_prefix": TEMPLATE_ABSOLUTE_PATH,
+        }
+
+        context["sections"].append(section_data)
+
+        return {
+            "context": context,
+        }
+
+    def resource_string(self, path):
+        """Helper to get resources from the extension package."""
+        data = pkg_resources.resource_string("nau_openedx_extensions", path)
+        return data.decode("utf8")
