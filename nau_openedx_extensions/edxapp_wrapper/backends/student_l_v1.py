@@ -1,7 +1,10 @@
 """
 Real implementation on getting a student course enrollment allowed.
 """
-from common.djangoapps.student.models import CourseEnrollment, CourseEnrollmentAllowed  # pylint: disable=import-error
+
+# pylint: disable=import-error, unused-import
+from common.djangoapps.student.models import CourseEnrollment, CourseEnrollmentAllowed
+from common.djangoapps.student.roles import CourseInstructorRole, CourseStaffRole
 
 
 def get_student_course_enrollment_allowed(user, course_id, *args, **kwargs):

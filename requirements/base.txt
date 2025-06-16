@@ -12,19 +12,21 @@ attrs==25.3.0
     # via openedx-events
 billiard==4.2.1
     # via celery
-celery==5.4.0
+celery==5.5.3
     # via
-    #   -c /home/ibranco/projects/nau/nau-openedx-extensions/requirements/constraints.txt
+    #   -c /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/constraints.txt
     #   -r requirements/base.in
-certifi==2025.1.31
+certifi==2025.6.15
     # via requests
 cffi==1.17.1
-    # via pynacl
-charset-normalizer==3.4.1
-    # via requests
-click==8.1.8
     # via
-    #   -c /home/ibranco/projects/nau/nau-openedx-extensions/requirements/constraints.txt
+    #   cryptography
+    #   pynacl
+charset-normalizer==3.4.2
+    # via requests
+click==8.2.1
+    # via
+    #   -c /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/constraints.txt
     #   celery
     #   click-didyoumean
     #   click-plugins
@@ -36,62 +38,89 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-django==4.2.20
+cryptography==45.0.4
+    # via pyjwt
+django==4.2.23
     # via
-    #   -c /home/ibranco/projects/nau/nau-openedx-extensions/requirements/constraints.txt
+    #   -c /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/constraints.txt
     #   django-crum
     #   django-waffle
+    #   djangorestframework
+    #   drf-jwt
     #   edx-django-utils
+    #   edx-drf-extensions
     #   openedx-events
     #   openedx-filters
 django-crum==0.7.9
     # via edx-django-utils
-django-waffle==4.2.0
-    # via edx-django-utils
+django-waffle==5.0.0
+    # via
+    #   edx-django-utils
+    #   edx-drf-extensions
+djangorestframework==3.16.0
+    # via
+    #   -r requirements/base.in
+    #   drf-jwt
+    #   edx-drf-extensions
 dnspython==2.7.0
     # via pymongo
+drf-jwt==1.19.2
+    # via edx-drf-extensions
 edx-ccx-keys==2.0.2
     # via openedx-events
-edx-django-utils==7.2.0
-    # via openedx-events
+edx-django-utils==8.0.0
+    # via
+    #   edx-drf-extensions
+    #   openedx-events
+edx-drf-extensions==10.6.0
+    # via -r requirements/base.in
 edx-opaque-keys[django]==2.9.0
     # via
-    #   -c /home/ibranco/projects/nau/nau-openedx-extensions/requirements/constraints.txt
+    #   -c /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/constraints.txt
     #   -r requirements/base.in
     #   edx-ccx-keys
+    #   edx-drf-extensions
     #   openedx-events
-fastavro==1.10.0
+fastavro==1.11.1
     # via openedx-events
 idna==3.10
     # via requests
-kombu==5.5.1
+kombu==5.5.4
     # via celery
-newrelic==10.8.0
-    # via edx-django-utils
 openedx-events==9.15.0
     # via
-    #   -c /home/ibranco/projects/nau/nau-openedx-extensions/requirements/constraints.txt
+    #   -c /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/constraints.txt
     #   -r requirements/base.in
 openedx-filters==1.12.0
     # via
-    #   -c /home/ibranco/projects/nau/nau-openedx-extensions/requirements/constraints.txt
+    #   -c /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/constraints.txt
     #   -r requirements/base.in
+packaging==25.0
+    # via kombu
 pbr==6.1.1
     # via stevedore
-prompt-toolkit==3.0.50
+prompt-toolkit==3.0.51
     # via click-repl
 psutil==7.0.0
     # via edx-django-utils
 pycparser==2.22
     # via cffi
+pyjwt[crypto]==2.10.1
+    # via
+    #   drf-jwt
+    #   edx-drf-extensions
 pymongo==4.4.0
     # via edx-opaque-keys
 pynacl==1.5.0
     # via edx-django-utils
 python-dateutil==2.9.0.post0
     # via celery
-requests==2.31.0
-    # via -r requirements/base.in
+requests==2.32.4
+    # via
+    #   -r requirements/base.in
+    #   edx-drf-extensions
+semantic-version==2.10.0
+    # via edx-drf-extensions
 six==1.17.0
     # via
     #   -r requirements/base.in
@@ -103,13 +132,11 @@ stevedore==5.4.1
     # via
     #   edx-django-utils
     #   edx-opaque-keys
-typing-extensions==4.13.0
+typing-extensions==4.14.0
     # via edx-opaque-keys
-tzdata==2025.1
-    # via
-    #   celery
-    #   kombu
-urllib3==2.3.0
+tzdata==2025.2
+    # via kombu
+urllib3==2.4.0
     # via requests
 vine==5.1.0
     # via
@@ -118,7 +145,7 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.13
     # via prompt-toolkit
-web-fragments==2.2.0
+web-fragments==3.1.0
     # via -r requirements/base.in
 
 # The following packages are considered to be unsafe in a requirements file:
