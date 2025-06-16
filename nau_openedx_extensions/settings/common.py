@@ -26,11 +26,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# Encuentra la ruta base del paquete (donde está tu app)
-BASE_DIR = dirname(dirname(abspath(__file__)))  # sube dos niveles desde common.py
-CORS_ORIGIN_ALLOW_ALL = True
-
-
+BASE_DIR = dirname(dirname(abspath(__file__)))
 
 def plugin_settings(settings):
     """

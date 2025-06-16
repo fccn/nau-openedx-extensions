@@ -34,9 +34,12 @@ class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public
     It also allows instructor to override the filter. The user can enroll even if its email
     domain doesn't be one of the allowed if the instructor has added its email as one of the
     Course Enrolment Allowed. A race condition can raise an error, if the user account already
-    exist and is inactive, in this case the instructor couldn't add manualy the custom user to
+    exist and is inactive, in this case the instructor couldn't add manually the custom user to
     the course. If this happens, the user needs to activate their account before the instructor
     could create the enrollment.
+
+    To activate it, the course needs to have the setting `filter_enrollment_by_domain_list` set
+    to a list of email domains inside the course other settings on the advanced settings.
 
     Example usage:
     Add the following configurations to your configuration file:
@@ -54,10 +57,7 @@ class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public
         """Filter."""
 
         other_course_settings = get_other_course_settings(course_key)
-        domains_allowed = (
-            other_course_settings.get("value", {}).get("filter_enrollment_by_domain_list") or
-            other_course_settings.get("value", {}).get("filterEnrollmentByDomainList")
-        )
+        domains_allowed = other_course_settings.get("value", {}).get("filter_enrollment_by_domain_list")
 
         if domains_allowed:
             if not user.is_active:
@@ -82,17 +82,6 @@ class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public
                     raise CourseEnrollmentStarted.PreventEnrollment(exception_msg)
 
         return {}
-
-    @staticmethod
-    def _is_user_email_allowed(user, domains_allowed):
-        """
-        Check if the user email is a domain or sub-domain of the allowed domains.
-        """
-        user_domain = user.email.split("@")[1].lower()
-        for domain in domains_allowed:
-            if user_domain == domain or fnmatch(user_domain, f"*.{domain}"):
-                return True
-        return False
 
 
 class FilterUsersWithAllowedNewsletter(PipelineStep):
