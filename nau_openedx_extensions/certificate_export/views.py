@@ -15,6 +15,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from nau_openedx_extensions.certificate_export.management.commands import PDFCommand
 from nau_openedx_extensions.certificate_export.tasks import export_course_certificates_task
 from nau_openedx_extensions.edxapp_wrapper.student import CourseInstructorRole, CourseStaffRole
 
@@ -59,7 +60,7 @@ def validate_course_access(request: Request, course_id: str) -> Tuple[bool, Resp
                 "success": False,
                 "message": NO_PERMISSION_MESSAGE,
             },
-            status=status.HTTP_403_FORBIDDEN,
+            status=status.HTTP_401_UNAUTHORIZED,
         )
 
     return True, course_key
@@ -86,4 +87,33 @@ class CertificateExportAPIView(APIView):
             return result  # type: ignore
         # Initilize the export task with the course_id
         export_course_certificates_task.delay(course_id)
+        return Response({"success": True, "message": SUCCESS_MESSAGE})
+
+
+class CertificateExportPdfAPIView(APIView):
+    """
+    API view to export all certificates in PDF format for a given course.
+
+    This view only has a POST method that initiates a PDF export task for a given course.
+    """
+
+    authentication_classes = (SessionAuthentication,)
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request: Request, course_id: str) -> Response:
+        """
+        Start a PDF export task for a course.
+
+        Args:
+            request (Request): The HTTP request object
+            course_id (str): The ID of the course to export certificates for
+
+        Returns:
+            Response: A response indicating the task has started
+        """
+        is_valid, result = validate_course_access(request, course_id)
+        if not is_valid:
+            return result  # type: ignore
+
+        PDFCommand().handle(course_ids=[course_id])
         return Response({"success": True, "message": SUCCESS_MESSAGE})
