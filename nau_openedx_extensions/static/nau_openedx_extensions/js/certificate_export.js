@@ -58,6 +58,11 @@ const exportButtons = [
         success: "CSV export task started successfully!",
         failure: "Failed to start CSV export task."
     },
+    {
+        selector: "#export-zip-certificates",
+        success: "ZIP export task started successfully!",
+        failure: "Failed to start ZIP export task."
+    }
 ];
 
 // Initialize export buttons

@@ -10,4 +10,9 @@ urlpatterns = [
         views.CertificateExportAPIView.as_view(),
         name="nau_export_certificates_csv",
     ),
+    re_path(
+        r"^courses/(?P<course_id>[^/]+)/pdf$",
+        views.CertificateExportPdfAPIView.as_view(),
+        name="nau_export_certificates_pdf",
+    ),
 ]
