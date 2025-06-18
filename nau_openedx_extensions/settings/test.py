@@ -4,9 +4,23 @@ Settings for nau_openedx_extensions
 
 from __future__ import absolute_import, unicode_literals
 
+import django
+
+django.setup()
+
 DEBUG = True
 
 SECRET_KEY = "test-secret-key-for-testing-only"
+
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.messages",
+    "django.contrib.sessions",
+    "django.contrib.sites",
+    "nau_openedx_extensions",
+]
 
 MAKO_TEMPLATE_DIRS_BASE = [
     "templates",
@@ -52,3 +66,6 @@ NAU_CERTIFICATES_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.certif
 NAU_UTIL_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.util_r_v1_tests"
 NAU_INSTRUCTOR_TASK_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.instructor_task_r_v1_tests"
 NAU_SITE_CONFIGURATION_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_r_v1_tests"
+
+# Certificate export
+HIGH_MEM_QUEUE = "edx.lms.core.high_mem"
