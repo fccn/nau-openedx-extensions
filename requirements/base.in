@@ -1,9 +1,12 @@
 -c constraints.txt
+
 celery
 edx-opaque-keys[django]
 six
 future; python_version < "3.0"
 web-fragments
-openedx-filters==1.12.0
-openedx-events==9.15.0
-requests==2.31.0
+openedx-filters
+openedx-events
+requests
+djangorestframework
+edx-drf-extensions

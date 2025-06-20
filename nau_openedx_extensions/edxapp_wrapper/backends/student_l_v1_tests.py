@@ -2,6 +2,9 @@
 Mock implementation on getting a student course enrollment allowed.
 """
 
+CourseInstructorRole = None
+CourseStaffRole = None
+
 
 def get_student_course_enrollment_allowed(user, course_id, *args, **kwargs):  # pylint: disable=unused-argument
     """
@@ -15,6 +18,7 @@ def get_student_course_enrollment_allowed(user, course_id, *args, **kwargs):  # 
         A CourseEnrollmentAllowed instance or None
     """
     return None
+
 
 def get_enrollment(user, course_key, *args, **kwargs):  # pylint: disable=unused-argument
     """

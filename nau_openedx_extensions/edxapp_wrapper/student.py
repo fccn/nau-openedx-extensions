@@ -36,3 +36,25 @@ def get_enrollment(user, course_key, *args, **kwargs):
     backend_module = settings.NAU_STUDENT_MODULE
     backend = import_module(backend_module)
     return backend.get_enrollment(user, course_key, *args, **kwargs)
+
+
+def get_course_instructor_role():
+    """
+    Wrapper for `common.djangoapps.student.roles.CourseInstructorRole` in edx-platform.
+    """
+    backend_function = settings.NAU_STUDENT_MODULE
+    backend = import_module(backend_function)
+    return backend.CourseInstructorRole
+
+
+def get_course_staff_role():
+    """
+    Wrapper for `common.djangoapps.student.roles.CourseStaffRole` in edx-platform.
+    """
+    backend_function = settings.NAU_STUDENT_MODULE
+    backend = import_module(backend_function)
+    return backend.CourseStaffRole
+
+
+CourseInstructorRole = get_course_instructor_role()
+CourseStaffRole = get_course_staff_role()

@@ -53,3 +53,7 @@ NAU_COHORT_MODULE = (
 NAU_VERIFY_STUDENT_MODULE = (
     "nau_openedx_extensions.edxapp_wrapper.backends.verify_student_v1_tests"
 )
+NAU_CERTIFICATES_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.certificates_r_v1_tests"
+NAU_UTIL_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.util_r_v1_tests"
+NAU_INSTRUCTOR_TASK_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.instructor_task_r_v1_tests"
+NAU_SITE_CONFIGURATION_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_r_v1_tests"
