@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2025-06-16 11:27-0500\n"
+"POT-Creation-Date: 2025-06-17 17:14-0500\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -17,6 +17,18 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.0\n"
+
+#: nau_openedx_extensions/certificate_export/views.py:22
+msgid "Export task started successfully."
+msgstr ""
+
+#: nau_openedx_extensions/certificate_export/views.py:23
+msgid "The supplied course_id key is not valid."
+msgstr ""
+
+#: nau_openedx_extensions/certificate_export/views.py:24
+msgid "You do not have permission to export certificates for this course."
+msgstr ""
 
 #: nau_openedx_extensions/custom_registration_form/forms.py:38
 msgid "You must read and understood the Privacy Policy"
@@ -115,7 +127,8 @@ msgstr ""
 "href='https://www.nau.edu.pt/legal/consentimento-para-o-envio-de-"
 "newsletters/'>consentimento para o envio de newsletters</a>"
 
-#: nau_openedx_extensions/filters/pipeline.py:55
+#: nau_openedx_extensions/filters/pipeline.py:62
+#, python-brace-format
 msgid ""
 "You need to activate your account before you can enroll in the course. "
 "Check your {email} inbox for an account activation link from "
@@ -125,11 +138,11 @@ msgstr ""
 "Verifique no seu e-mail {email} o link de ativação da conta "
 "{platform_name}."
 
-#: nau_openedx_extensions/filters/pipeline.py:68
+#: nau_openedx_extensions/filters/pipeline.py:75
 msgid "If you think this is an error, contact the course support."
 msgstr "Se achar que se trata de um erro, contacte o suporte."
 
-#: nau_openedx_extensions/filters/pipeline.py:69
+#: nau_openedx_extensions/filters/pipeline.py:76
 #, python-format
 msgid ""
 "You can't enroll on this course because your email domain is not allowed."
@@ -138,13 +151,17 @@ msgstr ""
 "Não pode inscrever-se neste curso porque o seu domínio de e-mail não é "
 "permitido. %(custom_message)s"
 
-#: nau_openedx_extensions/filters/pipeline.py:121
+#: nau_openedx_extensions/filters/pipeline.py:128
 msgid ""
 "You need to associate Autenticação Gov to your account or add NIF to your"
 " account."
 msgstr ""
 "É necessário associar a Autenticação Gov à sua conta ou adicionar o NIF à"
 " sua conta."
+
+#: nau_openedx_extensions/filters/pipeline.py:204
+msgid "Certificate Export"
+msgstr ""
 
 #: nau_openedx_extensions/management/commands/add_archived_course_message.py:110
 #: nau_openedx_extensions/management/commands/add_archived_course_message.py:115
@@ -155,13 +172,59 @@ msgstr ""
 "Este curso encontra-se arquivado e já não permite a realização de "
 "atividades para obtenção de certificado."
 
-#: nau_openedx_extensions/settings/common.py:35
+#: nau_openedx_extensions/settings/common.py:37
 msgid "Certificate"
 msgstr "Certificado"
 
-#: nau_openedx_extensions/settings/common.py:36
+#: nau_openedx_extensions/settings/common.py:38
 msgid "Certificate of Achievement"
 msgstr "Certificado de Conclusão"
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:6
+msgid ""
+"In this section you can export the course certificates in different "
+"formats."
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:9
+msgid "Export options"
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:13
+msgid ""
+"Download a CSV file with the details of all certificates generated for "
+"this course."
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:16
+msgid "Export certificates CSVs"
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:23
+msgid ""
+"Download a ZIP file containing all certificates in PDF format for this "
+"course."
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:25
+msgid "Export certificates PDF as ZIP"
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:32
+msgid "Error"
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:33
+msgid "Success"
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:34
+msgid "Info"
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:35
+msgid "Warning"
+msgstr ""
 
 #: nau_openedx_extensions/templates/message_gateway/tab.html:15
 msgid "Send to:"

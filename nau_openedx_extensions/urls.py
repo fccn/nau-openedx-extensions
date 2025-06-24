@@ -3,7 +3,7 @@
 from __future__ import absolute_import, unicode_literals
 
 from django.conf import settings
-from django.urls import re_path
+from django.urls import include, re_path
 
 from nau_openedx_extensions.message_gateway.views import api as message_gateway_api
 from nau_openedx_extensions.message_gateway.views import tab as message_gateway_tab
@@ -23,4 +23,5 @@ urlpatterns = [
         message_gateway_api.send_message,
         name="send_message",
     ),
+    re_path(r"^certificate-export/", include("nau_openedx_extensions.certificate_export.urls")),
 ]

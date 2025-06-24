@@ -4,18 +4,13 @@ Settings for nau_openedx_extensions
 
 from __future__ import absolute_import, unicode_literals
 
-from .common import *  # pylint: disable=wildcard-import, unused-wildcard-import
-
-
-class SettingsClass:
-    """ dummy settings class """
-
-
 DEBUG = True
-SETTINGS = SettingsClass()
-plugin_settings(SETTINGS)
-vars().update(SETTINGS.__dict__)
 
+SECRET_KEY = "test-secret-key-for-testing-only"
+
+MAKO_TEMPLATE_DIRS_BASE = [
+    "templates",
+]
 
 ROOT_URLCONF = "nau_openedx_extensions.urls"
 ALLOWED_HOSTS = ["*"]
