@@ -2,7 +2,7 @@
 <%page expression_filter="h"/>
 <%! from django.utils.translation import gettext as _ %>
 
-<div class="certificate-export-section">
+<div class="certificate-export-section" data-error-msg="${error_msg}">
   <p>${_("In this section you can export the course certificates in different formats.")}</p>
 
   <div class="certificate-export-controls">
@@ -12,7 +12,9 @@
       <div class="action-item-content">
         <p>${_("Download a CSV file with the details of all certificates generated for this course.")}</p>
         <button class="btn btn-primary" id="export-csv-certificates"
-                data-endpoint="${certificate_export_url}">
+                data-endpoint="${certificate_export_url}"
+                data-success="${csv_success}"
+                data-failure="${csv_failure}">
             ${_("Export certificates CSVs")}
         </button>
       </div>
@@ -21,7 +23,10 @@
     <div class="action-item">
       <div class="action-item-content">
         <p>${_("Download a ZIP file containing all certificates in PDF format for this course.")}</p>
-        <button class="btn btn-primary" id="export-zip-certificates" data-endpoint="{{ certificate_export_pdf_url }}">
+        <button class="btn btn-primary" id="export-zip-certificates"
+                data-endpoint="${certificate_export_pdf_url}"
+                data-success="${zip_success}"
+                data-failure="${zip_failure}">
           ${_("Export certificates PDF as ZIP")}
         </button>
       </div>
@@ -35,4 +40,3 @@
     <div class="message-status warning" style="display:none;">${_("Warning")}</div>
   </div>
 </div>
-

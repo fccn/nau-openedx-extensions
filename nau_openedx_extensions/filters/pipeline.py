@@ -179,15 +179,33 @@ class FilterCertificateExportTab(PipelineStep):
     """
 
     def run_filter(self, context, template_name):  # pylint: disable=unused-argument, arguments-differ
+        """
+        Add a Certificate export tab to the instructor dashboard.
+
+        Args:
+            context (dict): The context of the template.
+            template_name (str): The name of the template.
+
+        Returns:
+            dict: The context of the template.
+        """
         course = context["course"]
 
-        # Ensure the request is available in the context and the URL is correctly formed
         context.update(
             {
                 "certificate_export_url": reverse(
                     "nau-openedx-extensions:nau_export_certificates_csv", kwargs={"course_id": course.id}
                 ),
-                "course": course,  # Ensure the course object is passed
+                "certificate_export_pdf_url": reverse(
+                    "nau-openedx-extensions:nau_export_certificates_pdf", kwargs={"course_id": course.id}
+                ),
+                "course": course,
+                # Add translated messages for JavaScript
+                "csv_success": _("CSV export task started successfully!"),
+                "csv_failure": _("Failed to start CSV export task."),
+                "zip_success": _("ZIP export task started successfully!"),
+                "zip_failure": _("Failed to start ZIP export task."),
+                "error_msg": _("An unexpected error occurred. Please try again later."),
             }
         )
 

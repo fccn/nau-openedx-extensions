@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2025-06-17 17:14-0500\n"
+"POT-Creation-Date: 2025-06-24 16:48-0500\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -18,15 +18,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.0\n"
 
-#: nau_openedx_extensions/certificate_export/views.py:22
+#: nau_openedx_extensions/certificate_export/views.py:23
 msgid "Export task started successfully."
 msgstr ""
 
-#: nau_openedx_extensions/certificate_export/views.py:23
+#: nau_openedx_extensions/certificate_export/views.py:24
 msgid "The supplied course_id key is not valid."
 msgstr ""
 
-#: nau_openedx_extensions/certificate_export/views.py:24
+#: nau_openedx_extensions/certificate_export/views.py:25
 msgid "You do not have permission to export certificates for this course."
 msgstr ""
 
@@ -160,6 +160,26 @@ msgstr ""
 " sua conta."
 
 #: nau_openedx_extensions/filters/pipeline.py:204
+msgid "CSV export task started successfully!"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:205
+msgid "Failed to start CSV export task."
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:206
+msgid "ZIP export task started successfully!"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:207
+msgid "Failed to start ZIP export task."
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:208
+msgid "An unexpected error occurred. Please try again later."
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:222
 msgid "Certificate Export"
 msgstr ""
 
@@ -196,33 +216,33 @@ msgid ""
 "this course."
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:16
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:18
 msgid "Export certificates CSVs"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:23
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:25
 msgid ""
 "Download a ZIP file containing all certificates in PDF format for this "
 "course."
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:25
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:30
 msgid "Export certificates PDF as ZIP"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:32
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:37
 msgid "Error"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:33
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:38
 msgid "Success"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:34
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:39
 msgid "Info"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:35
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:40
 msgid "Warning"
 msgstr ""
 
