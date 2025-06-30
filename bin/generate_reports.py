@@ -106,6 +106,11 @@ def generate_report_url_data(course_id, lms_url, report, additional_info):
         else:
             data = {}
         return f"{lms_url}/courses/{course_id}/instructor/api/get_problem_responses", data
+    # NAU custom reports
+    elif report == "export_course_certificates":
+        return f"{lms_url}/nau-openedx-extensions/certificate-export/courses/{course_id}/csv", {}
+    elif report == "export_course_certificates_pdfs":
+        return f"{lms_url}/nau-openedx-extensions/certificate-export/courses/{course_id}/pdf", {}
     else:
         raise RuntimeError(
             f'Unsupported report {report} request')
@@ -174,6 +179,9 @@ def main():
                             "ora_data_report",
                             "ora_summary_report",
                             "get_problem_responses",
+                            # NAU custom reports
+                            "export_course_certificates",
+                            "export_course_certificates_pdfs",
                         ])
 
     try:
