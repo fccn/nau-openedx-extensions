@@ -75,6 +75,7 @@ setup(
     entry_points={
         "lms.djangoapp": [
             "nau_openedx_extensions = nau_openedx_extensions.apps:NauOpenEdxConfig",
+            "coursecertificate = nau_openedx_extensions.coursecertificate.apps:CoursecertificateConfig",
         ],
         "cms.djangoapp": [
             "nau_openedx_extensions = nau_openedx_extensions.studio.apps:NauOpenCmsConfig",
