@@ -1,11 +1,12 @@
 """
 Send course certificates to external services based on YAML configuration.
+
+NOTE: The NAU_SEND_COURSE_CERTIFICATE_CONFIG setting comes from Django setting.
 """
 
-import os
 from typing import Any, Optional
 
-import yaml
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from nau_openedx_extensions.coursecertificate.engine import CertificateEngine
@@ -34,11 +35,6 @@ class Command(BaseCommand):
         """
         Configure Django Command arguments
         """
-        parser.add_argument(
-            "--config",
-            default=self.get_default_config_path(),
-            help="Path to YAML configuration file",
-        )
         parser.add_argument(
             "--service-name",
             help="Specific service to send certificates to (from config)",
@@ -75,22 +71,19 @@ class Command(BaseCommand):
         self.stdout.write(msg)
         self.stdout.flush()
 
-    def get_default_config_path(self) -> str:
-        """Get default configuration file path"""
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        config_dir = os.path.dirname(os.path.dirname(current_dir))
-        return os.path.join(config_dir, self.DEFAULT_CONFIG_FILENAME)
-
-    def load_config(self, config_path: str) -> list[dict]:
-        """Load YAML configuration"""
-        try:
-            with open(config_path, "r", encoding="utf-8") as file:
-                config = yaml.safe_load(file)
-                return config.get(self.CONFIG_KEY, [])
-        except FileNotFoundError as exc:
-            raise CommandError(f"Configuration file not found: {config_path}") from exc
-        except yaml.YAMLError as exc:
-            raise CommandError(f"Error parsing YAML configuration: {exc}") from exc
+    def load_config(self) -> list[dict]:
+        """Load configuration from Django settings"""
+        config = getattr(settings, self.CONFIG_KEY, None)
+        if config is None:
+            raise CommandError(
+                f"Configuration setting '{self.CONFIG_KEY}' not found in Django settings. "
+                "This setting comes from Tutor configuration."
+            )
+        if not isinstance(config, list):
+            raise CommandError(
+                f"Configuration setting '{self.CONFIG_KEY}' must be a list of service configurations."
+            )
+        return config
 
     def process_service_safely(self, service_config: dict[str, Any], options: dict[str, Any]) -> bool:
         """Process a service with proper error handling"""
@@ -152,10 +145,10 @@ class Command(BaseCommand):
 
     def handle_sync(self, options: dict[str, Any]) -> None:
         """Handle synchronous execution"""
-        config = self.load_config(options["config"])
+        config = self.load_config()
         services_to_process = self.filter_services(config, options.get("service_name"))
 
-        self.log_msg(f"Loaded configuration from: {options['config']}")
+        self.log_msg("Loaded configuration from Django settings")
         self.log_msg(f"Processing {len(services_to_process)} service(s)")
 
         success_count = 0
@@ -169,10 +162,9 @@ class Command(BaseCommand):
     def handle_async(self, options: dict) -> None:
         """Handle asynchronous execution using Celery"""
 
-        # Load configuration
-        config_path = options["config"]
-        config = self.load_config(config_path)
-        self.log_msg(f"Loaded configuration from: {config_path}")
+        # Load configuration from Django settings
+        config = self.load_config()
+        self.log_msg("Loaded configuration from Django settings")
 
         # Filter services if specific service requested
         services_to_process = self.filter_services(config, options.get("service_name"))
