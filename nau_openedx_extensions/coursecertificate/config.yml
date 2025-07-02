@@ -1,0 +1,16 @@
+NAU_SEND_COURSE_CERTIFICATE_CONFIG:
+  - service: <service_name>
+    endpoint_url: <endpoint_url>
+    auth_token: <auth_token>
+    auth_type: <auth_type> # basic, bearer, etc.
+    auth_header: <auth_header> # Optional: Authorization, X-API-Key, etc.
+    batch_size: <batch_size>
+    days_back: <days_back>
+    fields:
+      - name: <field_name>
+        func: <path_to_extract_function>
+        args: <args> # Optional
+        trans: <trans> # Optional: md5, base64, etc.
+    filters:
+      - func: <path_to_filter_function>
+        args: <args> # Optional
