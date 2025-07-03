@@ -1,5 +1,5 @@
 NAU_SEND_COURSE_CERTIFICATE_CONFIG:
-  - service: portugal_digital
+  - service_name: portugal_digital
     endpoint_url: https://academiaportugaldigital.pt/api/api/Course/FinishedIntegrationNau
     auth_token: XXXXXXXXXXXXXXXXXXXXX
     auth_type: bearer
@@ -13,7 +13,7 @@ NAU_SEND_COURSE_CERTIFICATE_CONFIG:
       - name: value
         func: nau_openedx_extensions.coursecertificate.extractors.course.id
 
-  - service: ina_recap
+  - service_name: ina_recap
     endpoint_url: https://ina.gov.pt/api/v1/certificates/recap-integration
     auth_token: XXXXXXXXXXXXXXXXXXXXX
     auth_type: bearer

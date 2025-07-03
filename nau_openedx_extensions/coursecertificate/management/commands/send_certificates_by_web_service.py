@@ -42,7 +42,7 @@ class Command(BaseCommand):
             help="Path to YAML configuration file",
         )
         parser.add_argument(
-            "--service",
+            "--service-name",
             help="Specific service to send certificates to (from config)",
         )
         parser.add_argument(
@@ -177,7 +177,7 @@ class Command(BaseCommand):
 
     def send_certificates_to_service(self, service_config, certificates_data):
         """Send certificates to external service"""
-        service_name = service_config["service"]
+        service_name = service_config["service_name"]
         api_url = service_config.get("endpoint_url")
         auth_token = service_config.get("auth_token")
         auth_type = service_config.get("auth_type", "bearer")
@@ -243,7 +243,7 @@ class Command(BaseCommand):
 
     def process_service(self, service_config, options):
         """Process certificates for a specific service"""
-        service_name = service_config["service"]
+        service_name = service_config.get("service_name") or service_config.get("service")
         self.log_msg(f"\n=== Processing service: {service_name} ===")
 
         # Determine days to process
@@ -310,9 +310,9 @@ class Command(BaseCommand):
         self.log_msg(f"Loaded configuration from: {config_path}")
 
         # Filter services if specific service requested
-        target_service = options.get("service")
+        target_service = options.get("service_name")
         if target_service:
-            services_to_process = [service for service in self.config if service.get("service") == target_service]
+            services_to_process = [service for service in self.config if service.get("service_name") == target_service]
             if not services_to_process:
                 raise CommandError(f"Service '{target_service}' not found in configuration")
         else:
@@ -325,7 +325,7 @@ class Command(BaseCommand):
             try:
                 self.process_service(service_config, options)
             except (KeyError, ValueError, TypeError) as exc:
-                self.log_msg(f"Error processing service {service_config.get('service', 'unknown')}: {exc}")
+                self.log_msg(f"Error processing service {service_config.get('service_name', 'unknown')}: {exc}")
                 continue
 
         self.log_msg("\n=== All services processed ===")
