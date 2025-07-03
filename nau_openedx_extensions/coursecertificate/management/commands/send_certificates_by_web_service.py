@@ -184,9 +184,6 @@ class Command(BaseCommand):
         auth_type = service_config.get("auth_type", "bearer")
         auth_header = service_config.get("auth_header", "Authorization")
 
-        self.log_msg(f"Sending {len(certificates_data)} certificates to {service_name}")
-        self.log_msg(f"Data: {certificates_data}")
-
         if self.dry_run:
             self.log_msg(f"[DRY RUN] Would send to {api_url}")
             self.log_msg(f"[DRY RUN] Headers would include: {auth_type} authentication")
@@ -194,6 +191,9 @@ class Command(BaseCommand):
             self.log_msg("[DRY RUN] Payload:")
             self.log_msg(json.dumps(certificates_data, indent=2, ensure_ascii=False))
             return True
+        else:
+            self.log_msg(f"Sending {len(certificates_data)} certificates to {service_name}")
+            self.log_msg(f"Data: {certificates_data}")
 
         # Prepare headers
         headers = {
@@ -257,7 +257,7 @@ class Command(BaseCommand):
         if page_size is None:
             page_size = service_config.get("page_size", 1000)
 
-        self.log_msg(f"Processing certificates from last {days} days")
+        self.log_msg(f"Processing certificates from the last {days} days")
         self.log_msg(f"Page size: {page_size}")
 
         # Get certificates
