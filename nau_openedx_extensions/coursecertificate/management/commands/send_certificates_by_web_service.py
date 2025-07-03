@@ -249,15 +249,15 @@ class Command(BaseCommand):
         # Determine days to process
         days = options.get("days")
         if days is None:
-            days = service_config.get("days_back", 7)
+            days = service_config.get("days", 7)  # <-- actualizado
 
         # Determine page size
         page_size = options.get("page_size")
         if page_size is None:
-            page_size = service_config.get("batch_size", 1000)
+            page_size = service_config.get("page_size", 1000)  # <-- actualizado
 
         self.log_msg(f"Processing certificates from last {days} days")
-        self.log_msg(f"Batch size: {page_size}")
+        self.log_msg(f"Page size: {page_size}")
 
         # Get certificates
         certificates_queryset = self.get_certificates_queryset(days)
@@ -287,7 +287,7 @@ class Command(BaseCommand):
                     # Send to service
                     success = self.send_certificates_to_service(service_config, certificates_data)
                     if not success:
-                        self.log_msg(f"Failed to send batch {page_num} to {service_name}")
+                        self.log_msg(f"Failed to send page {page_num} to {service_name}")
 
         self.log_msg(f"Finished processing {service_name}")
 

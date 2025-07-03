@@ -4,8 +4,8 @@ NAU_SEND_COURSE_CERTIFICATE_CONFIG:
     auth_token: XXXXXXXXXXXXXXXXXXXXX
     auth_type: bearer
     auth_header: Authorization
-    batch_size: 100
-    days_back: 30
+    page_size: 100
+    days: 30
     fields:
       - name: key
         func: nau_openedx_extensions.coursecertificate.extractors.student.email
@@ -18,8 +18,8 @@ NAU_SEND_COURSE_CERTIFICATE_CONFIG:
     auth_token: XXXXXXXXXXXXXXXXXXXXX
     auth_type: bearer
     auth_header: Authorization
-    batch_size: 100
-    days_back: 50
+    page_size: 100
+    days: 50
     fields:
       - name: email
         func: nau_openedx_extensions.coursecertificate.extractors.student.email
