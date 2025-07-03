@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 import requests
 import yaml
-from common.djangoapps.util.query import use_read_replica_if_available   # can we use wrapper here?
+from common.djangoapps.util.query import use_read_replica_if_available
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.core.paginator import Paginator
@@ -67,7 +67,7 @@ class Command(BaseCommand):
     def get_default_config_path(self):
         """Get default configuration file path"""
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        return os.path.join(current_dir, "NAU_SEND_COURSE_CERTIFICATE_CONFIG.yml")
+        return os.path.join(current_dir, "config.yml")
 
     def load_config(self, config_path):
         """Load YAML configuration"""
@@ -89,6 +89,9 @@ class Command(BaseCommand):
         """Apply transformations to a field value"""
         if trans == "md5":
             return hashlib.md5(str(value).encode()).hexdigest()
+        elif trans == "base64":
+            import base64
+            return base64.b64encode(str(value).encode()).decode()
         return value
 
     def extract_field_value(self, certificate, field_config):
@@ -172,9 +175,10 @@ class Command(BaseCommand):
     def send_certificates_to_service(self, service_config, certificates_data):
         """Send certificates to external service"""
         service_name = service_config['service']
-        api_url = service_config['url']
-        api_key = service_config.get('api_key')
-        auth_type = service_config.get('auth', 'bearer') #We must discuss this @bryann
+        api_url = service_config.get('endpoint_url')
+        auth_token = service_config.get('auth_token')
+        auth_type = service_config.get('auth_type', 'bearer')
+        auth_header = service_config.get('auth_header', 'Authorization')
 
         self.log_msg(f"Sending {len(certificates_data)} certificates to {service_name}")
         self.log_msg(f"Data: {certificates_data}")
@@ -182,6 +186,7 @@ class Command(BaseCommand):
         if self.dry_run:
             self.log_msg(f"[DRY RUN] Would send to {api_url}")
             self.log_msg(f"[DRY RUN] Headers would include: {auth_type} authentication")
+            self.log_msg(f"[DRY RUN] Auth header: {auth_header}")
             return True
 
         # Prepare headers
@@ -190,10 +195,19 @@ class Command(BaseCommand):
             "Content-Type": "application/json",
         }
 
-        if auth_type == "bearer" and api_key:
-            headers["Authorization"] = f"Bearer {api_key}" # We must discuss this @bryann
-        elif auth_type == "api_key" and api_key:
-            headers["X-API-Key"] = api_key
+        # Handle different authentication types
+        if auth_token:
+            if auth_type == "bearer":
+                headers[auth_header] = f"Bearer {auth_token}"
+            elif auth_type == "basic":
+                import base64
+                credentials = base64.b64encode(auth_token.encode()).decode()
+                headers[auth_header] = f"Basic {credentials}"
+            elif auth_type == "api_key":
+                headers[auth_header] = auth_token
+            else:
+                # Custom auth type - use as-is
+                headers[auth_header] = f"{auth_type} {auth_token}"
 
         try:
             response = requests.post(
@@ -231,15 +245,15 @@ class Command(BaseCommand):
         # Determine days to process
         days = options.get('days')
         if days is None:
-            days = service_config.get('days', service_config.get('days_default', 7))
+            days = service_config.get('days_back', 7)
 
         # Determine page size
         page_size = options.get('page_size')
         if page_size is None:
-            page_size = service_config.get('page_size', 1000)
+            page_size = service_config.get('batch_size', 1000)
 
         self.log_msg(f"Processing certificates from last {days} days")
-        self.log_msg(f"Page size: {page_size}")
+        self.log_msg(f"Batch size: {page_size}")
 
         # Get certificates
         certificates_queryset = self.get_certificates_queryset(days)
@@ -282,7 +296,6 @@ class Command(BaseCommand):
 
         if self.dry_run:
             self.log_msg("=== DRY RUN MODE - No actual requests will be sent ===")
-            # TODO: Implement dry run logic
 
         if self.async_mode:
             self.log_msg("=== ASYNC MODE - Would run via Celery (not implemented yet) ===")
