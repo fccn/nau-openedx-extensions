@@ -128,7 +128,7 @@ class Command(BaseCommand):
             self.log_msg(f"Error extracting field {field_config['name']}: {exc}")
             return None
 
-    def apply_filters(self, certificates: QuerySet, service_config: dict) -> QuerySet:
+    def apply_filters(self, certificates: list[QuerySet], service_config: dict) -> list[QuerySet]:
         """Apply filters to certificates based on service configuration"""
         filters = service_config.get("filters", [])
         filtered_certificates = certificates
@@ -158,7 +158,7 @@ class Command(BaseCommand):
 
         return filtered_certificates
 
-    def convert_certificates_to_service_format(self, certificates: QuerySet, service_config: dict) -> list[dict]:
+    def convert_certificates_to_service_format(self, certificates: list[QuerySet], service_config: dict) -> list[dict]:
         """Convert certificates to the format required by the service"""
         fields_config = service_config.get("fields", [])
         converted_data = []
@@ -233,7 +233,7 @@ class Command(BaseCommand):
             self.log_msg(f"Request error sending to {service_name}: {exc}")
             return False
 
-    def get_certificates_queryset(self, days: int) -> QuerySet:
+    def get_certificates_queryset(self, days: int) -> list[QuerySet]:
         """Get certificates queryset filtered by date"""
         begin_date = datetime.now(UTC) - timedelta(days=days)
         return use_read_replica_if_available(
