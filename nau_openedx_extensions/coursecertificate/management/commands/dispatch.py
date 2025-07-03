@@ -1,6 +1,7 @@
 """
 Send course certificates to external services based on YAML configuration.
 """
+import base64
 import hashlib
 import importlib
 import os
@@ -8,11 +9,10 @@ from datetime import datetime, timedelta
 
 import requests
 import yaml
-from common.djangoapps.util.query import use_read_replica_if_available
-from django.conf import settings
+from common.djangoapps.util.query import use_read_replica_if_available  # lint-amnesty, pylint: disable=import-error
 from django.core.management.base import BaseCommand, CommandError
 from django.core.paginator import Paginator
-from lms.djangoapps.certificates.models import GeneratedCertificate  # can we use wrapper here?
+from lms.djangoapps.certificates.models import GeneratedCertificate  # lint-amnesty, pylint: disable=import-error
 from pytz import UTC
 
 
@@ -76,10 +76,10 @@ class Command(BaseCommand):
             with open(config_path, 'r', encoding='utf-8') as file:
                 config = yaml.safe_load(file)
                 return config.get('NAU_SEND_COURSE_CERTIFICATE_CONFIG', [])
-        except FileNotFoundError:
-            raise CommandError(f"Configuration file not found: {config_path}")
-        except yaml.YAMLError as e:
-            raise CommandError(f"Error parsing YAML configuration: {e}")
+        except FileNotFoundError as exc:
+            raise CommandError(f"Configuration file not found: {config_path}") from exc
+        except yaml.YAMLError as exc:
+            raise CommandError(f"Error parsing YAML configuration: {exc}") from exc
 
     def log_msg(self, msg):
         """Log a message immediately"""
@@ -91,7 +91,6 @@ class Command(BaseCommand):
         if trans == "md5":
             return hashlib.md5(str(value).encode()).hexdigest()
         elif trans == "base64":
-            import base64
             return base64.b64encode(str(value).encode()).decode()
         return value
 
@@ -121,8 +120,8 @@ class Command(BaseCommand):
                 value = self.apply_transformations(value, trans)
 
             return value
-        except Exception as e:
-            self.log_msg(f"Error extracting field {field_config['name']}: {e}")
+        except (ImportError, AttributeError, TypeError) as exc:
+            self.log_msg(f"Error extracting field {field_config['name']}: {exc}")
             return None
 
     def apply_filters(self, certificates, service_config):
@@ -149,8 +148,8 @@ class Command(BaseCommand):
                 else:
                     filtered_certificates = filter_func(filtered_certificates)
 
-            except Exception as e:
-                self.log_msg(f"Error applying filter {filter_config['func']}: {e}")
+            except (ImportError, AttributeError, TypeError) as exc:
+                self.log_msg(f"Error applying filter {filter_config['func']}: {exc}")
                 continue
 
         return filtered_certificates
@@ -201,7 +200,6 @@ class Command(BaseCommand):
             if auth_type == "bearer":
                 headers[auth_header] = f"Bearer {auth_token}"
             elif auth_type == "basic":
-                import base64
                 credentials = base64.b64encode(auth_token.encode()).decode()
                 headers[auth_header] = f"Basic {credentials}"
             elif auth_type == "api_key":
@@ -225,8 +223,8 @@ class Command(BaseCommand):
                 self.log_msg(f"Failed to send certificates to {service_name}: {response.text}")
                 return False
 
-        except requests.RequestException as e:
-            self.log_msg(f"Request error sending to {service_name}: {e}")
+        except requests.RequestException as exc:
+            self.log_msg(f"Request error sending to {service_name}: {exc}")
             return False
 
     def get_certificates_queryset(self, days):
@@ -326,8 +324,8 @@ class Command(BaseCommand):
         for service_config in services_to_process:
             try:
                 self.process_service(service_config, options)
-            except Exception as e:
-                self.log_msg(f"Error processing service {service_config.get('service', 'unknown')}: {e}")
+            except (KeyError, ValueError, TypeError) as exc:
+                self.log_msg(f"Error processing service {service_config.get('service', 'unknown')}: {exc}")
                 continue
 
         self.log_msg("\n=== All services processed ===")
