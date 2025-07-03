@@ -249,12 +249,12 @@ class Command(BaseCommand):
         # Determine days to process
         days = options.get("days")
         if days is None:
-            days = service_config.get("days", 7)  # <-- actualizado
+            days = service_config.get("days", 7)
 
         # Determine page size
         page_size = options.get("page_size")
         if page_size is None:
-            page_size = service_config.get("page_size", 1000)  # <-- actualizado
+            page_size = service_config.get("page_size", 1000)
 
         self.log_msg(f"Processing certificates from last {days} days")
         self.log_msg(f"Page size: {page_size}")
