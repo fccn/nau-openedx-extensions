@@ -67,7 +67,8 @@ class Command(BaseCommand):
     def get_default_config_path(self):
         """Get default configuration file path"""
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        return os.path.join(current_dir, "config.yml")
+        config_dir = os.path.dirname(os.path.dirname(current_dir))
+        return os.path.join(config_dir, "config.yml")
 
     def load_config(self, config_path):
         """Load YAML configuration"""
