@@ -4,16 +4,15 @@ Send course certificates to external services based on YAML configuration.
 import hashlib
 import importlib
 import os
-import re
 from datetime import datetime, timedelta
 
 import requests
 import yaml
-from common.djangoapps.util.query import use_read_replica_if_available  # lint-amnesty, pylint: disable=import-error
+from common.djangoapps.util.query import use_read_replica_if_available   # can we use wrapper here?
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.core.paginator import Paginator
-from lms.djangoapps.certificates.models import GeneratedCertificate  # lint-amnesty, pylint: disable=import-error
+from lms.djangoapps.certificates.models import GeneratedCertificate  # can we use wrapper here?
 from pytz import UTC
 
 
@@ -175,7 +174,7 @@ class Command(BaseCommand):
         service_name = service_config['service']
         api_url = service_config['url']
         api_key = service_config.get('api_key')
-        auth_type = service_config.get('auth', 'bearer')
+        auth_type = service_config.get('auth', 'bearer') #We must discuss this @bryann
 
         self.log_msg(f"Sending {len(certificates_data)} certificates to {service_name}")
         self.log_msg(f"Data: {certificates_data}")
@@ -192,7 +191,7 @@ class Command(BaseCommand):
         }
 
         if auth_type == "bearer" and api_key:
-            headers["Authorization"] = f"Bearer {api_key}"
+            headers["Authorization"] = f"Bearer {api_key}" # We must discuss this @bryann
         elif auth_type == "api_key" and api_key:
             headers["X-API-Key"] = api_key
 
@@ -203,7 +202,7 @@ class Command(BaseCommand):
                 headers=headers,
                 timeout=60,
             )
-            
+
             if response.ok:
                 self.log_msg(f"Certificates sent successfully to {service_name}")
                 return True
@@ -283,10 +282,11 @@ class Command(BaseCommand):
 
         if self.dry_run:
             self.log_msg("=== DRY RUN MODE - No actual requests will be sent ===")
+            # TODO: Implement dry run logic
 
         if self.async_mode:
             self.log_msg("=== ASYNC MODE - Would run via Celery (not implemented yet) ===")
-            # TODO: Implement Celery integration for milestone 3
+            # TODO: Implement Celery integration
             return
 
         # Load configuration
@@ -298,7 +298,7 @@ class Command(BaseCommand):
         target_service = options.get('service')
         if target_service:
             services_to_process = [
-                service for service in self.config 
+                service for service in self.config
                 if service.get('service') == target_service
             ]
             if not services_to_process:
