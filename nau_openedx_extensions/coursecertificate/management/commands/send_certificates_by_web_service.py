@@ -13,6 +13,7 @@ import requests
 import yaml
 from django.core.management.base import BaseCommand, CommandError
 from django.core.paginator import Paginator
+from django.db.models import QuerySet
 from pytz import UTC
 
 from nau_openedx_extensions.edxapp_wrapper.certificates import GeneratedCertificate
@@ -67,13 +68,13 @@ class Command(BaseCommand):
             help="Run via Celery (for milestone 3 compatibility)",
         )
 
-    def get_default_config_path(self):
+    def get_default_config_path(self) -> str:
         """Get default configuration file path"""
         current_dir = os.path.dirname(os.path.abspath(__file__))
         config_dir = os.path.dirname(os.path.dirname(current_dir))
         return os.path.join(config_dir, "config.yml")
 
-    def load_config(self, config_path):
+    def load_config(self, config_path: str) -> list[dict]:
         """Load YAML configuration"""
         try:
             with open(config_path, "r", encoding="utf-8") as file:
@@ -84,12 +85,12 @@ class Command(BaseCommand):
         except yaml.YAMLError as exc:
             raise CommandError(f"Error parsing YAML configuration: {exc}") from exc
 
-    def log_msg(self, msg):
+    def log_msg(self, msg: str) -> None:
         """Log a message immediately"""
         self.stdout.write(msg)
         self.stdout.flush()
 
-    def apply_transformations(self, value, trans):
+    def apply_transformations(self, value: str, trans: str) -> str:
         """Apply transformations to a field value"""
         if trans == "md5":
             return hashlib.md5(str(value).encode()).hexdigest()
@@ -97,7 +98,7 @@ class Command(BaseCommand):
             return base64.b64encode(str(value).encode()).decode()
         return value
 
-    def extract_field_value(self, certificate, field_config):
+    def extract_field_value(self, certificate: QuerySet, field_config: dict) -> str | None:
         """Extract field value from certificate using configured function"""
         func_path = field_config["func"]
         args = field_config.get("args", [])
@@ -127,7 +128,7 @@ class Command(BaseCommand):
             self.log_msg(f"Error extracting field {field_config['name']}: {exc}")
             return None
 
-    def apply_filters(self, certificates, service_config):
+    def apply_filters(self, certificates: QuerySet, service_config: dict) -> QuerySet:
         """Apply filters to certificates based on service configuration"""
         filters = service_config.get("filters", [])
         filtered_certificates = certificates
@@ -157,7 +158,7 @@ class Command(BaseCommand):
 
         return filtered_certificates
 
-    def convert_certificates_to_service_format(self, certificates, service_config):
+    def convert_certificates_to_service_format(self, certificates: QuerySet, service_config: dict) -> list[dict]:
         """Convert certificates to the format required by the service"""
         fields_config = service_config.get("fields", [])
         converted_data = []
@@ -175,10 +176,10 @@ class Command(BaseCommand):
 
         return converted_data
 
-    def send_certificates_to_service(self, service_config, certificates_data):
+    def send_certificates_to_service(self, service_config: dict, certificates_data: list[dict]) -> bool:
         """Send certificates to external service"""
         service_name = service_config["service_name"]
-        api_url = service_config.get("endpoint_url")
+        api_url = service_config["endpoint_url"]
         auth_token = service_config.get("auth_token")
         auth_type = service_config.get("auth_type", "bearer")
         auth_header = service_config.get("auth_header", "Authorization")
@@ -232,7 +233,7 @@ class Command(BaseCommand):
             self.log_msg(f"Request error sending to {service_name}: {exc}")
             return False
 
-    def get_certificates_queryset(self, days):
+    def get_certificates_queryset(self, days: int) -> QuerySet:
         """Get certificates queryset filtered by date"""
         begin_date = datetime.now(UTC) - timedelta(days=days)
         return use_read_replica_if_available(
@@ -241,7 +242,7 @@ class Command(BaseCommand):
             .select_related("user")
         )
 
-    def process_service(self, service_config, options):
+    def process_service(self, service_config: dict, options: dict) -> None:
         """Process certificates for a specific service"""
         service_name = service_config.get("service_name") or service_config.get("service")
         self.log_msg(f"\n=== Processing service: {service_name} ===")
@@ -291,7 +292,7 @@ class Command(BaseCommand):
 
         self.log_msg(f"Finished processing {service_name}")
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:
         """Execute the command"""
         self.dry_run = options.get("dry_run", False)
         self.async_mode = options.get("async_mode", False)
@@ -305,7 +306,7 @@ class Command(BaseCommand):
             return
 
         # Load configuration
-        config_path = options.get("config")
+        config_path = options["config"]
         self.config = self.load_config(config_path)
         self.log_msg(f"Loaded configuration from: {config_path}")
 
