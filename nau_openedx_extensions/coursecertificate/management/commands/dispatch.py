@@ -1,6 +1,7 @@
 """
 Send course certificates to external services based on YAML configuration.
 """
+
 import base64
 import hashlib
 import importlib
@@ -9,11 +10,12 @@ from datetime import datetime, timedelta
 
 import requests
 import yaml
-from common.djangoapps.util.query import use_read_replica_if_available  # lint-amnesty, pylint: disable=import-error
 from django.core.management.base import BaseCommand, CommandError
 from django.core.paginator import Paginator
-from lms.djangoapps.certificates.models import GeneratedCertificate  # lint-amnesty, pylint: disable=import-error
 from pytz import UTC
+
+from nau_openedx_extensions.edxapp_wrapper.certificates import GeneratedCertificate
+from nau_openedx_extensions.edxapp_wrapper.util import use_read_replica_if_available
 
 
 class Command(BaseCommand):
@@ -73,9 +75,9 @@ class Command(BaseCommand):
     def load_config(self, config_path):
         """Load YAML configuration"""
         try:
-            with open(config_path, 'r', encoding='utf-8') as file:
+            with open(config_path, "r", encoding="utf-8") as file:
                 config = yaml.safe_load(file)
-                return config.get('NAU_SEND_COURSE_CERTIFICATE_CONFIG', [])
+                return config.get("NAU_SEND_COURSE_CERTIFICATE_CONFIG", [])
         except FileNotFoundError as exc:
             raise CommandError(f"Configuration file not found: {config_path}") from exc
         except yaml.YAMLError as exc:
@@ -96,13 +98,13 @@ class Command(BaseCommand):
 
     def extract_field_value(self, certificate, field_config):
         """Extract field value from certificate using configured function"""
-        func_path = field_config['func']
-        args = field_config.get('args', [])
-        trans = field_config.get('trans')
+        func_path = field_config["func"]
+        args = field_config.get("args", [])
+        trans = field_config.get("trans")
 
         try:
             # Import the function dynamically
-            module_path, func_name = func_path.rsplit('.', 1)
+            module_path, func_name = func_path.rsplit(".", 1)
             module = importlib.import_module(module_path)
             extract_func = getattr(module, func_name)
 
@@ -126,16 +128,16 @@ class Command(BaseCommand):
 
     def apply_filters(self, certificates, service_config):
         """Apply filters to certificates based on service configuration"""
-        filters = service_config.get('filters', [])
+        filters = service_config.get("filters", [])
         filtered_certificates = certificates
 
         for filter_config in filters:
             try:
-                func_path = filter_config['func']
-                args = filter_config.get('args', [])
+                func_path = filter_config["func"]
+                args = filter_config.get("args", [])
 
                 # Import the filter function dynamically
-                module_path, func_name = func_path.rsplit('.', 1)
+                module_path, func_name = func_path.rsplit(".", 1)
                 module = importlib.import_module(module_path)
                 filter_func = getattr(module, func_name)
 
@@ -156,13 +158,13 @@ class Command(BaseCommand):
 
     def convert_certificates_to_service_format(self, certificates, service_config):
         """Convert certificates to the format required by the service"""
-        fields_config = service_config.get('fields', [])
+        fields_config = service_config.get("fields", [])
         converted_data = []
 
         for certificate in certificates:
             cert_data = {}
             for field_config in fields_config:
-                field_name = field_config['name']
+                field_name = field_config["name"]
                 field_value = self.extract_field_value(certificate, field_config)
                 if field_value is not None:
                     cert_data[field_name] = field_value
@@ -174,11 +176,11 @@ class Command(BaseCommand):
 
     def send_certificates_to_service(self, service_config, certificates_data):
         """Send certificates to external service"""
-        service_name = service_config['service']
-        api_url = service_config.get('endpoint_url')
-        auth_token = service_config.get('auth_token')
-        auth_type = service_config.get('auth_type', 'bearer')
-        auth_header = service_config.get('auth_header', 'Authorization')
+        service_name = service_config["service"]
+        api_url = service_config.get("endpoint_url")
+        auth_token = service_config.get("auth_token")
+        auth_type = service_config.get("auth_type", "bearer")
+        auth_header = service_config.get("auth_header", "Authorization")
 
         self.log_msg(f"Sending {len(certificates_data)} certificates to {service_name}")
         self.log_msg(f"Data: {certificates_data}")
@@ -238,18 +240,18 @@ class Command(BaseCommand):
 
     def process_service(self, service_config, options):
         """Process certificates for a specific service"""
-        service_name = service_config['service']
+        service_name = service_config["service"]
         self.log_msg(f"\n=== Processing service: {service_name} ===")
 
         # Determine days to process
-        days = options.get('days')
+        days = options.get("days")
         if days is None:
-            days = service_config.get('days_back', 7)
+            days = service_config.get("days_back", 7)
 
         # Determine page size
-        page_size = options.get('page_size')
+        page_size = options.get("page_size")
         if page_size is None:
-            page_size = service_config.get('batch_size', 1000)
+            page_size = service_config.get("batch_size", 1000)
 
         self.log_msg(f"Processing certificates from last {days} days")
         self.log_msg(f"Batch size: {page_size}")
@@ -276,9 +278,7 @@ class Command(BaseCommand):
 
             if certificates:
                 # Convert to service format
-                certificates_data = self.convert_certificates_to_service_format(
-                    certificates, service_config
-                )
+                certificates_data = self.convert_certificates_to_service_format(certificates, service_config)
 
                 if certificates_data:
                     # Send to service
@@ -290,8 +290,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Execute the command"""
-        self.dry_run = options.get('dry_run', False)
-        self.async_mode = options.get('async_mode', False)
+        self.dry_run = options.get("dry_run", False)
+        self.async_mode = options.get("async_mode", False)
 
         if self.dry_run:
             self.log_msg("=== DRY RUN MODE - No actual requests will be sent ===")
@@ -302,17 +302,14 @@ class Command(BaseCommand):
             return
 
         # Load configuration
-        config_path = options.get('config')
+        config_path = options.get("config")
         self.config = self.load_config(config_path)
         self.log_msg(f"Loaded configuration from: {config_path}")
 
         # Filter services if specific service requested
-        target_service = options.get('service')
+        target_service = options.get("service")
         if target_service:
-            services_to_process = [
-                service for service in self.config
-                if service.get('service') == target_service
-            ]
+            services_to_process = [service for service in self.config if service.get("service") == target_service]
             if not services_to_process:
                 raise CommandError(f"Service '{target_service}' not found in configuration")
         else:
