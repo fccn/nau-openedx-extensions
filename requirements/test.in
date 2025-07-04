@@ -9,3 +9,4 @@ pylint
 pytest
 coverage
 django_mock_queries
+faker

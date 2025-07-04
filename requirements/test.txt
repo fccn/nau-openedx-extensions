@@ -8,7 +8,7 @@ amqp==5.3.1
     # via
     #   -r /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/base.txt
     #   kombu
-asgiref==3.8.1
+asgiref==3.9.0
     # via
     #   -r /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/base.txt
     #   django
@@ -58,7 +58,7 @@ click-didyoumean==0.3.1
     #   celery
 click-log==0.4.0
     # via edx-lint
-click-plugins==1.1.1
+click-plugins==1.1.1.2
     # via
     #   -r /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/base.txt
     #   celery
@@ -68,9 +68,9 @@ click-repl==0.3.0
     #   celery
 code-annotations==2.3.0
     # via edx-lint
-coverage==7.9.1
+coverage==7.9.2
     # via -r requirements/test.in
-cryptography==45.0.4
+cryptography==45.0.5
     # via
     #   -r /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/base.txt
     #   pyjwt
@@ -134,6 +134,8 @@ edx-opaque-keys[django]==2.9.0
     #   edx-ccx-keys
     #   edx-drf-extensions
     #   openedx-events
+faker==37.4.0
+    # via -r requirements/test.in
 fastavro==1.11.1
     # via
     #   -r /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/base.txt
@@ -189,13 +191,13 @@ psutil==7.0.0
     # via
     #   -r /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/base.txt
     #   edx-django-utils
-pycodestyle==2.13.0
+pycodestyle==2.14.0
     # via -r requirements/test.in
 pycparser==2.22
     # via
     #   -r /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/base.txt
     #   cffi
-pygments==2.19.1
+pygments==2.19.2
     # via pytest
 pyjwt[crypto]==2.10.1
     # via
@@ -214,7 +216,7 @@ pylint-celery==0.3
     # via edx-lint
 pylint-django==2.5.5
     # via edx-lint
-pylint-plugin-utils==0.8.2
+pylint-plugin-utils==0.9.0
     # via
     #   pylint-celery
     #   pylint-django
@@ -226,7 +228,7 @@ pynacl==1.5.0
     # via
     #   -r /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/base.txt
     #   edx-django-utils
-pytest==8.4.0
+pytest==8.4.1
     # via -r requirements/test.in
 python-dateutil==2.9.0.post0
     # via
@@ -264,15 +266,16 @@ text-unidecode==1.3
     # via python-slugify
 tomlkit==0.13.3
     # via pylint
-typing-extensions==4.14.0
+typing-extensions==4.14.1
     # via
     #   -r /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/base.txt
     #   edx-opaque-keys
 tzdata==2025.2
     # via
     #   -r /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/base.txt
+    #   faker
     #   kombu
-urllib3==2.4.0
+urllib3==2.5.0
     # via
     #   -r /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/base.txt
     #   requests
