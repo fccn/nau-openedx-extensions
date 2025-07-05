@@ -18,7 +18,7 @@ NAU_SEND_COURSE_CERTIFICATE_CONFIG:
     auth_token: XXXXXXXXXXXXXXXXXXXXX
     auth_type: bearer
     auth_header: Authorization
-    page_size: 100
+    page_size: 2
     days: 50
     fields:
       - name: email
@@ -43,7 +43,7 @@ NAU_SEND_COURSE_CERTIFICATE_CONFIG:
       - name: course_name
         func: nau_openedx_extensions.coursecertificate.extractors.course.name
     filters:
-      - func: nau_openedx_extensions.coursecertificate.filters.certificate_by_org
-        args: NAU
       - func: nau_openedx_extensions.coursecertificate.filters.certificate_by_course_id_regex
         args: course-v1
+      - func: nau_openedx_extensions.coursecertificate.filters.certificate_by_org
+        args: EduNext
