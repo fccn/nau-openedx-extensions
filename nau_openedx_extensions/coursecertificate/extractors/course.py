@@ -2,6 +2,8 @@
 This module is used to extract the data from the course.
 """
 
+from nau_openedx_extensions.edxapp_wrapper.content import CourseOverview
+
 
 def id(certificate) -> str:  # pylint: disable=redefined-builtin
     return str(certificate.course_id)
@@ -12,5 +14,5 @@ def code(certificate) -> str:
 
 
 def name(certificate) -> str:
-    # TODO: Where is the course name?
-    return f"{certificate.course_id} display name"
+    course = CourseOverview.objects.get(id=certificate.course_id)
+    return course.display_name

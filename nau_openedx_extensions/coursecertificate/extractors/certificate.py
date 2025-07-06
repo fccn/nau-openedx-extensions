@@ -6,7 +6,6 @@ from django.conf import settings
 
 
 def date(certificate) -> str:
-    # TODO: Which should be the date format?
     return str(certificate.created_date.isoformat())
 
 
