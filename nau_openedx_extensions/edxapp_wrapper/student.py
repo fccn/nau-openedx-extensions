@@ -1,6 +1,7 @@
 """
 Student backend abstraction
 """
+
 from __future__ import absolute_import, unicode_literals
 
 from importlib import import_module
@@ -56,5 +57,15 @@ def get_course_staff_role():
     return backend.CourseStaffRole
 
 
+def get_course_enrollment_model():
+    """
+    Wrapper for `common.djangoapps.student.models.course_enrollment.CourseEnrollment` in edx-platform.
+    """
+    backend_function = settings.NAU_STUDENT_MODULE
+    backend = import_module(backend_function)
+    return backend.CourseEnrollment
+
+
 CourseInstructorRole = get_course_instructor_role()
 CourseStaffRole = get_course_staff_role()
+CourseEnrollment = get_course_enrollment_model()

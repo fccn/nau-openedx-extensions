@@ -99,3 +99,4 @@ def plugin_settings(settings):
     settings.NAU_UTIL_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.util_r_v1"
     settings.NAU_INSTRUCTOR_TASK_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.instructor_task_r_v1"
     settings.NAU_SITE_CONFIGURATION_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_r_v1"
+    settings.NAU_CONTENT_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.content_r_v1"

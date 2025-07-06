@@ -61,6 +61,9 @@ def plugin_settings(settings):
     settings.NAU_SITE_CONFIGURATION_MODULE = getattr(settings, "ENV_TOKENS", {}).get(
         "NAU_SITE_CONFIGURATION_MODULE", settings.NAU_SITE_CONFIGURATION_MODULE
     )
+    settings.NAU_CONTENT_MODULE = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_CONTENT_MODULE", settings.NAU_CONTENT_MODULE
+    )
     settings.NAU_CC_ALLOWED_SLUG = getattr(settings, "ENV_TOKENS", {}).get(
         "NAU_CC_ALLOWED_SLUG", settings.NAU_CC_ALLOWED_SLUG
     )
