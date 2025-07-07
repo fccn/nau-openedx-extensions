@@ -179,7 +179,7 @@ def write_file(response, course_id, filename, output_dir):
     :param filename: The name of the file to be written
     :param output_dir: The directory to save the report files to
     """
-    filepath = Path(os.path.join(output_dir, course_id, filename))
+    filepath = Path(os.path.join(output_dir, _normalize_course_id(course_id), filename))
     filepath.parent.mkdir(parents=True, exist_ok=True)
     with open(filepath, "wb") as f:
         for chunk in response.iter_content(chunk_size=8192):
