@@ -25,6 +25,9 @@ class Command(BaseCommand):
     Send course certificates to external services based on YAML configuration.
     """
 
+    # Define valid auth types as class constants
+    VALID_AUTH_TYPES = ["bearer", "basic", "api_key"]
+
     help = "Send course certificates to external services"
 
     def add_arguments(self, parser):
@@ -86,11 +89,14 @@ class Command(BaseCommand):
 
     def apply_transformations(self, value: str, trans: str) -> str:
         """Apply transformations to a field value"""
-        if trans == "md5":
-            return hashlib.md5(str(value).encode()).hexdigest()
-        elif trans == "base64":
-            return base64.b64encode(str(value).encode()).decode()
-        return value
+        transformations = {
+            "md5": lambda v: hashlib.md5(str(v).encode()).hexdigest(),
+            "base64": lambda v: base64.b64encode(str(v).encode()).decode(),
+        }
+        transform_func = transformations.get(trans)
+        if transform_func:
+            return transform_func(value)
+        return str(value)
 
     def extract_field_value(self, certificate: QuerySet, field_config: dict) -> str | None:
         """Extract field value from certificate using configured function"""
@@ -183,6 +189,13 @@ class Command(BaseCommand):
         auth_type = service_config.get("auth_type", "bearer")
         auth_header = service_config.get("auth_header", "Authorization")
 
+        # Validate auth_type strictly
+        if auth_type not in self.VALID_AUTH_TYPES:
+            raise CommandError(
+                f"Invalid auth_type '{auth_type}' for service '{service_name}'. "
+                f"Valid options: {', '.join(self.VALID_AUTH_TYPES)}"
+            )
+
         if dry_run:
             self.log_msg(f"[DRY RUN] Would send to {api_url}")
             self.log_msg(f"[DRY RUN] Headers would include: {auth_type} authentication")
@@ -209,9 +222,6 @@ class Command(BaseCommand):
                 headers[auth_header] = f"Basic {credentials}"
             elif auth_type == "api_key":
                 headers[auth_header] = auth_token
-            else:
-                # Custom auth type - use as-is
-                headers[auth_header] = f"{auth_type} {auth_token}"
 
         try:
             response = requests.post(
