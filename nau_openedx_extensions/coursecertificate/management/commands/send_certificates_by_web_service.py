@@ -27,12 +27,6 @@ class Command(BaseCommand):
 
     help = "Send course certificates to external services"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.config = None
-        self.dry_run = False
-        self.async_mode = False
-
     def add_arguments(self, parser):
         """
         Configure Django Command arguments
@@ -176,7 +170,7 @@ class Command(BaseCommand):
 
         return converted_data
 
-    def send_certificates_to_service(self, service_config: dict, certificates_data: list[dict]) -> bool:
+    def send_certificates_to_service(self, service_config: dict, certificates_data: list[dict], dry_run: bool = False) -> bool:
         """Send certificates to external service"""
         service_name = service_config["service_name"]
         api_url = service_config["endpoint_url"]
@@ -184,7 +178,7 @@ class Command(BaseCommand):
         auth_type = service_config.get("auth_type", "bearer")
         auth_header = service_config.get("auth_header", "Authorization")
 
-        if self.dry_run:
+        if dry_run:
             self.log_msg(f"[DRY RUN] Would send to {api_url}")
             self.log_msg(f"[DRY RUN] Headers would include: {auth_type} authentication")
             self.log_msg(f"[DRY RUN] Auth header: {auth_header}")
@@ -244,8 +238,11 @@ class Command(BaseCommand):
 
     def process_service(self, service_config: dict, options: dict) -> None:
         """Process certificates for a specific service"""
-        service_name = service_config.get("service_name") or service_config.get("service")
+        service_name = service_config.get("service_name")
         self.log_msg(f"\n=== Processing service: {service_name} ===")
+
+        # Get dry_run from options
+        dry_run = options.get("dry_run", False)
 
         # Determine days to process
         days = options.get("days")
@@ -285,8 +282,8 @@ class Command(BaseCommand):
                 certificates_data = self.convert_certificates_to_service_format(certificates, service_config)
 
                 if certificates_data:
-                    # Send to service
-                    success = self.send_certificates_to_service(service_config, certificates_data)
+                    # Send to service - PASAR dry_run como parámetro
+                    success = self.send_certificates_to_service(service_config, certificates_data, dry_run)
                     if not success:
                         self.log_msg(f"Failed to send page {page_num} to {service_name}")
 
@@ -294,30 +291,30 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options) -> None:
         """Execute the command"""
-        self.dry_run = options.get("dry_run", False)
-        self.async_mode = options.get("async_mode", False)
+        dry_run = options.get("dry_run", False)
+        async_mode = options.get("async_mode", False)
 
-        if self.dry_run:
+        if dry_run:
             self.log_msg("=== DRY RUN MODE - No actual requests will be sent ===")
 
-        if self.async_mode:
+        if async_mode:
             self.log_msg("=== ASYNC MODE - Would run via Celery (not implemented yet) ===")
             # TODO: Implement Celery integration
             return
 
         # Load configuration
         config_path = options["config"]
-        self.config = self.load_config(config_path)
+        config = self.load_config(config_path)
         self.log_msg(f"Loaded configuration from: {config_path}")
 
         # Filter services if specific service requested
         target_service = options.get("service_name")
         if target_service:
-            services_to_process = [service for service in self.config if service.get("service_name") == target_service]
+            services_to_process = [service for service in config if service.get("service_name") == target_service]
             if not services_to_process:
                 raise CommandError(f"Service '{target_service}' not found in configuration")
         else:
-            services_to_process = self.config
+            services_to_process = config
 
         self.log_msg(f"Processing {len(services_to_process)} service(s)")
 
