@@ -298,7 +298,7 @@ class Command(BaseCommand):
                 certificates_data = self.convert_certificates_to_service_format(certificates, service_config)
 
                 if certificates_data:
-                    # Send to service - PASAR dry_run como parámetro
+                    # Send to service
                     success = self.send_certificates_to_service(service_config, certificates_data, dry_run)
                     if not success:
                         self.log_msg(f"Failed to send page {page_num} to {service_name}")
