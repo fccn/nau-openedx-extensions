@@ -200,6 +200,7 @@ class Command(BaseCommand):
             self.log_msg(f"[DRY RUN] Would send to {api_url}")
             self.log_msg(f"[DRY RUN] Headers would include: {auth_type} authentication")
             self.log_msg(f"[DRY RUN] Auth header: {auth_header}")
+            self.log_msg(f"[DRY RUN] Auth token: {'Configured' if auth_token else 'Not configured'}")
             self.log_msg("[DRY RUN] Payload:")
             self.log_msg(json.dumps(certificates_data, indent=2, ensure_ascii=False))
             return True
