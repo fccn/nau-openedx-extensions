@@ -170,7 +170,7 @@ class Command(BaseCommand):
 
         return converted_data
 
-    def send_certificates_to_service(self, service_config: dict, certificates_data: list[dict], dry_run: bool = False) -> bool:  #pylint: disable=line-too-long
+    def send_certificates_to_service(self, service_config: dict, certificates_data: list[dict], dry_run: bool = False) -> bool:  # pylint: disable=line-too-long
         """Send certificates to external service"""
         service_name = service_config["service_name"]
         api_url = service_config["endpoint_url"]
