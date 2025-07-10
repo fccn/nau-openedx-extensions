@@ -8,10 +8,10 @@ NAU_SEND_COURSE_CERTIFICATE_CONFIG:
     days: 30
     fields:
       - name: key
-        func: nau_openedx_extensions.coursecertificate.extractors.student.email
+        func: nau_openedx_extensions.coursecertificate.extractors.student_email
         trans: md5
       - name: value
-        func: nau_openedx_extensions.coursecertificate.extractors.course.id
+        func: nau_openedx_extensions.coursecertificate.extractors.course_id
 
   - service_name: ina_recap
     endpoint_url: https://ina.gov.pt/api/v1/certificates/recap-integration
@@ -22,26 +22,26 @@ NAU_SEND_COURSE_CERTIFICATE_CONFIG:
     days: 50
     fields:
       - name: email
-        func: nau_openedx_extensions.coursecertificate.extractors.student.email
+        func: nau_openedx_extensions.coursecertificate.extractors.student_email
       - name: username
-        func: nau_openedx_extensions.coursecertificate.extractors.student.username
+        func: nau_openedx_extensions.coursecertificate.extractors.student_username
       - name: name
-        func: nau_openedx_extensions.coursecertificate.extractors.student.name
+        func: nau_openedx_extensions.coursecertificate.extractors.student_name
       - name: nif
-        func: nau_openedx_extensions.coursecertificate.extractors.student.nau_user_extended_model_field
+        func: nau_openedx_extensions.coursecertificate.extractors.student_nau_user_extended_model_field
         args: nif
       - name: enrolled_date
-        func: nau_openedx_extensions.coursecertificate.extractors.student.enrolled_date
+        func: nau_openedx_extensions.coursecertificate.extractors.student_enrolled_date
       - name: certificate_date
-        func: nau_openedx_extensions.coursecertificate.extractors.certificate.date
+        func: nau_openedx_extensions.coursecertificate.extractors.certificate_date
       - name: certificate_url
-        func: nau_openedx_extensions.coursecertificate.extractors.certificate.url
+        func: nau_openedx_extensions.coursecertificate.extractors.certificate_url
       - name: course_id
-        func: nau_openedx_extensions.coursecertificate.extractors.course.id
+        func: nau_openedx_extensions.coursecertificate.extractors.course_id
       - name: course_code
-        func: nau_openedx_extensions.coursecertificate.extractors.course.code
+        func: nau_openedx_extensions.coursecertificate.extractors.course_code
       - name: course_name
-        func: nau_openedx_extensions.coursecertificate.extractors.course.name
+        func: nau_openedx_extensions.coursecertificate.extractors.course_name
     filters:
       - func: nau_openedx_extensions.coursecertificate.filters.certificate_by_course_id_regex
         args: course-v1
