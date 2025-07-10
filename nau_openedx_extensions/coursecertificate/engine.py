@@ -7,7 +7,7 @@ import hashlib
 import importlib
 import json
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Callable
+from typing import Callable, Dict, List, Optional
 
 import requests
 from django.core.paginator import Paginator
