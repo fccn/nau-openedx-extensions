@@ -125,4 +125,4 @@ class Command(BaseCommand):
 
     def handle_async(self, options: dict) -> None:
         """Handle asynchronous execution using Celery"""
-        pass
+        raise CommandError("Async mode is not yet implemented. Use without --async flag.")
