@@ -56,5 +56,15 @@ def get_course_staff_role():
     return backend.CourseStaffRole
 
 
+def get_course_data_researcher_role():
+    """
+    Wrapper for `common.djangoapps.student.roles.CourseDataResearcherRole` in edx-platform.
+    """
+    backend_function = settings.NAU_STUDENT_MODULE
+    backend = import_module(backend_function)
+    return backend.CourseDataResearcherRole
+
+
 CourseInstructorRole = get_course_instructor_role()
 CourseStaffRole = get_course_staff_role()
+CourseDataResearcherRole = get_course_data_researcher_role()
