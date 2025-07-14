@@ -7,43 +7,41 @@ NAU_SEND_COURSE_CERTIFICATE_CONFIG:
     page_size: 100
     days: 30
     fields:
-      - name: key
-        func: nau_openedx_extensions.coursecertificate.extractors.student_email
-        trans: md5
-      - name: value
-        func: nau_openedx_extensions.coursecertificate.extractors.course_id
-
-  - service_name: ina_recap
-    endpoint_url: https://ina.gov.pt/api/v1/certificates/recap-integration
-    auth_token: XXXXXXXXXXXXXXXXXXXXX
-    auth_type: bearer
-    auth_header: Authorization
-    page_size: 2
-    days: 50
-    fields:
       - name: email
-        func: nau_openedx_extensions.coursecertificate.extractors.student_email
+        type: standard
+        model_field: user__email
+        trans: md5
       - name: username
-        func: nau_openedx_extensions.coursecertificate.extractors.student_username
+        type: standard
+        model_field: user__username
+        trans: base64
       - name: name
-        func: nau_openedx_extensions.coursecertificate.extractors.student_name
+        type: standard
+        model_field: user__profile__name
       - name: nif
-        func: nau_openedx_extensions.coursecertificate.extractors.student_nau_user_extended_model_field
-        args: nif
-      - name: enrolled_date
-        func: nau_openedx_extensions.coursecertificate.extractors.student_enrolled_date
+        type: standard
+        model_field: user__nauuserextendedmodel__nif
       - name: certificate_date
-        func: nau_openedx_extensions.coursecertificate.extractors.certificate_date
+        type: standard
+        model_field: created_date
       - name: certificate_url
-        func: nau_openedx_extensions.coursecertificate.extractors.certificate_url
+        type: concatenated
+        model_field: verify_uuid
+        concat: certificate_url
       - name: course_id
-        func: nau_openedx_extensions.coursecertificate.extractors.course_id
-      - name: course_code
-        func: nau_openedx_extensions.coursecertificate.extractors.course_code
+        type: standard
+        model_field: course_id
       - name: course_name
-        func: nau_openedx_extensions.coursecertificate.extractors.course_name
+        type: computed
+        subquery: course_name
+      - name: enrolled_date
+        type: computed
+        subquery: enrolled_date
+      - name: course_code
+        type: substring
+        substring: course_number
     filters:
-      - func: nau_openedx_extensions.coursecertificate.filters.certificate_by_course_id_regex
+      - name: certificate_by_course_id_regex
         args: course-v1
-      - func: nau_openedx_extensions.coursecertificate.filters.certificate_by_org
+      - name: certificate_by_org
         args: EduNext

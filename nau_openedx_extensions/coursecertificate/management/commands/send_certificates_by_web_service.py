@@ -2,7 +2,9 @@
 Send course certificates to external services based on YAML configuration.
 """
 
+import argparse
 import os
+from typing import Any, Optional
 
 import yaml
 from django.core.management.base import BaseCommand, CommandError
@@ -17,12 +19,18 @@ class Command(BaseCommand):
 
     help = "Send course certificates to external services"
 
-    def __init__(self, *args, **kwargs):
+    DEFAULT_CONFIG_FILENAME = "config.yml"
+    CONFIG_KEY = "NAU_SEND_COURSE_CERTIFICATE_CONFIG"
+
+    MSG_DRY_RUN = "=== DRY RUN MODE - No actual requests will be sent ==="
+    MSG_ASYNC_MODE = "=== ASYNC MODE - Dispatching services via Celery ==="
+    MSG_ALL_PROCESSED = "=== All services processed ==="
+
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        # Initialize the engine with our logger
         self.engine = CertificateEngine(logger=self.log_msg)
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         """
         Configure Django Command arguments
         """
@@ -57,71 +65,80 @@ class Command(BaseCommand):
             help="Run via Celery (for milestone 3 compatibility)",
         )
 
+    def log_msg(self, msg: str) -> None:
+        """Log a message immediately"""
+        self.stdout.write(msg)
+        self.stdout.flush()
+
     def get_default_config_path(self) -> str:
         """Get default configuration file path"""
         current_dir = os.path.dirname(os.path.abspath(__file__))
         config_dir = os.path.dirname(os.path.dirname(current_dir))
-        return os.path.join(config_dir, "config.yml")
+        return os.path.join(config_dir, self.DEFAULT_CONFIG_FILENAME)
 
     def load_config(self, config_path: str) -> list[dict]:
         """Load YAML configuration"""
         try:
             with open(config_path, "r", encoding="utf-8") as file:
                 config = yaml.safe_load(file)
-                return config.get("NAU_SEND_COURSE_CERTIFICATE_CONFIG", [])
+                return config.get(self.CONFIG_KEY, [])
         except FileNotFoundError as exc:
             raise CommandError(f"Configuration file not found: {config_path}") from exc
         except yaml.YAMLError as exc:
             raise CommandError(f"Error parsing YAML configuration: {exc}") from exc
 
-    def log_msg(self, msg: str) -> None:
-        """Log a message immediately"""
-        self.stdout.write(msg)
-        self.stdout.flush()
+    def process_service_safely(self, service_config: dict[str, Any], options: dict[str, Any]) -> bool:
+        """Process a service with proper error handling"""
+        service_name = service_config.get("service_name", "unknown")
 
-    def process_service(self, service_config: dict, options: dict) -> None:
-        """Process certificates for a specific service using the engine"""
-        # Delegate everything to the engine
-        self.engine.process_service(service_config, options)
+        try:
+            self.engine.process_service(service_config, options)
+            self.log_msg(f"✓ Successfully processed service: {service_name}")
+            return True
+        except (KeyError, ValueError, TypeError) as exc:
+            self.log_msg(f"Configuration error for service {service_name}: {exc}")
+            return False
+        except Exception as exc:  # pylint: disable=broad-except
+            self.log_msg(f"Unexpected error processing service {service_name}: {exc}")
+            return False
+
+    def filter_services(self, config: list[dict[str, Any]], target_service: Optional[str]) -> list[dict[str, Any]]:
+        """Filter services based on target service name"""
+        if not target_service:
+            return config
+
+        services = [service for service in config if service.get("service_name") == target_service]
+        if not services:
+            raise CommandError(f"Service '{target_service}' not found in configuration")
+
+        return services
 
     def handle(self, *args, **options) -> None:
         """Execute the command"""
-        dry_run = options.get("dry_run", False)
-        async_mode = options.get("async_mode", False)
+        if options.get("dry_run", False):
+            self.log_msg(self.MSG_DRY_RUN)
 
-        if dry_run:
-            self.log_msg("=== DRY RUN MODE - No actual requests will be sent ===")
+        if options.get("async_mode", False):
+            self.log_msg(self.MSG_ASYNC_MODE)
+            return self.handle_async(options)
 
-        if async_mode:
-            self.log_msg("=== ASYNC MODE - Dispatching services via Celery ===")
-            self.handle_async(options)
-            return
+        return self.handle_sync(options)
 
-        # Load configuration
-        config_path = options["config"]
-        config = self.load_config(config_path)
-        self.log_msg(f"Loaded configuration from: {config_path}")
+    def handle_sync(self, options: dict[str, Any]) -> None:
+        """Handle synchronous execution"""
+        config = self.load_config(options["config"])
+        services_to_process = self.filter_services(config, options.get("service_name"))
 
-        # Filter services if specific service requested
-        target_service = options.get("service_name")
-        if target_service:
-            services_to_process = [service for service in config if service.get("service_name") == target_service]
-            if not services_to_process:
-                raise CommandError(f"Service '{target_service}' not found in configuration")
-        else:
-            services_to_process = config
-
+        self.log_msg(f"Loaded configuration from: {options['config']}")
         self.log_msg(f"Processing {len(services_to_process)} service(s)")
 
-        # Process each service using the engine
+        success_count = 0
         for service_config in services_to_process:
-            try:
-                self.process_service(service_config, options)
-            except (KeyError, ValueError, TypeError) as exc:
-                self.log_msg(f"Error processing service {service_config.get('service_name', 'unknown')}: {exc}")
-                continue
+            if self.process_service_safely(service_config, options):
+                success_count += 1
 
-        self.log_msg("\n=== All services processed ===")
+        self.log_msg(f"\n{self.MSG_ALL_PROCESSED}")
+        self.log_msg(f"Successfully processed {success_count}/{len(services_to_process)} services.")
 
     def handle_async(self, options: dict) -> None:
         """Handle asynchronous execution using Celery"""
