@@ -64,7 +64,7 @@ msgstr "Trabalhador independente/empresário"
 msgid "Other"
 msgstr "Outro"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:64
+#: nau_openedx_extensions/custom_registration_form/models.py:63
 msgid ""
 "I have read and understood the <a href='https://www.nau.edu.pt/legal/"
 "politica-de-privacidade/' rel='noopener' target='_blank'>Privacy Policy</"
@@ -128,7 +128,7 @@ msgstr ""
 "www.nau.edu.pt/legal/consentimento-para-o-envio-de-"
 "newsletters/'>consentimento para o envio de newsletters</a>"
 
-#: nau_openedx_extensions/filters/pipeline.py:63
+#: nau_openedx_extensions/filters/pipeline.py:62
 #, python-brace-format
 msgid ""
 "You need to activate your account before you can enroll in the course. "
@@ -152,7 +152,7 @@ msgstr ""
 "Não pode inscrever-se neste curso porque o seu domínio de e-mail não é "
 "permitido. %(custom_message)s"
 
-#: nau_openedx_extensions/filters/pipeline.py:129
+#: nau_openedx_extensions/filters/pipeline.py:128
 msgid ""
 "You need to associate Autenticação Gov to your account or add NIF to "
 "your account."
@@ -184,8 +184,8 @@ msgstr "Ocorreu um erro. Por favor tente novamente mais tarde."
 msgid "Certificate Export"
 msgstr "Exportação de certificados"
 
-#: nau_openedx_extensions/management/commands/add_archived_course_message.py:111
-#: nau_openedx_extensions/management/commands/add_archived_course_message.py:116
+#: nau_openedx_extensions/management/commands/add_archived_course_message.py:110
+#: nau_openedx_extensions/management/commands/add_archived_course_message.py:115
 msgid ""
 "This is an archived course and no longer allows activities to be carried "
 "out in order to obtain a certificate."
