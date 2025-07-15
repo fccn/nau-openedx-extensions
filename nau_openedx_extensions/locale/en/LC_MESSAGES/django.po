@@ -12,11 +12,11 @@ msgstr ""
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
 "Language-Team: en <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.17.0\n"
+"Generated-By: Babel 2.9.0\n"
 
 #: nau_openedx_extensions/certificate_export/views.py:23
 msgid "Export task started successfully."
@@ -63,7 +63,7 @@ msgstr ""
 msgid "Other"
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/models.py:64
+#: nau_openedx_extensions/custom_registration_form/models.py:63
 msgid ""
 "I have read and understood the <a href='https://www.nau.edu.pt/legal"
 "/politica-de-privacidade/' rel='noopener' target='_blank'>Privacy "
@@ -125,7 +125,7 @@ msgstr ""
 "href='https://www.nau.edu.pt/legal/consentimento-para-o-envio-de-"
 "newsletters/'>consent to the sending of newsletters</a>"
 
-#: nau_openedx_extensions/filters/pipeline.py:63
+#: nau_openedx_extensions/filters/pipeline.py:62
 #, python-brace-format
 msgid ""
 "You need to activate your account before you can enroll in the course. "
@@ -144,7 +144,7 @@ msgid ""
 " %(custom_message)s"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:129
+#: nau_openedx_extensions/filters/pipeline.py:128
 msgid ""
 "You need to associate Autenticação Gov to your account or add NIF to your"
 " account."
@@ -174,8 +174,8 @@ msgstr ""
 msgid "Certificate Export"
 msgstr ""
 
-#: nau_openedx_extensions/management/commands/add_archived_course_message.py:111
-#: nau_openedx_extensions/management/commands/add_archived_course_message.py:116
+#: nau_openedx_extensions/management/commands/add_archived_course_message.py:110
+#: nau_openedx_extensions/management/commands/add_archived_course_message.py:115
 msgid ""
 "This is an archived course and no longer allows activities to be carried "
 "out in order to obtain a certificate."
