@@ -169,6 +169,7 @@ class ExternalServiceClient:
         """Send actual HTTP request to external service"""
         service_name = service_config["service_name"]
         api_url = service_config["endpoint_url"]
+        timeout = service_config["endpoint_timeout"]
 
         self.log(f"Sending {len(data)} certificates to {service_name}")
 
@@ -178,7 +179,7 @@ class ExternalServiceClient:
                 api_url,
                 json=data,
                 headers=headers,
-                timeout=60,
+                timeout=timeout,
             )
 
             if response.ok:

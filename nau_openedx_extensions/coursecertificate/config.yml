@@ -1,6 +1,7 @@
 NAU_SEND_COURSE_CERTIFICATE_CONFIG:
   - service_name: portugal_digital
     endpoint_url: https://academiaportugaldigital.pt/api/api/Course/FinishedIntegrationNau
+    endpoint_timeout: 60
     auth_token: XXXXXXXXXXXXXXXXXXXXX
     auth_type: bearer
     auth_header: Authorization
