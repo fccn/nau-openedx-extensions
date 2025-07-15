@@ -79,8 +79,5 @@ setup(
         "cms.djangoapp": [
             "nau_openedx_extensions = nau_openedx_extensions.studio.apps:NauOpenCmsConfig",
         ],
-        "openedx.course_tab": [
-            "nau = nau_openedx_extensions.message_gateway.views.tab:NauMessageGatewayTab",
-            ],
     }
 )

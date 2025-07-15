@@ -43,5 +43,3 @@ class NauOpenEdxConfig(AppConfig):
         Method to perform actions after apps registry is ended
         """
         from nau_openedx_extensions import signals  # pylint: disable=import-outside-toplevel,unused-import # noqa
-        from nau_openedx_extensions.permissions import \
-            load_permissions  # pylint: disable=import-outside-toplevel,unused-import # noqa
