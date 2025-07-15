@@ -14,7 +14,7 @@ billiard==4.2.1
     # via celery
 celery==5.5.3
     # via
-    #   -c /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/constraints.txt
+    #   -c /home/edunext/edunext/naunuevocompleto/extra/nau-openedx-extensions/requirements/constraints.txt
     #   -r requirements/base.in
 certifi==2025.7.14
     # via requests
@@ -26,7 +26,7 @@ charset-normalizer==3.4.2
     # via requests
 click==8.2.1
     # via
-    #   -c /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/constraints.txt
+    #   -c /home/edunext/edunext/naunuevocompleto/extra/nau-openedx-extensions/requirements/constraints.txt
     #   celery
     #   click-didyoumean
     #   click-plugins
@@ -42,7 +42,7 @@ cryptography==45.0.5
     # via pyjwt
 django==4.2.23
     # via
-    #   -c /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/constraints.txt
+    #   -c /home/edunext/edunext/naunuevocompleto/extra/nau-openedx-extensions/requirements/constraints.txt
     #   django-crum
     #   django-waffle
     #   djangorestframework
@@ -76,7 +76,7 @@ edx-drf-extensions==10.6.0
     # via -r requirements/base.in
 edx-opaque-keys[django]==2.9.0
     # via
-    #   -c /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/constraints.txt
+    #   -c /home/edunext/edunext/naunuevocompleto/extra/nau-openedx-extensions/requirements/constraints.txt
     #   -r requirements/base.in
     #   edx-ccx-keys
     #   edx-drf-extensions
@@ -89,11 +89,11 @@ kombu==5.5.4
     # via celery
 openedx-events==9.15.0
     # via
-    #   -c /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/constraints.txt
+    #   -c /home/edunext/edunext/naunuevocompleto/extra/nau-openedx-extensions/requirements/constraints.txt
     #   -r requirements/base.in
 openedx-filters==1.12.0
     # via
-    #   -c /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/constraints.txt
+    #   -c /home/edunext/edunext/naunuevocompleto/extra/nau-openedx-extensions/requirements/constraints.txt
     #   -r requirements/base.in
 packaging==25.0
     # via kombu

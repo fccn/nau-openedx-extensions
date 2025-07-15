@@ -9,6 +9,7 @@ import yaml
 from django.core.management.base import BaseCommand, CommandError
 
 from nau_openedx_extensions.coursecertificate.engine import CertificateEngine
+from nau_openedx_extensions.coursecertificate.tasks import process_service_certificates
 
 
 class Command(BaseCommand):
@@ -61,7 +62,7 @@ class Command(BaseCommand):
             "--async",
             action="store_true",
             dest="async_mode",
-            help="Run via Celery (for milestone 3 compatibility)",
+            help="Run via Celery (asynchronous mode)",
         )
 
     def log_msg(self, msg: str) -> None:
@@ -100,6 +101,27 @@ class Command(BaseCommand):
         except Exception as exc:  # pylint: disable=broad-except
             self.log_msg(f"Unexpected error processing service {service_name}: {exc}")
             return False
+
+    def dispatch_service_task_safely(self, service_config: dict[str, Any], options: dict[str, Any]) -> Optional[dict]:
+        """Dispatch a service task with proper error handling"""
+        service_name = service_config.get("service_name", "unknown")
+
+        try:
+            # Dispatch the task
+            task = process_service_certificates.delay(service_config, options)
+            self.log_msg(f"[DISPATCH] Task dispatched for service '{service_name}'")
+
+            return {
+                "service_name": service_name,
+                "task_id": task.id
+            }
+
+        except (ConnectionError, TimeoutError, ValueError, TypeError) as exc:
+            self.log_msg(f"[ERROR] Failed to dispatch task for service '{service_name}': {exc}")
+            return None
+        except Exception as exc:  # pylint: disable=broad-except
+            self.log_msg(f"[ERROR] Unexpected error dispatching task for service '{service_name}': {exc}")
+            return None
 
     def filter_services(self, config: list[dict[str, Any]], target_service: Optional[str]) -> list[dict[str, Any]]:
         """Filter services based on target service name"""
@@ -141,4 +163,38 @@ class Command(BaseCommand):
 
     def handle_async(self, options: dict) -> None:
         """Handle asynchronous execution using Celery"""
-        raise CommandError("Async mode is not yet implemented. Use without --async flag.")
+
+        # Load configuration
+        config_path = options["config"]
+        config = self.load_config(config_path)
+        self.log_msg(f"Loaded configuration from: {config_path}")
+
+        # Filter services if specific service requested
+        services_to_process = self.filter_services(config, options.get("service_name"))
+
+        self.log_msg(f"[INFO] Dispatching {len(services_to_process)} service(s) to Celery background queue")
+
+        # Dispatch each service as a separate Celery task
+        dispatched_tasks = []
+
+        for service_config in services_to_process:
+            task_info = self.dispatch_service_task_safely(service_config, options)
+            if task_info:
+                dispatched_tasks.append(task_info)
+
+        # Summary
+        successful_dispatches = len(dispatched_tasks)
+        total_services = len(services_to_process)
+
+        self.log_msg("\n[DISPATCH] Task Dispatch Summary:")
+        self.log_msg(f"[SUCCESS] Successfully dispatched: {successful_dispatches}/{total_services} tasks")
+
+        if dispatched_tasks:
+            self.log_msg("   Active tasks:")
+            for task_info in dispatched_tasks:
+                self.log_msg(f"     • {task_info['service_name']}: {task_info['task_id']}")
+
+        if successful_dispatches < total_services:
+            self.log_msg(f"   Failed to dispatch: {total_services - successful_dispatches} tasks")
+
+        self.log_msg("\n Note: Tasks are now running in background. Check Celery logs for execution results.")
