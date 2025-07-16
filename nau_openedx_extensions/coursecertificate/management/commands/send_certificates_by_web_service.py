@@ -44,6 +44,11 @@ class Command(BaseCommand):
             help="Specific service to send certificates to (from config)",
         )
         parser.add_argument(
+            "--certificate-id",
+            type=int,
+            help="Process only the certificate with this specific ID",
+        )
+        parser.add_argument(
             "--days",
             type=int,
             help="Number of days of certificates to process",

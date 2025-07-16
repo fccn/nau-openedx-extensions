@@ -307,6 +307,97 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
 
             self.assertIn("Service 'nonexistent_service' not found", str(context.exception))
 
+    @patch("builtins.open", mock_open())
+    def test_handle_with_certificate_id(self):
+        """Test command execution with specific certificate ID."""
+        config_yaml = yaml.dump(self.sample_config)
+
+        with patch("builtins.open", mock_open(read_data=config_yaml)):
+            with patch.object(self.command, "process_service_safely", return_value=True) as mock_process:
+                options = {
+                    "config": "/fake/path/config.yml",
+                    "certificate_id": 123,
+                    "dry_run": False,
+                    "async_mode": False,
+                }
+
+                self.command.handle(**options)
+
+                self.assertEqual(mock_process.call_count, 2)
+                call_args = mock_process.call_args
+                options_passed = call_args[0][1]
+                self.assertEqual(options_passed.get("certificate_id"), 123)
+
+    @patch("builtins.open", mock_open())
+    def test_handle_with_certificate_id_and_service_name(self):
+        """Test command execution with both certificate ID and service name."""
+        config_yaml = yaml.dump(self.sample_config)
+
+        with patch("builtins.open", mock_open(read_data=config_yaml)):
+            with patch.object(self.command, "process_service_safely", return_value=True) as mock_process:
+                options = {
+                    "config": "/fake/path/config.yml",
+                    "certificate_id": 456,
+                    "service_name": "test_service",
+                    "dry_run": False,
+                    "async_mode": False,
+                }
+
+                self.command.handle(**options)
+
+                mock_process.assert_called_once()
+                call_args = mock_process.call_args
+                options_passed = call_args[0][1]
+                self.assertEqual(options_passed.get("certificate_id"), 456)
+                self.assertEqual(options_passed.get("service_name"), "test_service")
+
+    @patch("builtins.open", mock_open())
+    def test_handle_with_certificate_id_and_dry_run(self):
+        """Test command execution with certificate ID in dry run mode."""
+        config_yaml = yaml.dump(self.sample_config)
+
+        with patch("builtins.open", mock_open(read_data=config_yaml)):
+            with patch.object(self.command, "process_service_safely", return_value=True) as mock_process:
+                options = {
+                    "config": "/fake/path/config.yml",
+                    "certificate_id": 789,
+                    "dry_run": True,
+                    "async_mode": False,
+                }
+
+                self.command.handle(**options)
+
+                self.assertEqual(mock_process.call_count, 2)
+                call_args = mock_process.call_args
+                options_passed = call_args[0][1]
+                self.assertEqual(options_passed.get("certificate_id"), 789)
+                self.assertTrue(options_passed.get("dry_run", False))
+
+                output = self.command.stdout.getvalue()
+                self.assertIn("=== DRY RUN MODE - No actual requests will be sent ===", output)
+
+    def test_process_service_safely_with_certificate_id(self):
+        """Test processing service safely with certificate ID option."""
+        service_config = {
+            "service_name": "test_service",
+            "endpoint_url": "https://api.test.com/certificates",
+        }
+
+        options = {"days": 7, "page_size": 100, "certificate_id": 999}
+
+        with patch.object(self.command.engine, "process_service") as mock_process:
+            result = self.command.process_service_safely(service_config, options)
+
+            self.assertTrue(result)
+            mock_process.assert_called_once_with(service_config, options)
+
+            call_args = mock_process.call_args
+            options_passed = call_args[0][1]
+            self.assertEqual(options_passed.get("certificate_id"), 999)
+
+            output = self.command.stdout.getvalue()
+            self.assertIn("Successfully processed service: test_service", output)
+
     def test_handle_sync_success(self):
         """Test successful sync handle execution."""
         config_yaml = yaml.dump(self.sample_config)
@@ -344,9 +435,32 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
 
                     mock_load_config.assert_called_once_with("/fake/path/config.yml")
                     self.assertEqual(mock_process.call_count, 2)
-
                     output = self.command.stdout.getvalue()
                     self.assertIn("Successfully processed 0/2 services", output)
+
+    def test_handle_sync_with_certificate_id(self):
+        """Test sync handle execution with certificate ID."""
+        config_yaml = yaml.dump(self.sample_config)
+
+        with patch("builtins.open", mock_open(read_data=config_yaml)):
+            with patch.object(
+                self.command, "load_config", return_value=self.sample_config["NAU_SEND_COURSE_CERTIFICATE_CONFIG"]
+            ) as mock_load_config:
+                with patch.object(self.command, "process_service_safely", return_value=True) as mock_process:
+                    options = {
+                        "config": "/fake/path/config.yml",
+                        "certificate_id": 1234,
+                        "dry_run": False,
+                    }
+
+                    self.command.handle_sync(options)
+
+                    mock_load_config.assert_called_once_with("/fake/path/config.yml")
+                    self.assertEqual(mock_process.call_count, 2)
+
+                    call_args = mock_process.call_args
+                    options_passed = call_args[0][1]
+                    self.assertEqual(options_passed.get("certificate_id"), 1234)
 
     def test_load_config_with_endpoint_timeout(self):
         """Test loading configuration with endpoint_timeout setting."""
@@ -432,10 +546,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
         config_yaml = yaml.dump(self.sample_config)
 
         with patch("builtins.open", mock_open(read_data=config_yaml)):
-            self.command.handle_async({
-                "config": "/fake/path/config.yml",
-                "service_name": "test_service"
-            })
+            self.command.handle_async({"config": "/fake/path/config.yml", "service_name": "test_service"})
 
         self.assertEqual(mock_task.delay.call_count, 1)
         args, kwargs = mock_task.delay.call_args
@@ -463,10 +574,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
     def test_handle_async_partial_failure(self, mock_task):
         """Test async mode when some dispatches fail."""
 
-        mock_task.delay.side_effect = [
-            Mock(id="task-success"),
-            ValueError("Invalid config")
-        ]
+        mock_task.delay.side_effect = [Mock(id="task-success"), ValueError("Invalid config")]
         config_yaml = yaml.dump(self.sample_config)
 
         with patch("builtins.open", mock_open(read_data=config_yaml)):
@@ -484,10 +592,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
 
         with patch("builtins.open", mock_open(read_data=config_yaml)):
             with self.assertRaises(CommandError) as context:
-                self.command.handle_async({
-                    "config": "/fake/path/config.yml",
-                    "service_name": "nonexistent_service"
-                })
+                self.command.handle_async({"config": "/fake/path/config.yml", "service_name": "nonexistent_service"})
 
         self.assertIn("Service 'nonexistent_service' not found", str(context.exception))
 
@@ -564,6 +669,23 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
         output = self.command.stdout.getvalue()
         self.assertIn("Task dispatched for service 'unknown'", output)
 
+    def test_integration_with_certificate_id(self):
+        """Test integration passes certificate_id to engine."""
+        service_config = {
+            "service_name": "test_service",
+            "endpoint_url": "https://api.test.com/certificates",
+        }
+        options = {"days": 7, "page_size": 100, "certificate_id": 555}
+
+        with patch.object(self.command.engine, "process_service") as mock_process:
+            self.command.process_service_safely(service_config, options)
+
+            mock_process.assert_called_once_with(service_config, options)
+            # Verify that the options with certificate_id were passed
+            call_args = mock_process.call_args
+            passed_options = call_args[0][1]
+            self.assertEqual(passed_options["certificate_id"], 555)
+
 
 class TestSendCertificatesByWebServiceCommandIntegration(TestCase):
     """
@@ -574,28 +696,11 @@ class TestSendCertificatesByWebServiceCommandIntegration(TestCase):
         """Set up test data."""
         self.user = User()
         self.certificate = Certificate(self.user)
+        self.command = Command()
+        self.command.stdout = OutputWrapper(StringIO())
+        self.command.stderr = OutputWrapper(StringIO())
+
         self.sample_config = {
-            "NAU_SEND_COURSE_CERTIFICATE_CONFIG": [
-                {
-                    "service_name": "integration_test",
-                    "endpoint_url": "https://integration.example.com/api/test",
-                    "endpoint_timeout": 60,
-                    "auth_token": "integration_token",
-                    "auth_type": "bearer",
-                    "days": 14,
-                    "page_size": 200,
-                    "fields": [],
-                    "filters": []
-                }
-            ]
-        }
-
-    @patch.object(Command, "process_service_safely")
-    def test_full_command_execution(self, mock_process_service_safely: Mock):
-        """Test full command execution with real configuration."""
-        mock_process_service_safely.return_value = True
-
-        config = {
             "NAU_SEND_COURSE_CERTIFICATE_CONFIG": [
                 {
                     "service_name": "integration_test",
@@ -619,13 +724,17 @@ class TestSendCertificatesByWebServiceCommandIntegration(TestCase):
             ]
         }
 
+    @patch.object(Command, "process_service_safely")
+    def test_full_command_execution(self, mock_process_service_safely: Mock):
+        """Test full command execution with real configuration."""
+        mock_process_service_safely.return_value = True
+
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_config_file:
-            yaml.dump(config, tmp_config_file)
+            yaml.dump(self.sample_config, tmp_config_file)
             config_path = tmp_config_file.name
 
         try:
-            command = Command()
-            command.handle(
+            self.command.handle(
                 config=config_path,
                 service_name="integration_test",
                 dry_run=False,
@@ -650,15 +759,12 @@ class TestSendCertificatesByWebServiceCommandIntegration(TestCase):
 
         mock_task.delay.return_value = Mock(id="integration-task")
         config_yaml = yaml.dump(self.sample_config)
-        command = Command()
-        command.stdout = OutputWrapper(StringIO())
 
         with patch("builtins.open", mock_open(read_data=config_yaml)):
-
-            command.handle(async_mode=True, config="/fake/path/config.yml")
+            self.command.handle(async_mode=True, config="/fake/path/config.yml")
 
             mock_task.delay.assert_called_once()
-            output = command.stdout.getvalue()
+            output = self.command.stdout.getvalue()
             self.assertIn("ASYNC MODE", output)
             self.assertIn("integration-task", output)
 
@@ -668,18 +774,15 @@ class TestSendCertificatesByWebServiceCommandIntegration(TestCase):
 
         mock_task.delay.return_value = Mock(id="dry-run-task")
         config_yaml = yaml.dump(self.sample_config)
-        command = Command()
-        command.stdout = OutputWrapper(StringIO())
 
         with patch("builtins.open", mock_open(read_data=config_yaml)):
-
-            command.handle(async_mode=True, dry_run=True, config="/fake/path/config.yml")
+            self.command.handle(async_mode=True, dry_run=True, config="/fake/path/config.yml")
 
             mock_task.delay.assert_called_once()
             args, kwargs = mock_task.delay.call_args
             self.assertTrue(args[1]["dry_run"])
 
-            output = command.stdout.getvalue()
+            output = self.command.stdout.getvalue()
             self.assertIn("ASYNC MODE", output)
             self.assertIn("DRY RUN MODE", output)
 
@@ -689,13 +792,41 @@ class TestSendCertificatesByWebServiceCommandIntegration(TestCase):
 
         mock_task.delay.return_value = Mock(id="filtered-task")
         config_yaml = yaml.dump(self.sample_config)
-        command = Command()
-        command.stdout = OutputWrapper(StringIO())
 
         with patch("builtins.open", mock_open(read_data=config_yaml)):
-
-            command.handle(async_mode=True, service_name="integration_test", config="/fake/path/config.yml")
+            self.command.handle(async_mode=True, service_name="integration_test", config="/fake/path/config.yml")
 
             mock_task.delay.assert_called_once()
             args, kwargs = mock_task.delay.call_args
             self.assertEqual(args[0]["service_name"], "integration_test")
+
+    @patch.object(Command, "process_service_safely")
+    def test_full_command_execution_with_certificate_id(self, mock_process_service_safely: Mock):
+        """Test full command execution with certificate ID."""
+        mock_process_service_safely.return_value = True
+
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as tmp_config_file:
+            yaml.dump(self.sample_config, tmp_config_file)
+            config_path = tmp_config_file.name
+
+        try:
+            self.command.handle(
+                config=config_path,
+                service_name="integration_test",
+                certificate_id=777,
+                dry_run=True,
+                verbosity=0,
+            )
+        finally:
+            os.remove(config_path)
+
+        mock_process_service_safely.assert_called_once()
+        call_args = mock_process_service_safely.call_args
+        service_config = call_args[0][0]
+        options = call_args[0][1]
+
+        self.assertEqual(service_config["service_name"], "integration_test")
+        self.assertEqual(service_config["endpoint_url"], "https://api.test.com/certificates")
+        self.assertEqual(service_config["endpoint_timeout"], 90)
+        self.assertEqual(options["certificate_id"], 777)
+        self.assertEqual(options["dry_run"], True)
