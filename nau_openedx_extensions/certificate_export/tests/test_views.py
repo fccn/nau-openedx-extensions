@@ -21,8 +21,6 @@ from nau_openedx_extensions.certificate_export.views import (
 VIEWS_MODULE_PATH = "nau_openedx_extensions.certificate_export.views"
 
 export_certificates_patch = patch(f"{VIEWS_MODULE_PATH}.PDFCommand.handle")
-course_staff_role_patch = patch(f"{VIEWS_MODULE_PATH}.CourseStaffRole")
-course_instructor_role_patch = patch(f"{VIEWS_MODULE_PATH}.CourseInstructorRole")
 course_data_researcher_role_patch = patch(f"{VIEWS_MODULE_PATH}.CourseDataResearcherRole")
 export_csv_task_patch = patch(f"{VIEWS_MODULE_PATH}.export_course_certificates_task")
 
@@ -69,63 +67,13 @@ class CertificateExportPdfAPIViewTest(APITestCase):
         self.assertEqual(response.data["message"], NO_PERMISSION_MESSAGE)
 
     @export_certificates_patch
-    @course_instructor_role_patch
-    @course_staff_role_patch
-    @course_data_researcher_role_patch
-    def test_successful_export_with_staff_role(
-        self,
-        course_staff_role_mock: MagicMock,
-        course_instructor_role_mock: MagicMock,
-        course_data_researcher_role_mock: MagicMock,
-        export_certificates_mock: MagicMock,
-    ):
-        """Test successful PDF export when user has staff role."""
-        course_staff_role_mock.return_value.has_user.return_value = True
-        course_instructor_role_mock.return_value.has_user.return_value = False
-        course_data_researcher_role_mock.return_value.has_user.return_value = False
-        export_certificates_mock.return_value = Response(status=status.HTTP_200_OK)
-
-        response = self._make_request()
-
-        self._assert_success_response(response)
-        export_certificates_mock.assert_called_once_with(course_ids=[self.course_id])
-
-    @export_certificates_patch
-    @course_instructor_role_patch
-    @course_staff_role_patch
-    @course_data_researcher_role_patch
-    def test_successful_export_with_instructor_role(
-        self,
-        course_staff_role_mock: MagicMock,
-        course_instructor_role_mock: MagicMock,
-        course_data_researcher_role_mock: MagicMock,
-        export_certificates_mock: MagicMock,
-    ):
-        """Test successful PDF export when user has instructor role."""
-        course_staff_role_mock.return_value.has_user.return_value = False
-        course_instructor_role_mock.return_value.has_user.return_value = True
-        course_data_researcher_role_mock.return_value.has_user.return_value = False
-        export_certificates_mock.return_value = Response(status=status.HTTP_200_OK)
-
-        response = self._make_request()
-
-        self._assert_success_response(response)
-        export_certificates_mock.assert_called_once_with(course_ids=[self.course_id])
-
-    @export_certificates_patch
-    @course_instructor_role_patch
-    @course_staff_role_patch
     @course_data_researcher_role_patch
     def test_successful_export_with_dataresearcher_role(
         self,
-        course_staff_role_mock: MagicMock,
-        course_instructor_role_mock: MagicMock,
         course_data_researcher_role_mock: MagicMock,
         export_certificates_mock: MagicMock,
     ):
         """Test successful PDF export when user has data researcher role."""
-        course_staff_role_mock.return_value.has_user.return_value = False
-        course_instructor_role_mock.return_value.has_user.return_value = False
         course_data_researcher_role_mock.return_value.has_user.return_value = True
         export_certificates_mock.return_value = Response(status=status.HTTP_200_OK)
 
@@ -139,18 +87,12 @@ class CertificateExportPdfAPIViewTest(APITestCase):
         response = self._make_request("invalid-course-id")
         self._assert_invalid_course_response(response)
 
-    @course_instructor_role_patch
-    @course_staff_role_patch
     @course_data_researcher_role_patch
     def test_no_permission(
         self,
-        course_staff_role_mock: MagicMock,
-        course_instructor_role_mock: MagicMock,
         course_data_researcher_role_mock: MagicMock
     ):
         """Test export when user has no permissions."""
-        course_staff_role_mock.return_value.has_user.return_value = False
-        course_instructor_role_mock.return_value.has_user.return_value = False
         course_data_researcher_role_mock.return_value.has_user.return_value = False
 
         response = self._make_request()
@@ -205,63 +147,13 @@ class CertificateExportAPIViewTest(APITestCase):
         self.assertEqual(response.data["message"], NO_PERMISSION_MESSAGE)
 
     @export_csv_task_patch
-    @course_instructor_role_patch
-    @course_staff_role_patch
-    @course_data_researcher_role_patch
-    def test_successful_csv_export_with_staff_role(
-        self,
-        course_staff_role_mock: MagicMock,
-        course_instructor_role_mock: MagicMock,
-        course_data_researcher_role_mock: MagicMock,
-        export_csv_task_mock: MagicMock,
-    ):
-        """Test successful CSV export when user has staff role."""
-        course_staff_role_mock.return_value.has_user.return_value = True
-        course_instructor_role_mock.return_value.has_user.return_value = False
-        course_data_researcher_role_mock.return_value.has_user.return_value = False
-        export_csv_task_mock.delay.return_value = MagicMock()
-
-        response = self._make_request()
-
-        self._assert_success_response(response)
-        export_csv_task_mock.delay.assert_called_once_with(self.course_id)
-
-    @export_csv_task_patch
-    @course_instructor_role_patch
-    @course_staff_role_patch
-    @course_data_researcher_role_patch
-    def test_successful_csv_export_with_instructor_role(
-        self,
-        course_staff_role_mock: MagicMock,
-        course_instructor_role_mock: MagicMock,
-        course_data_researcher_role_mock: MagicMock,
-        export_csv_task_mock: MagicMock,
-    ):
-        """Test successful CSV export when user has instructor role."""
-        course_staff_role_mock.return_value.has_user.return_value = False
-        course_instructor_role_mock.return_value.has_user.return_value = True
-        course_data_researcher_role_mock.return_value.has_user.return_value = False
-        export_csv_task_mock.delay.return_value = MagicMock()
-
-        response = self._make_request()
-
-        self._assert_success_response(response)
-        export_csv_task_mock.delay.assert_called_once_with(self.course_id)
-
-    @export_csv_task_patch
-    @course_instructor_role_patch
-    @course_staff_role_patch
     @course_data_researcher_role_patch
     def test_successful_csv_export_with_data_researcher_role(
         self,
-        course_staff_role_mock: MagicMock,
-        course_instructor_role_mock: MagicMock,
         course_data_researcher_role_mock: MagicMock,
         export_csv_task_mock: MagicMock,
     ):
         """Test successful CSV export when user has instructor role."""
-        course_staff_role_mock.return_value.has_user.return_value = False
-        course_instructor_role_mock.return_value.has_user.return_value = False
         course_data_researcher_role_mock.return_value.has_user.return_value = True
         export_csv_task_mock.delay.return_value = MagicMock()
 
@@ -271,20 +163,14 @@ class CertificateExportAPIViewTest(APITestCase):
         export_csv_task_mock.delay.assert_called_once_with(self.course_id)
 
     @export_csv_task_patch
-    @course_instructor_role_patch
-    @course_staff_role_patch
     @course_data_researcher_role_patch
     def test_successful_csv_export_with_superuser(
         self,
-        course_staff_role_mock: MagicMock,
-        course_instructor_role_mock: MagicMock,
         course_data_researcher_role_mock: MagicMock,
         export_csv_task_mock: MagicMock,
     ):
         """Test successful CSV export when user is superuser/staff."""
         self.user.is_staff = True
-        course_staff_role_mock.return_value.has_user.return_value = False
-        course_instructor_role_mock.return_value.has_user.return_value = False
         course_data_researcher_role_mock.return_value.has_user.return_value = False
         export_csv_task_mock.delay.return_value = MagicMock()
 
@@ -298,18 +184,12 @@ class CertificateExportAPIViewTest(APITestCase):
         response = self._make_request("invalid-course-id")
         self._assert_invalid_course_response(response)
 
-    @course_instructor_role_patch
-    @course_staff_role_patch
     @course_data_researcher_role_patch
     def test_csv_export_no_permission(
         self,
-        course_staff_role_mock: MagicMock,
-        course_instructor_role_mock: MagicMock,
         course_data_researcher_role_mock: MagicMock
     ):
         """Test CSV export when user has no permissions."""
-        course_staff_role_mock.return_value.has_user.return_value = False
-        course_instructor_role_mock.return_value.has_user.return_value = False
         course_data_researcher_role_mock.return_value.has_user.return_value = False
 
         response = self._make_request()
@@ -322,20 +202,14 @@ class CertificateExportAPIViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @export_csv_task_patch
-    @course_instructor_role_patch
-    @course_staff_role_patch
     @course_data_researcher_role_patch
     def test_csv_export_task_delay_called_correctly(
         self,
-        course_staff_role_mock: MagicMock,
-        course_instructor_role_mock: MagicMock,
         course_data_researcher_role_mock: MagicMock,
         export_csv_task_mock: MagicMock,
     ):
         """Test that the Celery task is called with delay method and correct parameters."""
-        course_staff_role_mock.return_value.has_user.return_value = True
-        course_instructor_role_mock.return_value.has_user.return_value = False
-        course_data_researcher_role_mock.return_value.has_user.return_value = False
+        course_data_researcher_role_mock.return_value.has_user.return_value = True
         mock_task_result = MagicMock()
         export_csv_task_mock.delay.return_value = mock_task_result
 
@@ -348,21 +222,15 @@ class CertificateExportAPIViewTest(APITestCase):
         self._assert_success_response(response)
 
     @export_csv_task_patch
-    @course_instructor_role_patch
-    @course_staff_role_patch
     @course_data_researcher_role_patch
     def test_csv_export_with_different_course_id_format(
         self,
-        course_staff_role_mock: MagicMock,
-        course_instructor_role_mock: MagicMock,
         course_data_researcher_role_mock: MagicMock,
         export_csv_task_mock: MagicMock,
     ):
         """Test CSV export with different course ID format."""
         different_course_id = "course-v1:MIT+6.00x+2023_T1"
-        course_staff_role_mock.return_value.has_user.return_value = True
-        course_instructor_role_mock.return_value.has_user.return_value = False
-        course_data_researcher_role_mock.return_value.has_user.return_value = False
+        course_data_researcher_role_mock.return_value.has_user.return_value = True
         export_csv_task_mock.delay.return_value = MagicMock()
 
         response = self._make_request(different_course_id)
@@ -371,20 +239,14 @@ class CertificateExportAPIViewTest(APITestCase):
         export_csv_task_mock.delay.assert_called_once_with(different_course_id)
 
     @export_csv_task_patch
-    @course_instructor_role_patch
-    @course_staff_role_patch
     @course_data_researcher_role_patch
     def test_csv_export_response_structure(
         self,
-        course_staff_role_mock: MagicMock,
-        course_instructor_role_mock: MagicMock,
         course_data_researcher_role_mock: MagicMock,
         export_csv_task_mock: MagicMock,
     ):
         """Test that CSV export response has correct structure."""
-        course_staff_role_mock.return_value.has_user.return_value = True
-        course_instructor_role_mock.return_value.has_user.return_value = False
-        course_data_researcher_role_mock.return_value.has_user.return_value = False
+        course_data_researcher_role_mock.return_value.has_user.return_value = True
         export_csv_task_mock.delay.return_value = MagicMock()
 
         response = self._make_request()
@@ -397,30 +259,23 @@ class CertificateExportAPIViewTest(APITestCase):
         self.assertTrue(response.data["success"])
 
     @export_csv_task_patch
-    @course_instructor_role_patch
-    @course_staff_role_patch
     @course_data_researcher_role_patch
     def test_csv_export_permission_check_order(
         self,
-        course_staff_role_mock: MagicMock,
-        course_instructor_role_mock: MagicMock,
         course_data_researcher_role_mock: MagicMock,
         export_csv_task_mock: MagicMock,
     ):
         """Test that permission checks are performed in correct order."""
         # Setup: user has staff role but not instructor role
-        course_staff_role_mock.return_value.has_user.return_value = True
-        course_instructor_role_mock.return_value.has_user.return_value = False
-        course_data_researcher_role_mock.return_value.has_user.return_value = False
+        course_data_researcher_role_mock.return_value.has_user.return_value = True
         export_csv_task_mock.delay.return_value = MagicMock()
 
         response = self._make_request()
 
         # Verify both role checks were performed
-        course_staff_role_mock.assert_called_once_with(self.course_key)
-        course_instructor_role_mock.assert_called_once_with(self.course_key)
+        course_data_researcher_role_mock.assert_called_once_with(self.course_key)
 
         # Verify the staff role check
-        course_staff_role_mock.return_value.has_user.assert_called_once_with(self.user)
+        course_data_researcher_role_mock.return_value.has_user.assert_called_once_with(self.user)
 
         self._assert_success_response(response)

@@ -17,11 +17,7 @@ from rest_framework.views import APIView
 
 from nau_openedx_extensions.certificate_export.management.commands import PDFCommand
 from nau_openedx_extensions.certificate_export.tasks import export_course_certificates_task
-from nau_openedx_extensions.edxapp_wrapper.student import (
-    CourseDataResearcherRole,
-    CourseInstructorRole,
-    CourseStaffRole,
-)
+from nau_openedx_extensions.edxapp_wrapper.student import CourseDataResearcherRole
 
 # Constants for response messages
 SUCCESS_MESSAGE = _("Export task started successfully.")
@@ -53,8 +49,6 @@ def validate_course_access(request: Request, course_id: str) -> Tuple[bool, Resp
     user_has_access = any(
         [
             request.user.is_staff,
-            CourseStaffRole(course_key).has_user(request.user),
-            CourseInstructorRole(course_key).has_user(request.user),
             CourseDataResearcherRole(course_key).has_user(request.user),
         ]
     )
