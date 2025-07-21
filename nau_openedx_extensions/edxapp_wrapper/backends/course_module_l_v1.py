@@ -3,6 +3,7 @@
 import logging
 
 from cms.djangoapps.models.settings.course_metadata import CourseMetadata  # pylint: disable=import-error
+from opaque_keys.edx.keys import CourseKey
 from xmodule.modulestore.django import modulestore  # pylint: disable=import-error
 
 log = logging.getLogger(__name__)
@@ -26,3 +27,8 @@ def get_course_name(course_id):
     except Exception as e:  # pylint: disable=broad-except
         log.error(f'Error fetching course {course_id} for {e}')
         return ""
+
+
+def get_course(course_key: CourseKey):
+    """Get the course."""
+    return modulestore().get_course(course_key)

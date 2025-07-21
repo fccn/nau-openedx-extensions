@@ -7,17 +7,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2025-07-17 14:36+0100\n"
+"POT-Creation-Date: 2025-07-23 16:26-0500\n"
 "PO-Revision-Date: 2025-07-17 15:32+0100\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
-"Language-Team: pt_PT <LL@li.org>\n"
 "Language: pt_PT\n"
+"Language-Team: pt_PT <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.9.0\n"
-"X-Generator: Poedit 3.6\n"
 
 #: nau_openedx_extensions/certificate_export/views.py:23
 msgid "Export task started successfully."
@@ -66,9 +65,9 @@ msgstr "Outro"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:63
 msgid ""
-"I have read and understood the <a href='https://www.nau.edu.pt/legal/"
-"politica-de-privacidade/' rel='noopener' target='_blank'>Privacy Policy</"
-"a>"
+"I have read and understood the <a href='https://www.nau.edu.pt/legal"
+"/politica-de-privacidade/' rel='noopener' target='_blank'>Privacy "
+"Policy</a>"
 msgstr ""
 "Li e compreendi a <a href='https://www.nau.edu.pt/legal/politica-de-"
 "privacidade/' rel='noopener' target='_blank'>Política de Privacidade</a>"
@@ -124,8 +123,8 @@ msgstr "Situação profissional"
 #: nau_openedx_extensions/custom_registration_form/models.py:103
 msgid "Allow newsletter"
 msgstr ""
-"Li e aceito prestar o meu <a target='_blank' href='https://"
-"www.nau.edu.pt/legal/consentimento-para-o-envio-de-"
+"Li e aceito prestar o meu <a target='_blank' "
+"href='https://www.nau.edu.pt/legal/consentimento-para-o-envio-de-"
 "newsletters/'>consentimento para o envio de newsletters</a>"
 
 #: nau_openedx_extensions/filters/pipeline.py:62
@@ -146,19 +145,19 @@ msgstr "Se achar que se trata de um erro, contacte o suporte."
 #: nau_openedx_extensions/filters/pipeline.py:76
 #, python-format
 msgid ""
-"You can't enroll on this course because your email domain is not "
-"allowed. %(custom_message)s"
+"You can't enroll on this course because your email domain is not allowed."
+" %(custom_message)s"
 msgstr ""
 "Não pode inscrever-se neste curso porque o seu domínio de e-mail não é "
 "permitido. %(custom_message)s"
 
 #: nau_openedx_extensions/filters/pipeline.py:128
 msgid ""
-"You need to associate Autenticação Gov to your account or add NIF to "
-"your account."
+"You need to associate Autenticação Gov to your account or add NIF to your"
+" account."
 msgstr ""
-"É necessário associar a Autenticação Gov à sua conta ou adicionar o NIF "
-"à sua conta."
+"É necessário associar a Autenticação Gov à sua conta ou adicionar o NIF à"
+" sua conta."
 
 #: nau_openedx_extensions/filters/pipeline.py:204
 msgid "CSV export task started successfully!"
@@ -218,8 +217,8 @@ msgid ""
 "Download a CSV file with the details of all certificates generated for "
 "this course."
 msgstr ""
-"Descarregar um ficheiro CSV com os detalhes dos certificados gerados "
-"para este curso."
+"Descarregar um ficheiro CSV com os detalhes dos certificados gerados para"
+" este curso."
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:18
 msgid "Export certificates CSVs"
@@ -253,30 +252,25 @@ msgstr "Informação"
 msgid "Warning"
 msgstr "Aviso"
 
-#: nau_openedx_extensions/templates/message_gateway/tab.html:15
-msgid "Send to:"
-msgstr "Enviar para:"
-
-#: nau_openedx_extensions/templates/message_gateway/tab.html:24
-msgid "Myself"
-msgstr "Para mim"
-
-#: nau_openedx_extensions/templates/message_gateway/tab.html:33
-msgid "Staff and Administrators"
-msgstr "Equipa e Administradores"
-
-#: nau_openedx_extensions/templates/message_gateway/tab.html:42
-msgid "All Learners"
-msgstr "Todos os estudantes"
-
-#: nau_openedx_extensions/templates/message_gateway/tab.html:47
-msgid "Message:"
-msgstr "Mensagem:"
-
-#: nau_openedx_extensions/templates/message_gateway/tab.html:57
-msgid "Send Message"
-msgstr "Enviar Mensagem"
-
 #: nau_openedx_extensions/utils/admin.py:63
 msgid "Export Selected to CSV"
 msgstr "Exportar selecionados para CSV"
+
+#~ msgid "Send to:"
+#~ msgstr "Enviar para:"
+
+#~ msgid "Myself"
+#~ msgstr "Para mim"
+
+#~ msgid "Staff and Administrators"
+#~ msgstr "Equipa e Administradores"
+
+#~ msgid "All Learners"
+#~ msgstr "Todos os estudantes"
+
+#~ msgid "Message:"
+#~ msgstr "Mensagem:"
+
+#~ msgid "Send Message"
+#~ msgstr "Enviar Mensagem"
+
