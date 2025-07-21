@@ -54,9 +54,6 @@ def plugin_settings(settings):
     settings.NAU_APPLY_SAML_OVERRIDES = (
         "nau_openedx_extensions.third_party_auth.providers.saml._apply_saml_overrides"
     )
-    settings.NAU_CERTIFICATE_CONTEXT_EXTENSION = (
-        "nau_openedx_extensions.certificates.context_extender.update_cert_context"
-    )
     settings.NAU_STUDENT_ACCOUNT_CONTEXT_EXTENSION = "nau_openedx_extensions.custom_registration_form.context_extender.update_account_view"
     settings.NAU_STUDENT_SERIALIZER_CONTEXT_EXTENSION = "nau_openedx_extensions.custom_registration_form.context_extender.update_account_serializer"
     settings.NAU_STUDENT_ACCOUNT_PARTIAL_UPDATE = "nau_openedx_extensions.custom_registration_form.context_extender.partial_update"

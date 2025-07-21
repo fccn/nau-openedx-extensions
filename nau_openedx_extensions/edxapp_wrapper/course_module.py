@@ -3,6 +3,7 @@
 from importlib import import_module
 
 from django.conf import settings
+from opaque_keys.edx.keys import CourseKey
 
 
 def get_other_course_settings(*args, **kwargs):
@@ -19,3 +20,11 @@ def get_course_name(*args, **kwargs):
     backend = import_module(backend_module)
 
     return backend.get_course_name(*args, **kwargs)
+
+
+def get_course(course_key: CourseKey):
+    """ Get course """
+    backend_module = settings.NAU_COURSE_MODULE
+    backend = import_module(backend_module)
+
+    return backend.get_course(course_key)
