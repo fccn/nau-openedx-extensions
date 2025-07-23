@@ -18,3 +18,10 @@ class CoursecertificateConfig(AppConfig):
             },
         },
     }
+
+    def ready(self):
+        """
+        Import handlers to ensure they are registered.
+        """
+        # pylint: disable=import-outside-toplevel,unused-import
+        import nau_openedx_extensions.coursecertificate.handlers

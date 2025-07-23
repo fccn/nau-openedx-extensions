@@ -23,6 +23,7 @@ class User:
     """
 
     def __init__(self):
+        self.id = fake.random_int(1, 10000)
         self.username = f"user_{fake.random_int(1, 10000)}"
         self.email = f"{self.username}@example.com"
         self.profile = Profile(f"{fake.first_name()} {fake.last_name()}")
@@ -63,6 +64,7 @@ class Certificate:
     """
 
     def __init__(self, user: User):
+        self.id = fake.random_int(1, 10000)
         self.user = user
         self.course_id = CourseKey.from_string(f"course-v1:edX+Demo{fake.random_int(1, 100)}+Course")
         self.verify_uuid = fake.uuid4()

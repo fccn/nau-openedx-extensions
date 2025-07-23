@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 from ddt import data, ddt
 from django.test import TestCase
 from opaque_keys.edx.keys import CourseKey
+from requests import RequestException
 
 from nau_openedx_extensions.coursecertificate.engine import CertificateEngine
 from nau_openedx_extensions.coursecertificate.tests.fixtures import Certificate, User
@@ -111,7 +112,21 @@ class TestCertificateEngine(TestCase):
 
         self.assertEqual(result, "test@example.com")
 
-    def test_extract_field_value_with_args(self):
+    def test_extract_field_value_with_args_str(self):
+        """Test field value extraction with arguments."""
+        field_config = {
+            "name": "test_field",
+            "func": "nau_openedx_extensions.coursecertificate.extractors.student_nau_user_extended_model_field",
+            "args": "nif",
+        }
+
+        certificate = Mock()
+        certificate.user.nauuserextendedmodel.nif = "123456789"
+        result = self.engine.extract_field_value(certificate, field_config)
+
+        self.assertEqual(result, "123456789")
+
+    def test_extract_field_value_with_args_list(self):
         """Test field value extraction with arguments."""
         field_config = {
             "name": "test_field",
@@ -463,9 +478,39 @@ class TestCertificateEngine(TestCase):
         mock_queryset = Mock()
         mock_use_read_replica.return_value = mock_queryset
 
-        result = self.engine.get_certificates_queryset(7)
+        result = self.engine.get_certificates_queryset(7, None)
 
         self.assertEqual(result, mock_queryset)
+        mock_use_read_replica.assert_called_once()
+        mock_certificate_model.objects.filter.assert_called_once()
+
+    @patch(f"{ENGINE_MODULE_PATH}.GeneratedCertificate")
+    @patch(f"{ENGINE_MODULE_PATH}.use_read_replica_if_available")
+    def test_get_certificates_queryset_with_certificate_id(
+        self, mock_use_read_replica: Mock, mock_certificate_model: Mock
+    ):
+        """Test getting certificates queryset with certificate ID."""
+        mock_queryset = Mock()
+        mock_use_read_replica.return_value = mock_queryset
+
+        result = self.engine.get_certificates_queryset(7, 1)
+
+        self.assertEqual(result, mock_queryset)
+        mock_use_read_replica.assert_called_once()
+        mock_certificate_model.objects.filter.assert_called_once()
+
+    @patch(f"{ENGINE_MODULE_PATH}.GeneratedCertificate")
+    @patch(f"{ENGINE_MODULE_PATH}.use_read_replica_if_available")
+    def test_get_certificates_queryset_with_certificate_id_not_found(
+        self, mock_use_read_replica: Mock, mock_certificate_model: Mock
+    ):
+        """Test getting certificates queryset with certificate ID not found."""
+        mock_use_read_replica.return_value = Mock(exists=Mock(return_value=False))
+        mock_certificate_model.objects.none.return_value = None
+
+        result = self.engine.get_certificates_queryset(7, 1)
+
+        self.assertIsNone(result)
         mock_use_read_replica.assert_called_once()
         mock_certificate_model.objects.filter.assert_called_once()
 
@@ -687,6 +732,24 @@ class TestCertificateEngine(TestCase):
             self.assertTrue(result)
             mock_send.assert_called_once()
 
+    @patch.object(CertificateEngine, "convert_certificates_to_service_format")
+    @patch.object(CertificateEngine, "send_certificates_to_service")
+    def test_process_certificates_page_with_no_data(
+        self, mock_send_certificates: Mock, mock_convert_certificates: Mock
+    ):
+        """Test processing certificates page with no data."""
+        service_config = {
+            "service_name": "test_service",
+            "endpoint_url": "https://api.test.com/certificates",
+        }
+        mock_convert_certificates.return_value = []
+
+        result = self.engine._process_certificates_page(self.certificates, service_config, dry_run=False)
+
+        self.assertTrue(result)
+        mock_convert_certificates.assert_called_once()
+        mock_send_certificates.assert_not_called()
+
     def test_process_certificates_pages(self):
         """Test processing certificates in pages."""
         service_config = {
@@ -711,6 +774,37 @@ class TestCertificateEngine(TestCase):
             # Should be called twice (one for each certificate)
             self.assertEqual(mock_process_page.call_count, 2)
 
+    def test_process_certificates_pages_failure(self):
+        """Test processing certificates pages with failure."""
+        service_config = {
+            "service_name": "test_service",
+            "endpoint_url": "https://api.test.com/certificates",
+        }
+        params = {
+            "page_size": 1,
+            "dry_run": False,
+        }
+
+        log_output = []
+
+        def mock_log(msg):
+            log_output.append(msg)
+
+        self.engine.log = mock_log
+
+        with patch.object(self.engine, "_process_certificates_page") as mock_process_page:
+            mock_process_page.side_effect = [True, False]
+
+            self.engine._process_certificates_pages(self.certificates, service_config, params)
+
+            self.assertEqual(mock_process_page.call_count, 2)
+
+            self.assertEqual(len(log_output), 4)
+            self.assertEqual(log_output[0], "Total certificates to process: 2")
+            self.assertEqual(log_output[1], "Processing 1 of 2 certificates (page 1)")
+            self.assertEqual(log_output[2], "Processing 2 of 2 certificates (page 2)")
+            self.assertEqual(log_output[3], "Failed to send page 2 to test_service")
+
     @patch.object(CertificateEngine, "get_certificates_queryset")
     def test_process_service_success(self, mock_get_queryset: Mock):
         """Test successful processing of a service."""
@@ -728,7 +822,22 @@ class TestCertificateEngine(TestCase):
         with patch.object(self.engine, "_process_certificates_pages") as mock_process_pages:
             self.engine.process_service(service_config, options)
 
-            mock_get_queryset.assert_called_once_with(7)
+            mock_get_queryset.assert_called_once_with(7, None)
+            mock_process_pages.assert_called_once()
+
+    @patch.object(CertificateEngine, "get_certificates_queryset")
+    def test_process_service_with_certificate_id(self, mock_get_queryset: Mock):
+        """Test processing service with certificate ID."""
+        service_config = {
+            "service_name": "test_service",
+            "endpoint_url": "https://api.test.com/certificates",
+        }
+        options = {"certificate_id": 1}
+
+        with patch.object(self.engine, "_process_certificates_pages") as mock_process_pages:
+            self.engine.process_service(service_config, options)
+
+            mock_get_queryset.assert_called_once_with(7, 1)
             mock_process_pages.assert_called_once()
 
     @patch.object(CertificateEngine, "get_certificates_queryset")
@@ -744,7 +853,7 @@ class TestCertificateEngine(TestCase):
         with patch.object(self.engine, "_process_certificates_pages") as mock_process_pages:
             self.engine.process_service(service_config, options)
 
-            mock_get_queryset.assert_called_once_with(7)
+            mock_get_queryset.assert_called_once_with(7, None)
             mock_process_pages.assert_called_once()
 
     def test_log_dry_run_info(self):
@@ -871,12 +980,11 @@ class TestCertificateEngine(TestCase):
         timeout = 60
 
         with patch("requests.post") as mock_post:
-            mock_post.side_effect = Exception("Connection error")
+            mock_post.side_effect = RequestException("Request error")
 
-            with self.assertRaises(Exception) as context:
-                self.engine._send_http_request(api_url, headers, certificates_data, timeout)
+            result = self.engine._send_http_request(api_url, headers, certificates_data, timeout)
 
-            self.assertEqual(str(context.exception), "Connection error")
+            self.assertFalse(result)
 
     def test_engine_initialization_with_logger(self):
         """Test engine initialization with custom logger."""
