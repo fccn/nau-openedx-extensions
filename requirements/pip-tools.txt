@@ -8,7 +8,7 @@ build==1.2.2.post1
     # via pip-tools
 click==8.2.1
     # via
-    #   -c /home/bryanttv/edunext/tutor/redwood/nau-local/extra-deps/nau-openedx-extensions/requirements/constraints.txt
+    #   -c /home/edunext/edunext/naunuevocompleto/extra/nau-openedx-extensions/requirements/constraints.txt
     #   pip-tools
 packaging==25.0
     # via build

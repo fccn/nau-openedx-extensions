@@ -66,6 +66,7 @@ NAU_CERTIFICATES_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.certif
 NAU_UTIL_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.util_r_v1_tests"
 NAU_INSTRUCTOR_TASK_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.instructor_task_r_v1_tests"
 NAU_SITE_CONFIGURATION_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_r_v1_tests"
+NAU_CONTENT_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.content_r_v1_tests"
 
 # Certificate export
 HIGH_MEM_QUEUE = "edx.lms.core.high_mem"
