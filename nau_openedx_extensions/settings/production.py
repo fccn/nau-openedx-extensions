@@ -23,8 +23,10 @@ def plugin_settings(settings):
     settings.NAU_ADD_SAML_IDP_CLASSES = getattr(settings, "ENV_TOKENS", {}).get(
         "NAU_ADD_SAML_IDP_CLASSES", settings.NAU_ADD_SAML_IDP_CLASSES
     )
-    settings.NAU_APPLY_SAML_OVERRIDES = getattr(settings, "ENV_TOKENS", {}).get(
-        "NAU_APPLY_SAML_OVERRIDES", settings.NAU_APPLY_SAML_OVERRIDES
+    settings.NAU_CERTIFICATE_CONTEXT_EXTENSION = getattr(
+        settings, "ENV_TOKENS", {}
+    ).get(
+        "NAU_CERTIFICATE_CONTEXT_EXTENSION", settings.NAU_CERTIFICATE_CONTEXT_EXTENSION
     )
     settings.NAU_STUDENT_ACCOUNT_CONTEXT_EXTENSION = getattr(
         settings, "ENV_TOKENS", {}

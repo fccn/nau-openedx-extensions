@@ -8,7 +8,7 @@ from importlib import import_module
 
 from django.conf import settings
 
-from nau_openedx_extensions.edxapp_wrapper.registration import EdXSAMLIdentityProvider, get_registration_extension_form
+from nau_openedx_extensions.edxapp_wrapper.registration import EdXSAMLIdentityProvider
 
 log = logging.getLogger(__name__)
 
