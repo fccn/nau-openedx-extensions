@@ -24,7 +24,7 @@
     You can specify a single course ID or a file containing multiple course IDs.
 
     python3 generate_reports.py --email <email> --password <password> \
-        --lms_url https://lms.nau.edu.pt --course_id course-v1:FCT+TPag+2024_T3 \ 
+        --lms_url https://lms.nau.edu.pt --course_id course-v1:FCT+TPag+2024_T3 \
         --course_ids_file courses.txt --report get_students_profile
 
 **Courses File**
@@ -32,7 +32,7 @@
 
     course-v1:FCT+TPag+2024_T3
     course-v1:FCT+Teste+2024_T3
-    
+
     Or one line with the additional block to be used by 'get_problem_responses' report. Example:
 
     course-v1:FCT+TPag+2024_T3 block-v1:FCT+TPag+2024_T3+type@problem+block@ac87b7d6c48e343e94b7
@@ -90,7 +90,7 @@ def generate_report_url_data(course_id, lms_url, report, additional_info):
         return f"{lms_url}/courses/{course_id}/instructor/api/get_students_who_may_enroll", {}
     elif report == "get_student_anonymized_ids":
         return f"{lms_url}/courses/{course_id}/instructor/api/get_anon_ids", {}
-    elif report == "calculate_grades":
+    elif report == "grade_report":
         return f"{lms_url}/courses/{course_id}/instructor/api/calculate_grades_csv", {}
     elif report == "problem_grade_report":
         return f"{lms_url}/courses/{course_id}/instructor/api/problem_grade_report", {}
@@ -174,7 +174,7 @@ def main():
                             "get_students_profile",
                             "get_students_who_may_enroll",
                             "get_student_anonymized_ids",
-                            "calculate_grades",
+                            "grade_report",
                             "problem_grade_report",
                             "ora_data_report",
                             "ora_summary_report",

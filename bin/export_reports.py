@@ -6,7 +6,7 @@
 **Description**
     This script is intended to be used for downloading reports for multiple courses on Open edX.
     It is designed to be run from the command line and takes several command line arguments.
-    It should be executed by a user with course team permissions, mainly as a 
+    It should be executed by a user with course team permissions, mainly as a
     data_researcher role inside the course.
     This script reads a course ID or a file containing course IDs, then it will execute
     a call to the Open edX API to download reports for each course.
@@ -28,27 +28,34 @@
     python3 export_reports.py --email <email> --password <password> \
         --lms_url https://lms.nau.edu.pt --course_id course-v1:FCT+TPag+2024_T3 \
         --report get_students_profile --days_ago 30
-    
+
     Download the most recent grade report from the all courses in the courses.txt file.
     In this case you can omit the days_ago argument.
 
     python3 export_reports.py --email <email> --password <password> \
         --lms_url https://lms.nau.edu.pt --course_ids_file courses.txt \
         --report grade_report
-        
-    Alternatively, you can setup the directory to save the reports in the 
+
+    Alternatively, you can setup the directory to save the reports in the
     output_dir argument.
 
     python3 export_reports.py --email <email> --password <password> \
         --lms_url https://lms.nau.edu.pt --course_ids_file courses.txt \
         --report grade_report --output_dir /home/myuser/reports
 
+    It's also possible to skip creating course directories and save all
+    reports in the same directory using the --skip_course_dirs argument.
+
+    python3 export_reports.py --email <email> --password <password> \
+        --lms_url https://lms.nau.edu.pt --course_ids_file courses.txt \
+        --report grade_report --output_dir /home/myuser/reports --skip_course_dirs
+
 **Courses File**
     The courses file should contain one line per course. For example:
 
     course-v1:FCT+TPag+2024_T3
     course-v1:FCT+Teste+2024_T3
-    
+
     Or one line with the additional block to be used by 'get_problem_responses' report. Example:
 
     course-v1:FCT+TPag+2024_T3;block-v1:FCT+TPag+2024_T3+type@problem+block@ac87b7d6c48e343e94b7
@@ -110,7 +117,7 @@ def login_to_lms(lms_url, auth_email, auth_password):
 
 def download_report(
         session, csrftoken, lms_url, course_id, report, additional_info, output_dir,
-        days_ago, skip_missing):
+        days_ago, skip_missing, skip_course_dirs):
     """
     Download a generated report from the LMS.
     :param session: The logged in session object
@@ -162,7 +169,7 @@ def download_report(
         response = requests.get(file["url"], stream=True, timeout=60)
         response.raise_for_status()
         filename = file["name"]
-        write_file(response, course_id, filename, output_dir)
+        write_file(response, course_id, filename, output_dir, skip_course_dirs)
     else:
         if skip_missing:
             print(f"Warning: Report '{report}' not found for course '{course_id}'. Skipping download.")
@@ -171,7 +178,7 @@ def download_report(
                 f"Report '{report}' not found for course '{course_id}'")
 
 
-def write_file(response, course_id, filename, output_dir):
+def write_file(response, course_id, filename, output_dir, skip_course_dirs):
     """
     Write the response content to a file.
     :param response: The response object from the request
@@ -179,7 +186,10 @@ def write_file(response, course_id, filename, output_dir):
     :param filename: The name of the file to be written
     :param output_dir: The directory to save the report files to
     """
-    filepath = Path(os.path.join(output_dir, _normalize_course_id(course_id), filename))
+    if skip_course_dirs:
+        filepath = Path(os.path.join(output_dir, filename))
+    else:
+        filepath = Path(os.path.join(output_dir, _normalize_course_id(course_id), filename))
     filepath.parent.mkdir(parents=True, exist_ok=True)
     with open(filepath, "wb") as f:
         for chunk in response.iter_content(chunk_size=8192):
@@ -222,6 +232,8 @@ def main():
                         help="Number of days ago to extract the report files for")
     parser.add_argument("--skip_missing", default=False, action='store_true',
                         help="Skip if report is absent and don't raise an error")
+    parser.add_argument("--skip_course_dirs", default=False, action='store_true',
+                        help="Skip creating course directories")
 
     try:
         args = parser.parse_args()
@@ -238,6 +250,7 @@ def main():
     days_ago = args.days_ago
     skip_missing = args.skip_missing
     output_dir = args.output_dir
+    skip_course_dirs = args.skip_course_dirs
 
     if not course_id and not course_ids_file:
         print("Error: You must provide a course_id or a course_ids_file")
@@ -271,7 +284,7 @@ def main():
 
     for course_id, additional_info in course_ids_add_info:
         download_report(session, csrftoken, lms_url, course_id, report,
-                        additional_info, output_dir, days_ago, skip_missing)
+                        additional_info, output_dir, days_ago, skip_missing, skip_course_dirs)
 
 
 def _normalize_course_id(course_id):
