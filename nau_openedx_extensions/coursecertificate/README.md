@@ -17,7 +17,9 @@ The certificate dispatch system provides:
 ## Django Settings Configuration Structure
 
 Configuration is defined through the Django setting `NAU_SEND_COURSE_CERTIFICATE_CONFIG`
-NOTE: please set NAU_SEND_COURSE_CERTIFICATE_CONFIG setting before running any command.
+
+> [!NOTE]
+> please set NAU_SEND_COURSE_CERTIFICATE_CONFIG setting before running any command.
 
 ```python
 # Django setting / This is an example
@@ -410,7 +412,7 @@ The system records detailed information in Django logs:
 
 ### Common Error Logs
 
-- **Configuration errors**: Issues with NAU_SEND_COURSE_CERTIFICATE_CONFIG django setting
+- **Configuration errors**: Issues with `NAU_SEND_COURSE_CERTIFICATE_CONFIG` django setting
 - **Connection errors**: Network issues or unavailable endpoints
 - **Authentication errors**: Invalid tokens or incorrect auth types
 - **Data errors**: Issues extracting fields or applying transformations
