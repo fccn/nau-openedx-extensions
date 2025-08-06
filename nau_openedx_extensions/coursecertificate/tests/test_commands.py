@@ -19,38 +19,38 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
     Test the send_certificates_by_web_service management command.
     """
 
+    SAMPLE_CONFIG = [
+        {
+            "service_name": "test_service",
+            "endpoint_url": "https://api.test.com/certificates",
+            "endpoint_timeout": 60,
+            "auth_token": "test_token",
+            "auth_type": "bearer",
+            "auth_header": "Authorization",
+            "days": 7,
+            "page_size": 100,
+            "fields": [],
+            "filters": [],
+        },
+        {
+            "service_name": "test_service_2",
+            "endpoint_url": "https://api2.test.com/certificates",
+            "endpoint_timeout": 30,
+            "auth_token": "test_token_2",
+            "auth_type": "bearer",
+            "auth_header": "Authorization",
+            "days": 3,
+            "page_size": 50,
+            "fields": [],
+            "filters": [],
+        },
+    ]
+
     def setUp(self):
         """Set up test data and configuration."""
         self.command = Command()
         self.command.stdout = OutputWrapper(StringIO())
         self.command.stderr = OutputWrapper(StringIO())
-
-        self.sample_config = [
-            {
-                "service_name": "test_service",
-                "endpoint_url": "https://api.test.com/certificates",
-                "endpoint_timeout": 60,
-                "auth_token": "test_token",
-                "auth_type": "bearer",
-                "auth_header": "Authorization",
-                "days": 7,
-                "page_size": 100,
-                "fields": [],
-                "filters": [],
-            },
-            {
-                "service_name": "test_service_2",
-                "endpoint_url": "https://api2.test.com/certificates",
-                "endpoint_timeout": 30,
-                "auth_token": "test_token_2",
-                "auth_type": "bearer",
-                "auth_header": "Authorization",
-                "days": 3,
-                "page_size": 50,
-                "fields": [],
-                "filters": [],
-            }
-        ]
 
         self.user1 = User()
         self.user2 = User()
@@ -58,6 +58,12 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
         self.certificate1 = Certificate(self.user1)
         self.certificate2 = Certificate(self.user2)
         self.certificates = [self.certificate1, self.certificate2]
+
+    def test_command_initialization(self):
+        """Test that command initializes properly."""
+        self.assertIsInstance(self.command, Command)
+        self.assertIsNotNone(self.command.stdout)
+        self.assertIsNotNone(self.command.stderr)
 
     @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
         {
@@ -74,7 +80,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
         }
     ])
     def test_load_config_success(self):
-        """Test loading configuration from a valid YAML file."""
+        """Test loading configuration from Django settings."""
         config = self.command.load_config()
 
         self.assertEqual(len(config), 1)
@@ -83,7 +89,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
 
     @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=None)
     def test_load_config_not_found(self):
-        """Test loading configuration when file doesn't exist."""
+        """Test loading configuration when setting doesn't exist."""
         with self.assertRaises(CommandError) as context:
             self.command.load_config()
 
@@ -91,7 +97,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
 
     @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG="not_a_list")
     def test_load_config_invalid_type(self):
-        """Test loading configuration with invalid YAML."""
+        """Test loading configuration with invalid type."""
         with self.assertRaises(CommandError) as context:
             self.command.load_config()
 
@@ -124,25 +130,21 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
 
     def test_filter_services_no_target(self):
         """Test filtering services without target service."""
-        config = self.sample_config
-        result = self.command.filter_services(config, None)
+        result = self.command.filter_services(self.SAMPLE_CONFIG, None)
 
-        self.assertEqual(result, config)
+        self.assertEqual(result, self.SAMPLE_CONFIG)
 
     def test_filter_services_with_target(self):
         """Test filtering services with target service."""
-        config = self.sample_config
-        result = self.command.filter_services(config, "test_service")
+        result = self.command.filter_services(self.SAMPLE_CONFIG, "test_service")
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["service_name"], "test_service")
 
     def test_filter_services_target_not_found(self):
         """Test filtering services when target service is not found."""
-        config = self.sample_config
-
         with self.assertRaises(CommandError) as context:
-            self.command.filter_services(config, "nonexistent_service")
+            self.command.filter_services(self.SAMPLE_CONFIG, "nonexistent_service")
 
         self.assertIn("Service 'nonexistent_service' not found", str(context.exception))
 
@@ -215,32 +217,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
             output = self.command.stdout.getvalue()
             self.assertIn("Unexpected error processing service test_service", output)
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "test_service",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 60,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 7,
-            "page_size": 100,
-            "fields": [],
-            "filters": [],
-        },
-        {
-            "service_name": "test_service_2",
-            "endpoint_url": "https://api2.test.com/certificates",
-            "endpoint_timeout": 30,
-            "auth_token": "test_token_2",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 3,
-            "page_size": 50,
-            "fields": [],
-            "filters": [],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=SAMPLE_CONFIG)
     def test_handle_success(self):
         """Test successful command execution."""
         with patch.object(self.command, "process_service_safely", return_value=True) as mock_process:
@@ -253,32 +230,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
 
             self.assertEqual(mock_process.call_count, 2)
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "test_service",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 60,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 7,
-            "page_size": 100,
-            "fields": [],
-            "filters": [],
-        },
-        {
-            "service_name": "test_service_2",
-            "endpoint_url": "https://api2.test.com/certificates",
-            "endpoint_timeout": 30,
-            "auth_token": "test_token_2",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 3,
-            "page_size": 50,
-            "fields": [],
-            "filters": [],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=SAMPLE_CONFIG)
     def test_handle_dry_run(self):
         """Test command execution in dry run mode."""
         with patch.object(self.command, "process_service_safely", return_value=True) as mock_process:
@@ -297,32 +249,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
             output = self.command.stdout.getvalue()
             self.assertIn("=== DRY RUN MODE - No actual requests will be sent ===", output)
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "test_service",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 60,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 7,
-            "page_size": 100,
-            "fields": [],
-            "filters": [],
-        },
-        {
-            "service_name": "test_service_2",
-            "endpoint_url": "https://api2.test.com/certificates",
-            "endpoint_timeout": 30,
-            "auth_token": "test_token_2",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 3,
-            "page_size": 50,
-            "fields": [],
-            "filters": [],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=SAMPLE_CONFIG)
     def test_handle_specific_service(self):
         """Test command execution with specific service name."""
         with patch.object(self.command, "process_service_safely", return_value=True) as mock_process:
@@ -336,32 +263,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
 
             mock_process.assert_called_once()
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "test_service",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 60,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 7,
-            "page_size": 100,
-            "fields": [],
-            "filters": [],
-        },
-        {
-            "service_name": "test_service_2",
-            "endpoint_url": "https://api2.test.com/certificates",
-            "endpoint_timeout": 30,
-            "auth_token": "test_token_2",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 3,
-            "page_size": 50,
-            "fields": [],
-            "filters": [],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=SAMPLE_CONFIG)
     def test_handle_service_not_found(self):
         """Test command execution with non-existent service name."""
         options = {
@@ -375,32 +277,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
 
         self.assertIn("Service 'nonexistent_service' not found", str(context.exception))
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "test_service",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 60,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 7,
-            "page_size": 100,
-            "fields": [],
-            "filters": [],
-        },
-        {
-            "service_name": "test_service_2",
-            "endpoint_url": "https://api2.test.com/certificates",
-            "endpoint_timeout": 30,
-            "auth_token": "test_token_2",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 3,
-            "page_size": 50,
-            "fields": [],
-            "filters": [],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=SAMPLE_CONFIG)
     def test_handle_with_certificate_id(self):
         """Test command execution with specific certificate ID."""
         with patch.object(self.command, "process_service_safely", return_value=True) as mock_process:
@@ -417,32 +294,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
             options_passed = call_args[0][1]
             self.assertEqual(options_passed.get("certificate_id"), 123)
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "test_service",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 60,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 7,
-            "page_size": 100,
-            "fields": [],
-            "filters": [],
-        },
-        {
-            "service_name": "test_service_2",
-            "endpoint_url": "https://api2.test.com/certificates",
-            "endpoint_timeout": 30,
-            "auth_token": "test_token_2",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 3,
-            "page_size": 50,
-            "fields": [],
-            "filters": [],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=SAMPLE_CONFIG)
     def test_handle_with_certificate_id_and_service_name(self):
         """Test command execution with both certificate ID and service name."""
         with patch.object(self.command, "process_service_safely", return_value=True) as mock_process:
@@ -461,32 +313,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
             self.assertEqual(options_passed.get("certificate_id"), 456)
             self.assertEqual(options_passed.get("service_name"), "test_service")
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "test_service",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 60,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 7,
-            "page_size": 100,
-            "fields": [],
-            "filters": [],
-        },
-        {
-            "service_name": "test_service_2",
-            "endpoint_url": "https://api2.test.com/certificates",
-            "endpoint_timeout": 30,
-            "auth_token": "test_token_2",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 3,
-            "page_size": 50,
-            "fields": [],
-            "filters": [],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=SAMPLE_CONFIG)
     def test_handle_with_certificate_id_and_dry_run(self):
         """Test command execution with certificate ID in dry run mode."""
         with patch.object(self.command, "process_service_safely", return_value=True) as mock_process:
@@ -532,7 +359,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
     def test_handle_sync_success(self):
         """Test successful sync handle execution."""
         with patch.object(
-            self.command, "load_config", return_value=self.sample_config
+            self.command, "load_config", return_value=self.SAMPLE_CONFIG
         ) as mock_load_config:
             with patch.object(self.command, "process_service_safely", return_value=True) as mock_process:
                 options = {
@@ -547,7 +374,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
     def test_handle_sync_with_failure(self):
         """Test sync handle execution with service failure."""
         with patch.object(
-            self.command, "load_config", return_value=self.sample_config
+            self.command, "load_config", return_value=self.SAMPLE_CONFIG
         ) as mock_load_config:
             with patch.object(self.command, "process_service_safely", return_value=False) as mock_process:
                 options = {
@@ -564,7 +391,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
     def test_handle_sync_with_certificate_id(self):
         """Test sync handle execution with certificate ID."""
         with patch.object(
-            self.command, "load_config", return_value=self.sample_config
+            self.command, "load_config", return_value=self.SAMPLE_CONFIG
         ) as mock_load_config:
             with patch.object(self.command, "process_service_safely", return_value=True) as mock_process:
                 options = {
@@ -581,32 +408,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
                 options_passed = call_args[0][1]
                 self.assertEqual(options_passed.get("certificate_id"), 1234)
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "test_service",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 60,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 7,
-            "page_size": 100,
-            "fields": [],
-            "filters": [],
-        },
-        {
-            "service_name": "test_service_2",
-            "endpoint_url": "https://api2.test.com/certificates",
-            "endpoint_timeout": 30,
-            "auth_token": "test_token_2",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 3,
-            "page_size": 50,
-            "fields": [],
-            "filters": [],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=SAMPLE_CONFIG)
     @patch(f"{COMMAND_MODULE_PATH}.process_service_certificates")
     def test_handle_async_basic(self, mock_task):
         """Test basic async mode functionality."""
@@ -621,32 +423,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
         self.assertIn("Successfully dispatched: 2/2 tasks", output)
         self.assertIn("task-123", output)
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "test_service",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 60,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 7,
-            "page_size": 100,
-            "fields": [],
-            "filters": [],
-        },
-        {
-            "service_name": "test_service_2",
-            "endpoint_url": "https://api2.test.com/certificates",
-            "endpoint_timeout": 30,
-            "auth_token": "test_token_2",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 3,
-            "page_size": 50,
-            "fields": [],
-            "filters": [],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=SAMPLE_CONFIG)
     @patch(f"{COMMAND_MODULE_PATH}.process_service_certificates")
     def test_handle_async_with_service_filter(self, mock_task):
         """Test async mode with specific service filter."""
@@ -662,32 +439,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
         output = self.command.stdout.getvalue()
         self.assertIn("Dispatching 1 service(s) to Celery", output)
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "test_service",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 60,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 7,
-            "page_size": 100,
-            "fields": [],
-            "filters": [],
-        },
-        {
-            "service_name": "test_service_2",
-            "endpoint_url": "https://api2.test.com/certificates",
-            "endpoint_timeout": 30,
-            "auth_token": "test_token_2",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 3,
-            "page_size": 50,
-            "fields": [],
-            "filters": [],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=SAMPLE_CONFIG)
     @patch(f"{COMMAND_MODULE_PATH}.process_service_certificates")
     def test_handle_async_dispatch_failure(self, mock_task):
         """Test async mode when task dispatch fails."""
@@ -701,32 +453,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
         self.assertIn("Redis connection failed", output)
         self.assertIn("Successfully dispatched: 0/2 tasks", output)
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "test_service",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 60,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 7,
-            "page_size": 100,
-            "fields": [],
-            "filters": [],
-        },
-        {
-            "service_name": "test_service_2",
-            "endpoint_url": "https://api2.test.com/certificates",
-            "endpoint_timeout": 30,
-            "auth_token": "test_token_2",
-            "auth_type": "bearer",
-            "auth_header": "Authorization",
-            "days": 3,
-            "page_size": 50,
-            "fields": [],
-            "filters": [],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=SAMPLE_CONFIG)
     @patch(f"{COMMAND_MODULE_PATH}.process_service_certificates")
     def test_handle_async_partial_failure(self, mock_task):
         """Test async mode when some dispatches fail."""
@@ -766,7 +493,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
         """Test successful task dispatch."""
 
         mock_task.delay.return_value = Mock(id="task-789")
-        service_config = self.sample_config[0]
+        service_config = self.SAMPLE_CONFIG[0]
 
         result = self.command.dispatch_service_task_safely(service_config, {"dry_run": False})
 
@@ -782,7 +509,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
         """Test task dispatch with connection error."""
 
         mock_task.delay.side_effect = ConnectionError("Broker connection failed")
-        service_config = self.sample_config[0]
+        service_config = self.SAMPLE_CONFIG[0]
 
         result = self.command.dispatch_service_task_safely(service_config, {"dry_run": False})
 
@@ -796,7 +523,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
         """Test task dispatch with value error."""
 
         mock_task.delay.side_effect = ValueError("Invalid configuration")
-        service_config = self.sample_config[0]
+        service_config = self.SAMPLE_CONFIG[0]
 
         result = self.command.dispatch_service_task_safely(service_config, {"dry_run": False})
 
@@ -810,7 +537,7 @@ class TestSendCertificatesByWebServiceCommand(TestCase):
         """Test task dispatch with unexpected error."""
 
         mock_task.delay.side_effect = RuntimeError("Unexpected error")
-        service_config = self.sample_config[0]
+        service_config = self.SAMPLE_CONFIG[0]
 
         result = self.command.dispatch_service_task_safely(service_config, {"dry_run": False})
 
@@ -857,37 +584,7 @@ class TestSendCertificatesByWebServiceCommandIntegration(TestCase):
     Integration tests for the send_certificates_by_web_service command.
     """
 
-    def setUp(self):
-        """Set up test data."""
-        self.user = User()
-        self.certificate = Certificate(self.user)
-        self.command = Command()
-        self.command.stdout = OutputWrapper(StringIO())
-        self.command.stderr = OutputWrapper(StringIO())
-
-        self.sample_config = [
-            {
-                "service_name": "integration_test",
-                "endpoint_url": "https://api.test.com/certificates",
-                "endpoint_timeout": 90,
-                "auth_token": "test_token",
-                "auth_type": "bearer",
-                "days": 1,
-                "page_size": 10,
-                "fields": [
-                    {
-                        "name": "certificate_date",
-                        "func": "nau_openedx_extensions.coursecertificate.extractors.certificate_date",
-                    },
-                    {
-                        "name": "student_email",
-                        "func": "nau_openedx_extensions.coursecertificate.extractors.student_email",
-                    },
-                ],
-            }
-        ]
-
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
+    INTEGRATION_CONFIG = [
         {
             "service_name": "integration_test",
             "endpoint_url": "https://api.test.com/certificates",
@@ -907,7 +604,17 @@ class TestSendCertificatesByWebServiceCommandIntegration(TestCase):
                 },
             ],
         }
-    ])
+    ]
+
+    def setUp(self):
+        """Set up test data."""
+        self.user = User()
+        self.certificate = Certificate(self.user)
+        self.command = Command()
+        self.command.stdout = OutputWrapper(StringIO())
+        self.command.stderr = OutputWrapper(StringIO())
+
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=INTEGRATION_CONFIG)
     @patch.object(Command, "process_service_safely")
     def test_full_command_execution(self, mock_process_service_safely: Mock):
         """Test full command execution with real configuration."""
@@ -929,27 +636,7 @@ class TestSendCertificatesByWebServiceCommandIntegration(TestCase):
         self.assertEqual(service_config["endpoint_timeout"], 90)
         self.assertEqual(options["dry_run"], False)
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "integration_test",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 90,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "days": 1,
-            "page_size": 10,
-            "fields": [
-                {
-                    "name": "certificate_date",
-                    "func": "nau_openedx_extensions.coursecertificate.extractors.certificate_date",
-                },
-                {
-                    "name": "student_email",
-                    "func": "nau_openedx_extensions.coursecertificate.extractors.student_email",
-                },
-            ],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=INTEGRATION_CONFIG)
     @patch(f"{COMMAND_MODULE_PATH}.process_service_certificates")
     def test_command_async_mode_integration(self, mock_task):
         """Test command async mode integration."""
@@ -963,27 +650,7 @@ class TestSendCertificatesByWebServiceCommandIntegration(TestCase):
         self.assertIn("ASYNC MODE", output)
         self.assertIn("integration-task", output)
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "integration_test",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 90,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "days": 1,
-            "page_size": 10,
-            "fields": [
-                {
-                    "name": "certificate_date",
-                    "func": "nau_openedx_extensions.coursecertificate.extractors.certificate_date",
-                },
-                {
-                    "name": "student_email",
-                    "func": "nau_openedx_extensions.coursecertificate.extractors.student_email",
-                },
-            ],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=INTEGRATION_CONFIG)
     @patch(f"{COMMAND_MODULE_PATH}.process_service_certificates")
     def test_command_async_dry_run_integration(self, mock_task):
         """Test command async + dry-run mode integration."""
@@ -1000,27 +667,7 @@ class TestSendCertificatesByWebServiceCommandIntegration(TestCase):
         self.assertIn("ASYNC MODE", output)
         self.assertIn("DRY RUN MODE", output)
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "integration_test",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 90,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "days": 1,
-            "page_size": 10,
-            "fields": [
-                {
-                    "name": "certificate_date",
-                    "func": "nau_openedx_extensions.coursecertificate.extractors.certificate_date",
-                },
-                {
-                    "name": "student_email",
-                    "func": "nau_openedx_extensions.coursecertificate.extractors.student_email",
-                },
-            ],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=INTEGRATION_CONFIG)
     @patch(f"{COMMAND_MODULE_PATH}.process_service_certificates")
     def test_command_async_with_service_filter_integration(self, mock_task):
         """Test command async mode with service filter integration."""
@@ -1033,27 +680,7 @@ class TestSendCertificatesByWebServiceCommandIntegration(TestCase):
         args, kwargs = mock_task.delay.call_args
         self.assertEqual(args[0]["service_name"], "integration_test")
 
-    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=[
-        {
-            "service_name": "integration_test",
-            "endpoint_url": "https://api.test.com/certificates",
-            "endpoint_timeout": 90,
-            "auth_token": "test_token",
-            "auth_type": "bearer",
-            "days": 1,
-            "page_size": 10,
-            "fields": [
-                {
-                    "name": "certificate_date",
-                    "func": "nau_openedx_extensions.coursecertificate.extractors.certificate_date",
-                },
-                {
-                    "name": "student_email",
-                    "func": "nau_openedx_extensions.coursecertificate.extractors.student_email",
-                },
-            ],
-        }
-    ])
+    @override_settings(NAU_SEND_COURSE_CERTIFICATE_CONFIG=INTEGRATION_CONFIG)
     @patch.object(Command, "process_service_safely")
     def test_full_command_execution_with_certificate_id(self, mock_process_service_safely: Mock):
         """Test full command execution with certificate ID."""
