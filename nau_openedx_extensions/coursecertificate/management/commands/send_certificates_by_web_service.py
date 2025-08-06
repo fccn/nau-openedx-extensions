@@ -20,7 +20,6 @@ class Command(BaseCommand):
 
     help = "Send course certificates to external services"
 
-    DEFAULT_CONFIG_FILENAME = "config.yml"
     CONFIG_KEY = "NAU_SEND_COURSE_CERTIFICATE_CONFIG"
 
     MSG_DRY_RUN = "=== DRY RUN MODE - No actual requests will be sent ==="
