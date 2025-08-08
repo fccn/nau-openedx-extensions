@@ -15,10 +15,14 @@ from nau_openedx_extensions.coursecertificate.tasks import process_service_certi
 
 class Command(BaseCommand):
     """
-    Send course certificates to external services based on YAML configuration.
+    Send course certificates to external services based on the
+    Djando setting `NAU_SEND_COURSE_CERTIFICATE_CONFIG`.
     """
 
-    help = "Send course certificates to external services"
+    help = """
+    Send course certificates to external services configured
+    in the Djando setting `NAU_SEND_COURSE_CERTIFICATE_CONFIG`.
+    """
 
     CONFIG_KEY = "NAU_SEND_COURSE_CERTIFICATE_CONFIG"
 

@@ -105,3 +105,4 @@ def plugin_settings(settings):
     settings.CCX_MAX_STUDENTS_ALLOWED = getattr(settings, "ENV_TOKENS", {}).get(
         "CCX_MAX_STUDENTS_ALLOWED", 200
     )
+    settings.NAU_SEND_COURSE_CERTIFICATE_CONFIG = getattr(settings, "ENV_TOKENS", {}).get("NAU_SEND_COURSE_CERTIFICATE_CONFIG", [])
