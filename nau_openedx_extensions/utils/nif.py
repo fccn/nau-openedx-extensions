@@ -37,6 +37,10 @@ def is_nif_valid(nif_value):
         # verificar tamanho do número passado
         if len(nif) != LEN_NIF:
             return False
+
+        if not nif.isdigit():
+            return False
+
         # verificar validade do carácter inicial do NIF
         # if nif[0] not in "125689":
         #     return False
