@@ -49,4 +49,4 @@ class NauUserExtendedForm(ModelForm):
         self.fields["data_authorization"].error_messages = {
             "required": _("You must read and understood the Privacy Policy")
         }
-        self.fields["nif"].validators = [validate_nif]
+        self.fields["nif"].validators.append(validate_nif)
