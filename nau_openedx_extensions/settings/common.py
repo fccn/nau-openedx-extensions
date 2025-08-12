@@ -39,18 +39,6 @@ def plugin_settings(settings):
 
     settings.MAKO_TEMPLATE_DIRS_BASE.append(ROOT_DIRECTORY / "templates")
 
-    settings.NAU_CUSTOM_SAML_IDENTITY_PROVIDERS = [
-        {
-            "provider_key": "nau_custom_saml_provider",
-            "provider_class": "nau_openedx_extensions.third_party_auth.providers.saml.NauEdXSAMLIdentityProvider",
-            "verbose_name": "NAU SAML provider",
-        }
-    ]
-
-    settings.NAU_ADD_SAML_IDP_CHOICES = "nau_openedx_extensions.third_party_auth.providers.saml.get_extended_saml_idp_choices"
-    settings.NAU_ADD_SAML_IDP_CLASSES = (
-        "nau_openedx_extensions.third_party_auth.providers.saml.extend_saml_idp_classes"
-    )
     settings.NAU_CERTIFICATE_CONTEXT_EXTENSION = (
         "nau_openedx_extensions.certificates.context_extender.update_cert_context"
     )
