@@ -82,7 +82,6 @@ def plugin_settings(settings):
     settings.NAU_COURSE_MESSAGE_RECIPIENT_FIELDS = ["profile__name", "email"]
     settings.NAU_CC_ALLOWED_SLUG = "cccmd:"
     settings.NAU_ACCOUNTS_CC_VISIBLE_FIELDS = ["employment_situation", "nif", "allow_newsletter"]
-    settings.SCORMXBLOCK_ASYNC_THRESHOLD = 500
     settings.NAU_SITE_CONFIGURATION_HELPERS_MODULE = (
         "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_helpers_l_v1"
     )
