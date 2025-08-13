@@ -24,7 +24,7 @@ class FilterUpdateCertificateContextTest(TestCase):
 
     patch_get_course = patch(f"{FILTERS_PATH}.get_course")
     patch_get_request = patch(f"{FILTERS_PATH}.get_current_request")
-    patch_gen_cert = patch(f"{FILTERS_PATH}.GeneratedCertificate")
+    patch_get_user_certificate = patch(f"{FILTERS_PATH}.get_user_certificate")
     patch_cert_config = patch(f"{FILTERS_PATH}.CertificateHtmlViewConfiguration")
     patch_translation = patch(f"{FILTERS_PATH}.translation")
     patch_get_catalog_data = patch(f"{FILTERS_PATH}.get_catalog_data_for_course")
@@ -44,21 +44,21 @@ class FilterUpdateCertificateContextTest(TestCase):
         self.request = MagicMock(user=self.user)
 
     @patch_cert_config
-    @patch_gen_cert
+    @patch_get_user_certificate
     @patch_get_request
     @patch_get_course
     def test_get_properties_basic(
         self,
         mock_get_course: Mock,
         mock_get_request: Mock,
-        mock_gen_cert: Mock,
+        mock_get_user_certificate: Mock,
         mock_cert_config: Mock,
     ):
         with patch.object(self.filter, "_determine_certificate_language") as mock_determine_lang:
             self.course.cert_html_view_overrides = {"nau_certs_settings": {"setting": "value"}}
             mock_get_course.return_value = self.course
             mock_get_request.return_value = self.request
-            mock_gen_cert.objects.get.return_value = self.user_certificate
+            mock_get_user_certificate.return_value = self.user_certificate
             mock_cert_config.get_config.return_value = {"config": "test"}
             mock_determine_lang.return_value = "en"
 
