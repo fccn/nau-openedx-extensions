@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2025-07-17 14:36+0100\n"
+"POT-Creation-Date: 2025-08-06 10:56-0500\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -30,13 +30,14 @@ msgstr ""
 msgid "You do not have permission to export certificates for this course."
 msgstr ""
 
-#: nau_openedx_extensions/custom_registration_form/forms.py:38
-msgid "You must read and understood the Privacy Policy"
-msgstr ""
-
+#: nau_openedx_extensions/custom_registration_form/forms.py:20
 #: nau_openedx_extensions/custom_registration_form/models.py:25
 #: nau_openedx_extensions/custom_registration_form/models.py:29
 msgid "Invalid NIF"
+msgstr ""
+
+#: nau_openedx_extensions/custom_registration_form/forms.py:50
+msgid "You must read and understood the Privacy Policy"
 msgstr ""
 
 #: nau_openedx_extensions/custom_registration_form/models.py:53
