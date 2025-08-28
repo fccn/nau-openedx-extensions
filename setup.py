@@ -76,6 +76,7 @@ setup(
         "lms.djangoapp": [
             "nau_openedx_extensions = nau_openedx_extensions.apps:NauOpenEdxConfig",
             "coursecertificate = nau_openedx_extensions.coursecertificate.apps:CoursecertificateConfig",
+            "enrollment_by_domain = nau_openedx_extensions.enrollment_by_domain.apps:EnrollmentByDomainConfig",
         ],
         "cms.djangoapp": [
             "nau_openedx_extensions = nau_openedx_extensions.studio.apps:NauOpenCmsConfig",
