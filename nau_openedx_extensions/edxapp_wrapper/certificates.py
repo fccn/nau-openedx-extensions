@@ -43,14 +43,5 @@ def get_custom_template_and_language(*args, **kwargs):
     return backend._get_custom_template_and_language(*args, **kwargs)  # pylint: disable=protected-access
 
 
-def get_user_certificate(*args, **kwargs):
-    """
-    Wrapper for `lms.djangoapps.certificates.views.webview._get_user_certificate` in edx-platform.
-    """
-    backend_function = settings.NAU_CERTIFICATES_MODULE
-    backend = import_module(backend_function)
-    return backend._get_user_certificate(*args, **kwargs)  # pylint: disable=protected-access
-
-
 GeneratedCertificate = get_generated_certificate_class()
 CertificateHtmlViewConfiguration = get_certificate_html_view_configuration_class()

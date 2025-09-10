@@ -24,7 +24,6 @@ class FilterUpdateCertificateContextTest(TestCase):
 
     patch_get_course = patch(f"{FILTERS_PATH}.get_course")
     patch_get_request = patch(f"{FILTERS_PATH}.get_current_request")
-    patch_get_user_certificate = patch(f"{FILTERS_PATH}.get_user_certificate")
     patch_cert_config = patch(f"{FILTERS_PATH}.CertificateHtmlViewConfiguration")
     patch_translation = patch(f"{FILTERS_PATH}.translation")
     patch_get_catalog_data = patch(f"{FILTERS_PATH}.get_catalog_data_for_course")
@@ -38,27 +37,22 @@ class FilterUpdateCertificateContextTest(TestCase):
         self.course_id_str = "course-v1:Demo+DemoX+Demo_Course"
         self.course_key = CourseKey.from_string(self.course_id_str)
         self.user = MagicMock(username="testuser", email="test@example.com")
+        self.request_user = MagicMock(username="testuser2", email="test2@example.com")
         self.course = MagicMock(id=self.course_key, display_name="Test Course")
-        self.user_certificate = MagicMock(grade="85", mode="verified")
-        self.context = {"course_id": self.course_id_str}
-        self.request = MagicMock(user=self.user)
+        self.user_certificate = MagicMock(grade="85", mode="verified", user=self.user)
+        self.context = {"course_id": self.course_id_str, "user_certificate": self.user_certificate}
+        self.request = MagicMock(user=self.request_user)
 
     @patch_cert_config
-    @patch_get_user_certificate
-    @patch_get_request
     @patch_get_course
     def test_get_properties_basic(
         self,
         mock_get_course: Mock,
-        mock_get_request: Mock,
-        mock_get_user_certificate: Mock,
         mock_cert_config: Mock,
     ):
         with patch.object(self.filter, "_determine_certificate_language") as mock_determine_lang:
             self.course.cert_html_view_overrides = {"nau_certs_settings": {"setting": "value"}}
             mock_get_course.return_value = self.course
-            mock_get_request.return_value = self.request
-            mock_get_user_certificate.return_value = self.user_certificate
             mock_cert_config.get_config.return_value = {"config": "test"}
             mock_determine_lang.return_value = "en"
 
@@ -69,7 +63,6 @@ class FilterUpdateCertificateContextTest(TestCase):
             self.assertEqual(result["course"], self.course)
             self.assertEqual(result["course_key"], self.course_key)
             self.assertEqual(result["nau_cert_settings"], {"setting": "value"})
-            self.assertEqual(result["request"], self.request)
             self.assertEqual(result["user"], self.user)
             self.assertEqual(result["user_certificate"], self.user_certificate)
 
@@ -467,3 +460,34 @@ class FilterUpdateCertificateContextTest(TestCase):
 
         mock_log.error.assert_called_once()
         self.assertEqual(result, {})
+
+    @patch_get_request
+    @patch_cert_config
+    @patch_get_course
+    def test_get_properties_preview_certificate(
+        self,
+        mock_get_course: Mock,
+        mock_cert_config: Mock,
+        mock_get_request: Mock,
+    ):
+        """
+        Test _get_properties for preview certificate, current logged-in user is different from certificate user.
+        """
+        # Simulate preview certificate that is not saved/linked to user
+        self.user_certificate.user = None
+        with patch.object(self.filter, "_determine_certificate_language") as mock_determine_lang:
+            self.course.cert_html_view_overrides = {"nau_certs_settings": {"setting": "value"}}
+            mock_get_course.return_value = self.course
+            mock_cert_config.get_config.return_value = {"config": "test"}
+            mock_determine_lang.return_value = "en"
+            mock_get_request.return_value = self.request
+
+            result = self.filter._get_properties(self.context, None)
+
+            self.assertEqual(result["certificate_language"], "en")
+            self.assertEqual(result["configuration"], {"config": "test"})
+            self.assertEqual(result["course"], self.course)
+            self.assertEqual(result["course_key"], self.course_key)
+            self.assertEqual(result["nau_cert_settings"], {"setting": "value"})
+            self.assertEqual(result["user"], self.request_user)
+            self.assertEqual(result["user_certificate"], self.user_certificate)
