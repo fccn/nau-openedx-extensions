@@ -28,7 +28,6 @@ from nau_openedx_extensions.edxapp_wrapper.certificates import (
     CertificateHtmlViewConfiguration,
     get_catalog_data_for_course,
     get_custom_template_and_language,
-    get_user_certificate,
 )
 from nau_openedx_extensions.edxapp_wrapper.course_module import get_course
 from nau_openedx_extensions.edxapp_wrapper.grades import get_course_grades
@@ -108,16 +107,16 @@ class FilterUpdateCertificateContext(PipelineStep):
                 - course: Course object
                 - course_key: Course key object
                 - nau_cert_settings: Custom certificate settings
-                - request: Current HTTP request
                 - user: User object
                 - user_certificate: Generated certificate for the user
         """
         course_key = CourseKey.from_string(context["course_id"])
         course = get_course(course_key)
-        request = get_current_request()
-        user = request.user  # type: ignore
-        preview_mode = request.GET.get("preview", None)  # type: ignore
-        user_certificate = get_user_certificate(request, user, course_key, course, preview_mode)
+        user_certificate = context["user_certificate"]
+        if getattr(user_certificate, "user", None):
+            user = user_certificate.user
+        else:
+            user = get_current_request().user
         certificate_language = self._determine_certificate_language(course, user_certificate, custom_template)
 
         return {
@@ -126,7 +125,6 @@ class FilterUpdateCertificateContext(PipelineStep):
             "course": course,
             "course_key": course_key,
             "nau_cert_settings": course.cert_html_view_overrides.get("nau_certs_settings"),
-            "request": request,
             "user": user,
             "user_certificate": user_certificate,
         }
