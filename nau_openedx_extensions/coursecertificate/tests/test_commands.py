@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 from django.core.management.base import CommandError, OutputWrapper
 from django.test import TestCase, override_settings
 
-from nau_openedx_extensions.coursecertificate.management.commands.send_certificates_by_web_service import Command
+from nau_openedx_extensions.management.commands.send_certificates_by_web_service import Command
 from nau_openedx_extensions.coursecertificate.tests.fixtures import Certificate, User
 
 COMMAND_MODULE_PATH = "nau_openedx_extensions.coursecertificate.management.commands.send_certificates_by_web_service"
