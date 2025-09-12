@@ -6,18 +6,23 @@ on:
     branches:
       - nau/*.master
 
-
 jobs:
 
   test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+
+    - name: Clone edx-platform
+      run: |
+        git clone --depth 1 https://github.com/openedx/edx-platform.git ${{ github.workspace }}/../edx-platform
+
     - uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        cache: 'pip' # caching pip dependencies
+        cache: 'pip'
         cache-dependency-path: requirements/*.txt
+
     - run: make requirements
     - run: make test
 
@@ -28,7 +33,7 @@ jobs:
     - uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        cache: 'pip' # caching pip dependencies
+        cache: 'pip'
         cache-dependency-path: requirements/*.txt
     - run: make requirements
     - run: make lint
@@ -40,7 +45,7 @@ jobs:
     - uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-        cache: 'pip' # caching pip dependencies
+        cache: 'pip'
         cache-dependency-path: requirements/*.txt
     - run: make requirements
     - run: make check_miss_run_update_translations
