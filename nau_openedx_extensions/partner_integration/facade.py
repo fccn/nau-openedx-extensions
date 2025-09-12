@@ -1,0 +1,433 @@
+"""Facade` pattern implementation to extract data from the LMS database."""
+# pylint: disable=import-error
+import logging
+from datetime import datetime, time, timedelta
+
+from django.contrib.auth import get_user_model
+from django.db.models import OuterRef, Q, Subquery
+from lms.djangoapps.course_blocks.api import get_course_blocks  # pylint: disable=unused-import
+from lms.djangoapps.course_blocks.transformers import start_date
+from lms.djangoapps.course_home_api.utils import get_course_or_403
+from lms.djangoapps.courseware.courses import get_course_blocks_completion_summary
+from lms.djangoapps.grades.api import CourseGradeFactory
+from opaque_keys.edx.keys import CourseKey
+from openedx.core.djangoapps.content.block_structure.api import get_block_structure_manager
+from openedx.core.djangoapps.content.block_structure.transformers import BlockStructureTransformers
+from openedx.features.content_type_gating.block_transformers import ContentTypeGateTransformer
+from xmodule.modulestore.django import modulestore
+
+from nau_openedx_extensions.partner_integration.exception import (
+    CertificateInternalErrorException,
+    CertificateInvalidDataProvidedException,
+    PartnerCourseOwnerException,
+)
+from nau_openedx_extensions.edxapp_wrapper.certificates import GeneratedCertificate
+from nau_openedx_extensions.edxapp_wrapper.content import CourseOverview
+from nau_openedx_extensions.edxapp_wrapper.student import CourseEnrollment
+from nau_openedx_extensions.edxapp_wrapper.util import use_read_replica_if_available
+from openedx.core.djangoapps.enrollments import api as enrollment_api
+
+logger = logging.getLogger(__name__)
+
+
+class DataExtractorFacade:
+    """
+    DataExtractorFacade base class.
+    The intention of this class is to provide common methods to be used by
+    the different data extractor facades. Since the partner clients
+    can only access data they are authorized to, the base security scope
+    filtering logic is common to all data extractor facades.
+    """
+
+    def apply_base_security_scope(self, base_security_scope):
+        """
+        Applies the partner query security scope to filter courses. It comes from
+        the partner configuration.
+
+        The `base_security_scope` is a dictionary that defines the filtering logic to apply
+        in the execution of the courses query. It garantees that the partners can only access
+        data they are authorized to. It focus on filtering data at the course level, as courses
+        are the main entity related to certificates. `org` is the base field to filter courses,
+        it is required, but other fields are optional and can be used to refine the query.
+
+        Example of a `base_security_scope`:
+        {
+            "org": "NAU",
+            "end__gte": "2025-01-01"
+        }
+        """
+        try:
+            logger.info("Executing query by security scope.")
+            course_query = use_read_replica_if_available(CourseOverview.objects.filter(**base_security_scope))
+
+            return course_query
+        except Exception as e:
+            raise CertificateInternalErrorException() from e
+
+
+class CertificateExportFacade(DataExtractorFacade):
+    """
+    `Facade` is a design pattern that provides a simplified interface to a complex subsystem.
+    read more at:
+    - https://refactoring.guru/design-patterns/facade
+    - https://en.wikipedia.org/wiki/Facade_pattern
+
+    `CertificateExportFacade` is an implmentation of the `Facade` pattern that applies the methods
+    to extract certificate data from the LMS database, based on the client's query security scope
+    or specific request parameters (nifs, emails).
+    """
+
+    def get_certificates(self, query_security_scope, start_dt, end_dt, courses, nifs, emails):
+        """
+        Fetches certificates based on the client's `query_security_scope` and request parameters.
+        If no specific parameters are provided, it fetches certificates based on the `query_security_scope`.
+        """
+        logger.info("Fetching certificates using CertificateExportFacade.")
+        try:
+            base_security_scope = query_security_scope.get("base_security_scope")
+            base_certificates_scope = query_security_scope.get("base_certificates_scope")
+            courses_base_query = super().apply_base_security_scope(base_security_scope)
+            certificates_base_query = self._apply_base_certificates_scope(base_certificates_scope, courses_base_query)
+            certificates = self._execute_certificates_query(
+                certificates_base_query, start_dt, end_dt, courses, nifs, emails)
+
+            return certificates
+        except Exception as e:
+            raise CertificateInternalErrorException() from e
+
+    def _apply_base_certificates_scope(self, base_certificates_scope, courses_base_query):
+        """
+        Applies the partner base certificates scope to filter certificates. It comes from
+        the partner configuration.
+
+        The `base_certificates_scope` is a dictionary that defines the filtering logic
+        to apply in the execution of the certificates query. It allows base filtering at
+        the certificate level, being unecessary to fetch all certificates related to the
+        courses, and also being not necessary to provide data via payload to refine the query.
+
+        Example of a `base_certificates_scope`:
+        {
+            "mode": "honor",
+            "user__email__icontains": "example.com",
+            "status__in": ["audit_passing", "honor_passing"],
+            "created_date__gte": "2025-01-01",
+        }
+        """
+        try:
+            certificates_query = use_read_replica_if_available(
+                GeneratedCertificate.objects.filter(
+                    course_id__in=courses_base_query.values("id")
+                ).select_related("user")
+            )
+            certificates_query = self._annotate_course_data(certificates_query)
+
+            if base_certificates_scope:
+                certificates_query = use_read_replica_if_available(
+                    GeneratedCertificate.objects.filter(**base_certificates_scope).select_related("user")
+                )
+
+            logger.info("Assembled certificates base query by security scope.")
+            return certificates_query
+        except Exception as e:
+            raise CertificateInternalErrorException() from e
+
+    def _execute_certificates_query(self, certificates_base_query, start_dt, end_dt, courses, nifs, emails):
+        """
+        Returns a queryset of certificates filtered by specific request parameters (nifs, emails).
+        """
+        try:
+            logger.info(f"Fetching certificates using specific parameters. NIFs: {nifs}, Emails: {emails}")
+            certificates_query = certificates_base_query
+
+            if courses:
+                q = Q()
+                for code in courses:
+                    q |= Q(course_id__icontains=code)
+
+                certificates_query = certificates_query.filter(q).select_related("user")
+
+            if not start_dt or not end_dt:
+                start = datetime.now()
+                start_dt = datetime.combine(start, time.min) - timedelta(days=365)
+                end_dt = start
+
+            filters = Q()
+            if emails:
+                filters |= Q(user__email__in=emails)
+            if nifs:
+                filters |= Q(user__nauuserextendedmodel__nif__in=nifs)
+                filters |= Q(user__nauuserextendedmodel__cc_nif__in=nifs)
+            filters &= Q(created_date__range=(start_dt, end_dt))
+
+            certificates_query = certificates_query.filter(filters)
+            certificates_query = self._annotate_enrollment_data(certificates_query)
+
+            return use_read_replica_if_available(certificates_query.distinct())
+        except Exception as e:
+            raise CertificateInternalErrorException() from e
+
+    def _annotate_course_data(self, certificates_query):
+        """Annotates the certificates queryset with course data."""
+        try:
+            course_qs = CourseOverview.objects.filter(id=OuterRef("course_id"))
+
+            return certificates_query.annotate(
+                course_org=Subquery(course_qs.values("org")[:1]),
+                course_display_name=Subquery(course_qs.values("display_name")[:1]),
+                course_start=Subquery(course_qs.values("start")[:1]),
+                course_end=Subquery(course_qs.values("end")[:1]),
+                course_enrollment_start=Subquery(course_qs.values("enrollment_start")[:1]),
+                course_enrollment_end=Subquery(course_qs.values("enrollment_end")[:1]),
+            )
+        except Exception as e:
+            raise CertificateInternalErrorException() from e
+
+    def _annotate_enrollment_data(self, certificates_query):
+        """Annotates the certificates queryset with enrollment data."""
+        try:
+            course_enrollment_qs = CourseEnrollment.objects.filter(
+                user=OuterRef("user"),
+                course_id=OuterRef("course_id")
+            )
+            return certificates_query.annotate(enrollment_date=Subquery(course_enrollment_qs.values("created")[:1]))
+        except Exception as e:
+            raise CertificateInternalErrorException() from e
+
+
+class EnrollmentFacade(DataExtractorFacade):
+    """
+    `Facade` is a design pattern that provides a simplified interface to a complex subsystem.
+    read more at:
+    - https://refactoring.guru/design-patterns/facade
+    - https://en.wikipedia.org/wiki/Facade_pattern
+
+    `EnrollmentFacade` is an implmentation of the `Facade` pattern that applies the methods
+    to manage enrollments, based on the client's query security scope and specific request
+    parameters (nifs, emails).
+    """
+
+    def get_enrollments(self, query_security_scope, start_dt, end_dt, courses, nifs, emails):
+        """
+        Fetches enrollments based on the client's `query_security_scope` and request parameters.
+        If no specific parameters are provided, it fetches enrollments based on the `query_security_scope`.
+        """
+        logger.info("Fetching enrollments using EnrollmentFacade.")
+        try:
+            base_security_scope = query_security_scope.get("base_security_scope", {})
+            base_enrollments_scope = query_security_scope.get("base_enrollments_scope", {})
+            courses_base_query = super().apply_base_security_scope(base_security_scope)
+            enrollments_base_query = self._apply_base_enrollments_scope(base_enrollments_scope, courses_base_query)
+            enrollments = self._execute_enrollments_query(
+                enrollments_base_query, start_dt, end_dt, courses, nifs, emails)
+
+            return enrollments
+        except Exception as e:
+            raise CertificateInternalErrorException() from e
+        
+    def enroll_user(self, query_security_scope, course_id, nifs, emails):
+        """
+        Enrolls users in a course based on NIFs and/or emails provided.
+        It accepts a course ID, and a list of NIFs and/or emails to enroll
+        users in the specified course.
+        
+        It implements the enrollment logic using the Open edX enrollment API.
+        
+        Returns:
+            list: A list of CourseEnrollment objects for the enrolled users.
+        """
+        logger.info("Enrolling user in a course RestIntegrationEnrollmentFacade.")
+        try:
+            base_security_scope = query_security_scope.get("base_security_scope", {})
+            courses_base_query = super().apply_base_security_scope(base_security_scope)
+            
+            try:
+                course = courses_base_query.get(id=course_id)
+            except CourseOverview.DoesNotExist:
+                raise CertificateInvalidDataProvidedException("The specified course ID does not exist or is not accessible.")
+
+            filters = Q()
+            if emails:
+                filters |= Q(email__in=emails)
+            if nifs:
+                filters |= (
+                    Q(nauuserextendedmodel__nif__in=nifs) |
+                    Q(nauuserextendedmodel__cc_nif__in=nifs)
+                )
+            User = get_user_model()
+            users = use_read_replica_if_available(User.objects.filter(filters).distinct())
+            
+            enrollments = []
+            for user in users:
+                enrollment = enrollment_api.add_enrollment(user.username, str(course.id))
+                if enrollment:
+                    enrollment_register = use_read_replica_if_available(
+                        CourseEnrollment.objects.filter(
+                            course=course,
+                            user=user
+                        )
+                    ).select_related("user", "course")
+                    enrollments.append(enrollment_register.first())
+
+            return enrollments
+        except PartnerCourseOwnerException as e:
+            raise e
+        except Exception as e:
+            raise CertificateInternalErrorException() from e
+
+    def _apply_base_enrollments_scope(self, base_enrollments_scope, courses_base_query):
+        """
+        Applies the partner base enrollments scope to filter enrollments. It comes from
+        the partner configuration.
+
+        The `base_enrollments_scope` is a dictionary that defines the filtering logic
+        to apply in the execution of the enrollments query. It allows base filtering at
+        the enrollment level, being unecessary to fetch all enrollments related to the
+        courses, and also being not necessary to provide data via payload to refine the query.
+
+        Example of a `base_enrollments_scope`:
+        {
+            "mode": "honor",
+            "created__gte": "2025-01-01",
+            "is_active": True,
+        }
+        """
+        try:
+            enrollments_query = use_read_replica_if_available(
+                CourseEnrollment.objects.filter(
+                    course__id__in=courses_base_query.values("id")
+                )
+            ).select_related("user", "course")
+
+            if base_enrollments_scope:
+                enrollments_query = use_read_replica_if_available(
+                    CourseEnrollment.objects.filter(**base_enrollments_scope).select_related("user")
+                )
+
+            logger.info("Assembled enrollments base query by security scope.")
+            return enrollments_query
+        except Exception as e:
+            raise CertificateInternalErrorException() from e
+
+    def _execute_enrollments_query(self, enrollments_base_query, start_dt, end_dt, courses, nifs, emails):
+        """
+        Returns a queryset of enrollments filtered by specific request parameters (nifs, emails).
+        """
+        try:
+            logger.info(f"Fetching enrollments using specific parameters. NIFs: {nifs}, Emails: {emails}")
+            enrollments_query = enrollments_base_query
+
+            if courses:
+                enrollments_query = enrollments_query.filter(course__id__in=courses).select_related("user")
+
+            if not start_dt or not end_dt:
+                start = datetime.now()
+                start_dt = datetime.combine(start, time.min) - timedelta(days=365)
+                end_dt = start
+
+            filters = Q()
+            if emails:
+                filters |= Q(user__email__in=emails)
+            if nifs:
+                filters |= Q(user__nauuserextendedmodel__nif__in=nifs)
+                filters |= Q(user__nauuserextendedmodel__cc_nif__in=nifs)
+            filters &= Q(created__range=(start_dt, end_dt))
+
+            enrollments_query = enrollments_query.filter(filters)
+            enrollments_query = self._annotate_certificates_data(enrollments_query)
+
+            return use_read_replica_if_available(enrollments_query.distinct())
+        except Exception as e:
+            raise CertificateInternalErrorException() from e
+
+    def _annotate_certificates_data(self, enrollments_query):
+        """Annotates enrollments with related certificates."""
+        try:
+            certificates_qs = GeneratedCertificate.objects.filter(
+                course_id=OuterRef("course_id")
+            )
+            return enrollments_query.annotate(
+                certificate_download_url=Subquery(certificates_qs.values("download_url")[:1]),
+                certificate_status=Subquery(certificates_qs.values("status")[:1]),
+                certificate_created=Subquery(certificates_qs.values("created_date")[:1]),
+            )
+        except Exception as e:
+            raise CertificateInternalErrorException() from e
+
+
+class StudentProgressExportFacade(DataExtractorFacade):
+    """
+    `Facade` is a design pattern that provides a simplified interface to a complex subsystem.
+    read more at:
+    - https://refactoring.guru/design-patterns/facade
+    - https://en.wikipedia.org/wiki/Facade_pattern
+
+    `StudentProgressExportFacade` is an implmentation of the `Facade` pattern that applies the methods
+    to extract student progress data from the LMS database, based on the client's query security scope.
+    """
+
+    def _get_student_user(self, student_id, nif, email):
+        """Gets the student User object"""
+        try:
+            User = get_user_model()
+
+            if student_id:
+                return User.objects.get(id=student_id)
+            elif nif:
+                return User.objects.get(nauuserextendedmodel__nif=student_id)
+
+            return User.objects.get(email=email)
+        except Exception as e:
+            raise CertificateInternalErrorException() from e
+
+    def get_student_progress(self, course_id, student_id, nif, email, query_security_scope):
+        """
+        Fetches student progress based on the client's `query_security_scope` and request parameters.
+        """
+        try:
+
+            base_security_scope = query_security_scope.get("base_security_scope")
+            courses_base_query = super().apply_base_security_scope(base_security_scope)
+            course = courses_base_query.filter(id=course_id)
+            if not course:
+                raise PartnerCourseOwnerException()
+
+            course_key = CourseKey.from_string(course_id)
+            student = self._get_student_user(student_id, nif, email)
+
+            course = get_course_or_403(student, 'load', course_key, check_if_enrolled=False)
+            collected_block_structure = get_block_structure_manager(course_key).get_collected()
+
+            course_grade = CourseGradeFactory().read(student, collected_block_structure=collected_block_structure)
+            course_grade.update(visible_grades_only=True)
+
+            transformers = BlockStructureTransformers()
+            transformers += [start_date.StartDateTransformer(), ContentTypeGateTransformer()]
+            # usage_key = collected_block_structure.root_block_usage_key
+            # course_blocks = get_course_blocks(
+            #     student,
+            #     usage_key,
+            #     transformers=transformers,
+            #     collected_block_structure=collected_block_structure,
+            #     include_has_scheduled_content=True
+            # )
+
+            user_has_passing_grade = False
+            if not student.is_anonymous:
+                user_grade = course_grade.percent
+                user_has_passing_grade = user_grade >= course.lowest_passing_grade
+
+            block = modulestore().get_course(course_key)
+            grading_policy = block.grading_policy
+
+            student_progress = {
+                'username': student.username,
+                'user_has_passing_grade': user_has_passing_grade,
+                'completion_summary': get_course_blocks_completion_summary(course_key, student),
+                'course_grade': course_grade,
+                'grading_policy': grading_policy,
+                'section_scores': list(course_grade.chapter_grades.values()),
+            }
+
+            return student_progress
+        except Exception as e:
+            raise CertificateInternalErrorException() from e
