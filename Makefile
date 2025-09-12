@@ -31,9 +31,10 @@ requirements: ## Install requirements
 	python -m pip install -r requirements/test.txt
 .PHONY: requirements
 
-test: clean ## Run all python tests
-	$(TOX) pip install -r requirements/test.txt --exists-action w
-	$(TOX) DJANGO_SETTINGS_MODULE=nau_openedx_extensions.settings.test coverage run --source="." -m pytest ./nau_openedx_extensions
+test: clean requirements
+	$(TOX) PYTHONPATH=$(PWD):../edx-platform \
+	       DJANGO_SETTINGS_MODULE=lms.envs.tutor.production \
+	       coverage run --source="nau_openedx_extensions" -m pytest --rootdir=/.. nau_openedx_extensions
 	$(TOX) coverage report --fail-under=5
 .PHONY: test
 

@@ -26,6 +26,14 @@ MAKO_TEMPLATE_DIRS_BASE = [
     "templates",
 ]
 
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": ":memory:",
+    }
+}
+
+
 ROOT_URLCONF = "nau_openedx_extensions.urls"
 ALLOWED_HOSTS = ["*"]
 
