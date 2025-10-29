@@ -109,6 +109,9 @@ class NauUserExtendedModel(models.Model):
     def date_joined(self):
         return self.user.date_joined
 
+    def is_active(self):
+        return self.user.is_active
+
 # Add more fields to the student profile download csv file.
 #
 # This feature requires that additional properties be configured on `STUDENT_FEATURES` list on file
