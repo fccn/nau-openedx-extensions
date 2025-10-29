@@ -26,8 +26,8 @@ class NauUserExtendedModelAdmin(admin.ModelAdmin, ExportCsvMixin):
         "openedx_email",
     )
     raw_id_fields = ("user",)
-    list_filter = ("allow_newsletter", "user__date_joined")
-    list_display = ("openedx_username", "openedx_email", "date_joined")
+    list_filter = ("allow_newsletter", "user__date_joined", "user__is_active",)
+    list_display = ("openedx_username", "openedx_email", "date_joined",)
 
     # use this user date_joined field has an hierarchy to the user can search the last registries more rapid.
     date_hierarchy = "user__date_joined"
