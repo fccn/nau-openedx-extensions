@@ -13,19 +13,19 @@ from lms.djangoapps.grades.api import CourseGradeFactory
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.djangoapps.content.block_structure.api import get_block_structure_manager
 from openedx.core.djangoapps.content.block_structure.transformers import BlockStructureTransformers
+from openedx.core.djangoapps.enrollments import api as enrollment_api
 from openedx.features.content_type_gating.block_transformers import ContentTypeGateTransformer
 from xmodule.modulestore.django import modulestore
 
+from nau_openedx_extensions.edxapp_wrapper.certificates import GeneratedCertificate
+from nau_openedx_extensions.edxapp_wrapper.content import CourseOverview
+from nau_openedx_extensions.edxapp_wrapper.student import CourseEnrollment
+from nau_openedx_extensions.edxapp_wrapper.util import use_read_replica_if_available
 from nau_openedx_extensions.partner_integration.exception import (
     CertificateInternalErrorException,
     CertificateInvalidDataProvidedException,
     PartnerCourseOwnerException,
 )
-from nau_openedx_extensions.edxapp_wrapper.certificates import GeneratedCertificate
-from nau_openedx_extensions.edxapp_wrapper.content import CourseOverview
-from nau_openedx_extensions.edxapp_wrapper.student import CourseEnrollment
-from nau_openedx_extensions.edxapp_wrapper.util import use_read_replica_if_available
-from openedx.core.djangoapps.enrollments import api as enrollment_api
 
 logger = logging.getLogger(__name__)
 
@@ -223,15 +223,15 @@ class EnrollmentFacade(DataExtractorFacade):
             return enrollments
         except Exception as e:
             raise CertificateInternalErrorException() from e
-        
+
     def enroll_user(self, query_security_scope, course_id, nifs, emails):
         """
         Enrolls users in a course based on NIFs and/or emails provided.
         It accepts a course ID, and a list of NIFs and/or emails to enroll
         users in the specified course.
-        
+
         It implements the enrollment logic using the Open edX enrollment API.
-        
+
         Returns:
             list: A list of CourseEnrollment objects for the enrolled users.
         """
@@ -239,11 +239,13 @@ class EnrollmentFacade(DataExtractorFacade):
         try:
             base_security_scope = query_security_scope.get("base_security_scope", {})
             courses_base_query = super().apply_base_security_scope(base_security_scope)
-            
+
             try:
                 course = courses_base_query.get(id=course_id)
-            except CourseOverview.DoesNotExist:
-                raise CertificateInvalidDataProvidedException("The specified course ID does not exist or is not accessible.")
+            except CourseOverview.DoesNotExist as exc:
+                raise CertificateInvalidDataProvidedException(
+                    "The specified course ID does not exist or is not accessible."
+                ) from exc
 
             filters = Q()
             if emails:
@@ -255,7 +257,7 @@ class EnrollmentFacade(DataExtractorFacade):
                 )
             User = get_user_model()
             users = use_read_replica_if_available(User.objects.filter(filters).distinct())
-            
+
             enrollments = []
             for user in users:
                 enrollment = enrollment_api.add_enrollment(user.username, str(course.id))

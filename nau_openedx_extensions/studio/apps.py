@@ -15,8 +15,7 @@ class NauOpenCmsConfig(AppConfig):
         "settings_config": {
             'cms.djangoapp': {
                 'common': {'relative_path': 'settings.common'},
-                'test': {'relative_path': 'settings.test'},
-                "production": {"relative_path": "settings.production"},
+                'production': {'relative_path': 'settings.production'},
             },
         },
     }

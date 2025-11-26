@@ -21,10 +21,16 @@ def get_cohort(username, course_key):
     try:
         user = User.objects.get(Q(username=username))
     except Exception as e:
-        log.error("On get_cohort method error getting user %s, error: %s, stacktrace: %s", username, str(e), traceback.format_exc())
+        log.error(
+            "On get_cohort method error getting user %s, error: %s, stacktrace: %s",
+            username, str(e), traceback.format_exc()
+        )
     # pylint: disable=broad-except
     try:
         return edxapp_get_cohort(user, course_key, assign=False, use_cached=False)
     except Exception as e:
-        log.error("On get_cohort method error getting cohort course_key: %s, error: %s, stacktrace: %s", course_key, str(e), traceback.format_exc())
+        log.error(
+            "On get_cohort method error getting cohort course_key: %s, error: %s, stacktrace: %s",
+            course_key, str(e), traceback.format_exc()
+        )
         return None
