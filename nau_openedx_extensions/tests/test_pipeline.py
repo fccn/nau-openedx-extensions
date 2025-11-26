@@ -17,6 +17,14 @@ from nau_openedx_extensions.filters.pipeline import (
 )
 
 
+@override_settings(
+    NAU_STUDENT_MODULE=(
+        "nau_openedx_extensions.edxapp_wrapper.backends.student_l_v1_tests"
+    ),
+    NAU_COURSE_MODULE=(
+        "nau_openedx_extensions.edxapp_wrapper.backends.course_module_l_v1_tests"
+    ),
+)
 class FilterEnrollmentByDomainTest(TestCase):
     """
     Test the FilterEnrollmentByDomain that prevent enrollment if the email domain is not allowed.
