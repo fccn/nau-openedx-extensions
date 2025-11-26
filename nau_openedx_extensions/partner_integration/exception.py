@@ -2,33 +2,54 @@
 
 
 class CertificateNoDataProvidedException(Exception):
-    """Custom exception for certificate access errors."""
+    """
+    Custom exception for certificate access errors.
+
+    Exception raised when no data provided to fetch certificates.
+    """
 
     def __init__(self, message=None):
         if message:
             self.message = message
         else:
-            self.message = "No data provided to fetch certificates. Please provide at least one NIF or email, or ensure the client's query scope contains logic to access data."
+            self.message = (
+                "No data provided to fetch certificates. Please provide at least one NIF "
+                "or email, or ensure the client's query scope contains logic to access data."
+            )
 
 
 class CertificateInvalidDataProvidedException(Exception):
-    """Custom exception for certificate access errors."""
+    """
+    Custom exception for certificate access errors.
+
+    Exception raised when the data provided for extraction is not valid.
+    """
 
     def __init__(self, message=None):
         if message:
             self.message = message
         else:
-            self.message = "Invalid data provided for certificate access. Please verify the request parameters."
+            self.message = (
+                "Invalid data provided for certificate access. "
+                "Please verify the request parameters."
+            )
 
 
 class CertificateInternalErrorException(Exception):
-    """Custom exception for internal errors during certificate access."""
+    """
+    Custom exception for internal errors during certificate access.
+
+    Exception raised when the query fails or access issues occur.
+    """
 
     def __init__(self, message=None):
         if message:
             self.message = message
         else:
-            self.message = "An internal error occurred while accessing certificates. Please verify the request parameters and try again later. Contact support if the issue persists."
+            self.message = (
+                "An internal error occurred while accessing certificates. Please verify the "
+                "request parameters and try again later. Contact support if the issue persists."
+            )
 
 
 class CertificateInactiveClientException(Exception):

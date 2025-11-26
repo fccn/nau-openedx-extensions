@@ -162,13 +162,35 @@ class CertificateRestExportView(APIView):
 
             return response
         except CertificateInvalidDataProvidedException as e:
-            return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
+            logger.exception(
+                "Invalid data provided for certificate export", exc_info=e
+            )
+            return Response(
+                {"error": e.message}, status=status.HTTP_400_BAD_REQUEST
+            )
         except CertificateNoDataProvidedException as e:
-            return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
+            logger.exception(
+                "No data provided for certificate export", exc_info=e
+            )
+            return Response(
+                {"error": e.message}, status=status.HTTP_400_BAD_REQUEST
+            )
         except CertificateInternalErrorException as e:
-            return Response({"error": e.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.exception(
+                "Internal error occurred during certificate export", exc_info=e
+            )
+            return Response(
+                {"error": e.message},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         except Exception as e:  # pylint: disable=broad-except
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.exception(
+                "Unexpected error occurred during certificate export", exc_info=e
+            )
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class EnrollmentRestExportView(APIView):
@@ -261,8 +283,13 @@ class StudentProgressRestExportView(APIView):
             elif not student_id and not nif and not email:
                 return Response(
                     {
-                        "error": "Invalid request data, it must to have one of the user's identifier: id, nif or email."},
-                    status=status.HTTP_400_BAD_REQUEST)
+                        "error": (
+                            "Invalid request data, it must to have one of the user's "
+                            "identifier: id, nif or email."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             student_progress = StudentProgressExportFacade().get_student_progress(
                 course_id,
@@ -290,7 +317,7 @@ class PartnerRestIntegrationEnrollUserView(APIView):
     """
     authentication_classes = [ClientJWTAuthentication]
     permission_classes = [IsAuthenticatedPartnerAPIClient]
-    
+
     def post(self, request):
         """
         HTTP POST handler to enroll users based on provided parameters.
@@ -298,7 +325,7 @@ class PartnerRestIntegrationEnrollUserView(APIView):
 
         Returns:
             list: A list of enrollments matching the query parameters or query security scope.
-        
+
         Example of payload:
         {
             "course": "course-v1:edX+DemoX+Demo_Course",

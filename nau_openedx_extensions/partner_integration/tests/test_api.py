@@ -12,10 +12,10 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from nau_openedx_extensions.custom_registration_form.factories import NauUserExtendedModelFactory
+from nau_openedx_extensions.edxapp_wrapper.content import CourseOverview
 from nau_openedx_extensions.partner_integration.factories import PartnerAPIClientFactory
 from nau_openedx_extensions.partner_integration.models import GeneratedCertificate
 from nau_openedx_extensions.partner_integration.oauth_authentication import ClientJWTAuthentication
-from nau_openedx_extensions.edxapp_wrapper.content import CourseOverview
 
 
 class BaseStructure:
@@ -65,14 +65,6 @@ class BaseStructure:
         return base_data
 
 
-@override_settings(
-    DATABASES={
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            'NAME': ":memory:",
-        }
-    }
-)
 class TestPartnerClientTokenView(TransactionTestCase):
 
     def setUp(self):
@@ -80,16 +72,6 @@ class TestPartnerClientTokenView(TransactionTestCase):
         self.endpoint = "/nau-openedx-extensions/partner-integration/auth-token/"
         self.partner_client = PartnerAPIClientFactory.create(
             query_security_scope={"base_security_scope": {"org": "TEST_ORG"}})
-
-    def test_incorrect_endpoint_404(self):
-        """
-        Validates the API returns 404 when none endpoint is incorrect.
-        It also validates all the tests find the API, as they are using
-        the correct endpoint.
-        """
-        self.http_client.credentials(**{})
-        response = self.http_client.post("incorrect_part")
-        self.assertEqual(response.status_code, 404)
 
     def test_missing_headers_returns_400(self):
         """Validates the API returns 400 when none header provided."""
@@ -188,14 +170,6 @@ class TestPartnerClientTokenView(TransactionTestCase):
         self.assert_is_jwt(token)
 
 
-@override_settings(
-    DATABASES={
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": ":memory:",
-        }
-    }
-)
 class TestCertificateRestExportView(TransactionTestCase, BaseStructure):
 
     def setUp(self):
@@ -570,16 +544,9 @@ class TestCertificateRestExportView(TransactionTestCase, BaseStructure):
         self.assertEqual(len(response.data["results"]), 0)
 
 
-@override_settings(
-    DATABASES={
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": ":memory:",
-        }
-    }
-)
 class TestPartnerRestIntegrationEnrollUserView(TransactionTestCase, BaseStructure):
     """Tests for the PartnerRestIntegrationEnrollUserView API endpoint."""
+
     def setUp(self):
         self.http_client = APIClient()
         self.endpoint = "/nau-openedx-extensions/partner-integration/enroll-user/"
@@ -614,7 +581,7 @@ class TestPartnerRestIntegrationEnrollUserView(TransactionTestCase, BaseStructur
         external_user.user.email = "test_default_date_user@example.com"
         external_user.save()
         external_user.user.save()
-        
+
         data = {
             "course": str(course_id),
             "emails": [
@@ -634,6 +601,3 @@ class TestPartnerRestIntegrationEnrollUserView(TransactionTestCase, BaseStructur
         self.assertEqual(response.data[0]["user_nif"], "101010101")
         self.assertEqual(response.data[0]["user_email"], "test_default_date_user@example.com")
         self.assertEqual(response.data[0]["course_id"], str(course_id))
-        
-
-

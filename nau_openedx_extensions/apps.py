@@ -21,15 +21,13 @@ class NauOpenEdxConfig(AppConfig):
         },
         "settings_config": {
             "lms.djangoapp": {
-                "test": {"relative_path": "settings.test"},
                 "common": {"relative_path": "settings.common"},
                 "production": {"relative_path": "settings.production"},
             },
-            'cms.djangoapp': {
+            "cms.djangoapp": {
                 'common': {'relative_path': 'settings.common'},
-                'test': {'relative_path': 'settings.test'},
-                "production": {"relative_path": "settings.production"},
-            },
+                'production': {'relative_path': 'settings.production'},
+            }
         },
         "view_context_config": {
             "lms.djangoapp": {

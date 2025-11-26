@@ -4,12 +4,12 @@ from datetime import datetime
 
 from rest_framework import serializers
 
+from nau_openedx_extensions.edxapp_wrapper.certificates import GeneratedCertificate
+from nau_openedx_extensions.edxapp_wrapper.student import CourseEnrollment
 from nau_openedx_extensions.partner_integration.exception import (
     CertificateInvalidDataProvidedException,
     CertificateNoDataProvidedException,
 )
-from nau_openedx_extensions.edxapp_wrapper.certificates import GeneratedCertificate
-from nau_openedx_extensions.edxapp_wrapper.student import CourseEnrollment
 
 
 class CompleteCertificateDataSerializer(serializers.ModelSerializer):
@@ -96,20 +96,20 @@ class EnrollUserRequestSerializer(serializers.Serializer):
     nifs = serializers.ListField(child=serializers.CharField(), required=False)
     emails = serializers.ListField(child=serializers.EmailField(), required=False)
 
-    def validate(self, attrs):  
+    def validate(self, attrs):
         """Validates the request data."""
 
         course = attrs.get("course")
         nifs = attrs.get("nifs", [])
         emails = attrs.get("emails", [])
         query_security_scope = self.context.get("query_security_scope", {})
-        
+
         if not query_security_scope:
             raise CertificateNoDataProvidedException("No security scope configured to enroll users.")
 
         if not course:
             raise CertificateInvalidDataProvidedException("Course ID must be provided to enroll users.")
-        
+
         if not nifs and not emails:
             raise CertificateNoDataProvidedException("At least one NIF or email must be provided to enroll users.")
 

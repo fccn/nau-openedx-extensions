@@ -1,8 +1,8 @@
 # tests/test_models_partner_api_client.py
 from django.test import TestCase
 
-from nau_openedx_extensions.partner_integration.factories import PartnerAPIClientFactory
 from nau_openedx_extensions.models import PartnerAPIClient
+from nau_openedx_extensions.partner_integration.factories import PartnerAPIClientFactory
 
 
 class PartnerAPIClientModelTest(TestCase):
