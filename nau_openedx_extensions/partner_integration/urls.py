@@ -22,6 +22,6 @@ urlpatterns = [
         views.PartnerRestIntegrationEnrollUserView.as_view(),
         name="nau_rest_enroll_user"),
     path("auth-token/",
-        views.PartnerClientTokenView.as_view(),
-        name="nau_partner_client_auth_token"),
+         views.PartnerClientTokenView.as_view(),
+         name="nau_partner_client_auth_token"),
 ]
