@@ -7,11 +7,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from nau_openedx_extensions.partner_integration.exception import (
-    CertificateInactiveClientException,
-    CertificateInternalErrorException,
-    CertificateInvalidDataProvidedException,
-    CertificateNoDataProvidedException,
-    PartnerCourseOwnerException,
+    PartnerIntegrationCourseOwnerException,
+    PartnerIntegrationDataConflictException,
+    PartnerIntegrationInactiveClientException,
+    PartnerIntegrationInternalErrorException,
+    PartnerIntegrationInvalidDataProvidedException,
+    PartnerIntegrationNoDataProvidedException,
 )
 from nau_openedx_extensions.partner_integration.facade import (
     CertificateExportFacade,
@@ -39,9 +40,9 @@ class DataExtractorPagination(PageNumberPagination):
     Custom pagination for data extraction endpoints.
 
     Attributes:
-        page_size (int): Default number of items per page (200).
+        page_size (int): Default number of items per page (100).
         page_size_query_param (str): Query parameter name to allow client to override page size.
-        max_page_size (int): Maximum allowed page size (200) to prevent large queries.
+        max_page_size (int): Maximum allowed page size (100) to prevent large queries.
     """
     page_size = 100
     page_size_query_param = "page_size"
@@ -62,15 +63,18 @@ class PartnerClientTokenView(APIView):
         Returns:
             dict: A dictionary containing the issued access token.
         """
+        logger.info("PartnerClientTokenView: POST request received. Staring authentication process.")
         client_id = request.headers.get("X-Client-ID")
         auth_header = request.headers.get("Authorization")
 
         if not client_id or not auth_header:
+            logger.error("PartnerClientTokenView: Missing client_id or Authorization header.")
             return Response({"detail": "Missing client_id or Authorization header"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             scheme, client_secret = auth_header.split(" ")
-        except ValueError:
+        except ValueError as e:
+            logger.error("PartnerClientTokenView: Invalid Authorization header format.", exc_info=e)
             return Response({"detail": "Invalid Authorization header"}, status=status.HTTP_400_BAD_REQUEST)
 
         if scheme.lower() != "token":
@@ -78,7 +82,8 @@ class PartnerClientTokenView(APIView):
 
         try:
             client = PartnerAPIClient.objects.get(client_id=client_id, is_active=True)
-        except BaseException:
+        except BaseException as e:
+            logger.error(f"PartnerClientTokenView: Client with ID {client_id} not found or inactive.", exc_info=e)
             return Response({"detail": "Invalid client"}, status=status.HTTP_403_FORBIDDEN)
 
         if not client.check_password(client_secret):
@@ -94,9 +99,9 @@ class CertificateRestExportView(APIView):
     or based on the client's query security scope.
 
     Raises:
-        CertificateInactiveClientException: An exception raised when the client is inactive.
-        CertificateNoDataProvidedException: An exception raised when no data is provided for the query.
-        CertificateInternalErrorException: An exception raised when an internal error occurs.
+        PartnerIntegrationInactiveClientException: An exception raised when the client is inactive.
+        PartnerIntegrationNoDataProvidedException: An exception raised when no data is provided for the query.
+        PartnerIntegrationInternalErrorException: An exception raised when an internal error occurs.
 
     Methods:
         post: Handles POST requests to retrieve certificates.
@@ -137,7 +142,8 @@ class CertificateRestExportView(APIView):
             query_security_scope: dict = client.query_security_scope
 
             if not client.is_active:
-                raise CertificateInactiveClientException()
+                logger.error("CertificateRestExportView: Inactive client attempted to access endpoint.")
+                raise PartnerIntegrationInactiveClientException()
 
             serializer = DataExtractorRequestSerializer(
                 data=request.data, context={
@@ -161,21 +167,21 @@ class CertificateRestExportView(APIView):
             response = paginator.get_paginated_response(serializer.data)
 
             return response
-        except CertificateInvalidDataProvidedException as e:
+        except PartnerIntegrationInvalidDataProvidedException as e:
             logger.exception(
                 "Invalid data provided for certificate export", exc_info=e
             )
             return Response(
                 {"error": e.message}, status=status.HTTP_400_BAD_REQUEST
             )
-        except CertificateNoDataProvidedException as e:
+        except PartnerIntegrationNoDataProvidedException as e:
             logger.exception(
                 "No data provided for certificate export", exc_info=e
             )
             return Response(
                 {"error": e.message}, status=status.HTTP_400_BAD_REQUEST
             )
-        except CertificateInternalErrorException as e:
+        except PartnerIntegrationInternalErrorException as e:
             logger.exception(
                 "Internal error occurred during certificate export", exc_info=e
             )
@@ -195,7 +201,7 @@ class CertificateRestExportView(APIView):
 
 class EnrollmentRestExportView(APIView):
     """
-    EnrrollmentRestExportView is an endpoint to retrieve enrollments based on provided specific parameters,
+    EnrollmentRestExportView is an endpoint to retrieve enrollments based on provided specific parameters,
     or based on the client's query security scope.
     """
     authentication_classes = [ClientJWTAuthentication]
@@ -216,7 +222,8 @@ class EnrollmentRestExportView(APIView):
             query_security_scope: dict = client.query_security_scope
 
             if not client.is_active:
-                raise CertificateInactiveClientException()
+                logger.error("EnrollmentRestExportView: Inactive client attempted to access endpoint.")
+                raise PartnerIntegrationInactiveClientException()
 
             serializer = DataExtractorRequestSerializer(
                 data=request.data, context={
@@ -240,12 +247,36 @@ class EnrollmentRestExportView(APIView):
             response = paginator.get_paginated_response(serializer.data)
 
             return response
-        except CertificateNoDataProvidedException as e:
-            return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
-        except CertificateInternalErrorException as e:
-            return Response({"error": e.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except PartnerIntegrationInvalidDataProvidedException as e:
+            logger.exception(
+                "Invalid data provided for enrollment export", exc_info=e
+            )
+            return Response(
+                {"error": e.message}, status=status.HTTP_400_BAD_REQUEST
+            )
+        except PartnerIntegrationNoDataProvidedException as e:
+            logger.exception(
+                "No data provided for enrollment export", exc_info=e
+            )
+            return Response(
+                {"error": e.message}, status=status.HTTP_400_BAD_REQUEST
+            )
+        except PartnerIntegrationInternalErrorException as e:
+            logger.exception(
+                "Internal error occurred during enrollment export", exc_info=e
+            )
+            return Response(
+                {"error": e.message},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         except Exception as e:  # pylint: disable=broad-except
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.exception(
+                "Unexpected error occurred during enrollment export", exc_info=e
+            )
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class StudentProgressRestExportView(APIView):
@@ -262,7 +293,7 @@ class StudentProgressRestExportView(APIView):
         or client's security scope.
 
         Returns:
-            list: A list of progresses matching the query parameters or query security scope.
+            list: An object matching the query parameters or query security scope.
         """
         try:
             logger.info("StudentProgressRestExportView: POST request received.")
@@ -270,7 +301,7 @@ class StudentProgressRestExportView(APIView):
             query_security_scope: dict = client.query_security_scope
 
             if not client.is_active:
-                raise CertificateInactiveClientException()
+                raise PartnerIntegrationInactiveClientException()
 
             course_id = request.data.get("course_id")
             student_id = request.data.get("student_id")
@@ -291,7 +322,8 @@ class StudentProgressRestExportView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            student_progress = StudentProgressExportFacade().get_student_progress(
+            student_progress_facade = StudentProgressExportFacade()
+            student_progress = student_progress_facade.get_student_progress(
                 course_id,
                 student_id,
                 nif,
@@ -301,41 +333,45 @@ class StudentProgressRestExportView(APIView):
             data = CourseProgressSerializer(student_progress).data
 
             return Response(data)
-        except PartnerCourseOwnerException as e:
+        except PartnerIntegrationCourseOwnerException as e:
+            logger.error(
+                "StudentProgressRestExportView: Client does not have permisson to access this course.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_403_FORBIDDEN)
-        except CertificateNoDataProvidedException as e:
+        except PartnerIntegrationNoDataProvidedException as e:
+            logger.error(
+                "StudentProgressRestExportView: No data provided for student progress export.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
-        except CertificateInternalErrorException as e:
+        except PartnerIntegrationInternalErrorException as e:
+            logger.error(
+                "StudentProgressRestExportView: Internal error occurred during student progress export.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:  # pylint: disable=broad-except
+            logger.error(
+                "StudentProgressRestExportView: Unexpected error occurred during student progress export.", exc_info=e)
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class PartnerRestIntegrationEnrollUserView(APIView):
     """
-    Endpoint to enroll users via REST API
+    Endpoint to enroll users via REST API.
     """
     authentication_classes = [ClientJWTAuthentication]
     permission_classes = [IsAuthenticatedPartnerAPIClient]
 
     def post(self, request):
         """
-        HTTP POST handler to enroll users based on provided parameters.
-        It accepts a course ID, and a list of NIFs and/or emails to enroll users in the specified course.
+        HTTP POST handler to enroll user based on provided parameters.
+        It accepts a course ID, NIF or emails to enroll user in the specified course.
 
         Returns:
-            list: A list of enrollments matching the query parameters or query security scope.
+            list: The enrollment register created.
 
         Example of payload:
         {
             "course": "course-v1:edX+DemoX+Demo_Course",
-            "nifs": [
-                "123456789",
-                "987654321"
-            ],
-            "emails": [
-                "user@example01.com",
-            ]
+            "nifs": "123456789",
+            # or
+            "emails": "user@example01.com"
         }
         """
         try:
@@ -344,7 +380,8 @@ class PartnerRestIntegrationEnrollUserView(APIView):
             query_security_scope: dict = client.query_security_scope
 
             if not client.is_active:
-                raise CertificateInactiveClientException()
+                logger.error("PartnerRestIntegrationEnrollmentView: Inactive client attempted to access endpoint.")
+                raise PartnerIntegrationInactiveClientException()
 
             serializer = EnrollUserRequestSerializer(
                 data=request.data, context={
@@ -352,18 +389,28 @@ class PartnerRestIntegrationEnrollUserView(APIView):
             serializer.is_valid(raise_exception=True)
             validated_data = serializer.validated_data
 
-            enrollments = EnrollmentFacade().enroll_user(
+            enrollment = EnrollmentFacade().enroll_user(
                 query_security_scope,
                 validated_data.get("course"),
-                validated_data.get("nifs"),
-                validated_data.get("emails")
+                validated_data.get("nif"),
+                validated_data.get("email")
             )
-            serializer = CompleteEnrollmentDataSerializer(enrollments, many=True)
+            serializer = CompleteEnrollmentDataSerializer(enrollment)
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        except CertificateNoDataProvidedException as e:
+        except PartnerIntegrationDataConflictException as e:
+            logger.error("PartnerRestIntegrationEnrollmentView: Data conflict occurred during enrollment.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_409_CONFLICT)
+        except PartnerIntegrationInvalidDataProvidedException as e:
+            logger.error("PartnerRestIntegrationEnrollmentView: Invalid data provided for enrollment.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
-        except CertificateInternalErrorException as e:
+        except PartnerIntegrationNoDataProvidedException as e:
+            logger.error("PartnerRestIntegrationEnrollmentView: No data provided for enrollment.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
+        except PartnerIntegrationInternalErrorException as e:
+            logger.error("PartnerRestIntegrationEnrollmentView: Internal error occurred during enrollment.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:  # pylint: disable=broad-except
+            logger.error(
+                "PartnerRestIntegrationEnrollmentView: Unexpected error occurred during enrollment.", exc_info=e)
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

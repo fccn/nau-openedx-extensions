@@ -1,11 +1,11 @@
 """Custom exceptions for the data extractor module."""
 
 
-class CertificateNoDataProvidedException(Exception):
+class PartnerIntegrationNoDataProvidedException(Exception):
     """
-    Custom exception for certificate access errors.
+    Custom exception for data access errors.
 
-    Exception raised when no data provided to fetch certificates.
+    Exception raised when no parameter provided to extract data.
     """
 
     def __init__(self, message=None):
@@ -13,14 +13,14 @@ class CertificateNoDataProvidedException(Exception):
             self.message = message
         else:
             self.message = (
-                "No data provided to fetch certificates. Please provide at least one NIF "
+                "No parameter provided to extract data. Please provide at least one NIF "
                 "or email, or ensure the client's query scope contains logic to access data."
             )
 
 
-class CertificateInvalidDataProvidedException(Exception):
+class PartnerIntegrationInvalidDataProvidedException(Exception):
     """
-    Custom exception for certificate access errors.
+    Custom exception for data access errors.
 
     Exception raised when the data provided for extraction is not valid.
     """
@@ -30,14 +30,32 @@ class CertificateInvalidDataProvidedException(Exception):
             self.message = message
         else:
             self.message = (
-                "Invalid data provided for certificate access. "
+                "Invalid data provided for data access. "
                 "Please verify the request parameters."
             )
 
 
-class CertificateInternalErrorException(Exception):
+class PartnerIntegrationDataConflictException(Exception):
     """
-    Custom exception for internal errors during certificate access.
+    Custom exception for data access errors.
+
+    Exception raised when the data provided for extraction causes a conflict.
+    e.g., attempting to enroll a user who is already enrolled.
+    """
+    def __init__(self, message=None):
+        if message:
+            self.message = message
+        else:
+            self.message = (
+                "The data provided caused a conflict"
+                "it means that the operation could not be completed due to existing data. "
+                "Please verify the request parameters."
+            )
+
+
+class PartnerIntegrationInternalErrorException(Exception):
+    """
+    Custom exception for internal errors during data access.
 
     Exception raised when the query fails or access issues occur.
     """
@@ -47,12 +65,12 @@ class CertificateInternalErrorException(Exception):
             self.message = message
         else:
             self.message = (
-                "An internal error occurred while accessing certificates. Please verify the "
+                "An internal error occurred while accessing data. Please verify the "
                 "request parameters and try again later. Contact support if the issue persists."
             )
 
 
-class CertificateInactiveClientException(Exception):
+class PartnerIntegrationInactiveClientException(Exception):
     """Custom exception for inactive API clients."""
 
     def __init__(self, message=None):
@@ -62,8 +80,8 @@ class CertificateInactiveClientException(Exception):
             self.message = "The API client is inactive. Please contact support to reactivate the client."
 
 
-class PartnerCourseOwnerException(Exception):
-    """Custom exception for internal errors during certificate access."""
+class PartnerIntegrationCourseOwnerException(Exception):
+    """Custom exception for internal errors during data access."""
 
     def __init__(self, message=None):
         if message:

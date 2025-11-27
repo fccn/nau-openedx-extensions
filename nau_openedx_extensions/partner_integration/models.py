@@ -154,7 +154,8 @@ class PartnerAPIClient(AbstractBaseUser, PermissionsMixin):
                     return check_field(lookup, field.related_model)
 
                 return field.get_lookup(lookup) is not None
-            except BaseException:
+            except BaseException as e:
+                logger.error(f"Field lookup validation error for {field_name}__{lookup}: {e}")
                 return False
 
         def check_field(field, model):
@@ -163,14 +164,17 @@ class PartnerAPIClient(AbstractBaseUser, PermissionsMixin):
             if "__" in str(field):
                 lookup_is_valid = is_valid_lookup(model, field_name[0], "__".join(field_name[1:]))
                 if not lookup_is_valid:
+                    logger.error(f"Invalid lookup for field {field}, it will be ignored.")
                     raise ValueError(f"Field {field} is invalid, it will be ignored.")
             elif field not in valid_fields:
+                logger.error(f"Invalid field {field}, it will be ignored.")
                 raise ValueError(f"Field {field} is invalid, it will be ignored.")
 
             return True
 
         def check_value(field, value):
             if value is None:
+                logger.error(f"Field {field} has None value, it will be ignored.")
                 raise ValueError(f"Field {field} has None value, it will be ignored.")
 
         for scope, model in [
@@ -183,5 +187,6 @@ class PartnerAPIClient(AbstractBaseUser, PermissionsMixin):
                     try:
                         check_field(field, model)
                         check_value(field, value)
-                    except BaseException:
+                    except BaseException as e:
+                        logger.error(f"Removing invalid field {field} from scope: {e}")
                         del scope[field]
