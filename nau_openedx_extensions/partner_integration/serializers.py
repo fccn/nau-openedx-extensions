@@ -1,5 +1,6 @@
 """Serializers for Data Extractor API requests and responses."""
 # pylint: disable=abstract-method
+import logging
 from datetime import datetime
 
 from rest_framework import serializers
@@ -7,9 +8,11 @@ from rest_framework import serializers
 from nau_openedx_extensions.edxapp_wrapper.certificates import GeneratedCertificate
 from nau_openedx_extensions.edxapp_wrapper.student import CourseEnrollment
 from nau_openedx_extensions.partner_integration.exception import (
-    CertificateInvalidDataProvidedException,
-    CertificateNoDataProvidedException,
+    PartnerIntegrationInvalidDataProvidedException,
+    PartnerIntegrationNoDataProvidedException,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class CompleteCertificateDataSerializer(serializers.ModelSerializer):
@@ -66,7 +69,7 @@ class DataExtractorRequestSerializer(serializers.Serializer):
 
         if not nifs and not emails:
             if not query_security_scope:
-                raise CertificateNoDataProvidedException()
+                raise PartnerIntegrationNoDataProvidedException()
 
         return attrs
 
@@ -80,41 +83,41 @@ class DataExtractorRequestSerializer(serializers.Serializer):
             end = datetime.fromisoformat(end_date)
 
             if start > end:
-                raise CertificateInvalidDataProvidedException("Start date must not be greater than end date.")
+                raise PartnerIntegrationInvalidDataProvidedException("Start date must not be greater than end date.")
 
             if (end - start).days > 365:
-                raise CertificateInvalidDataProvidedException("Date range cannot exceed one year.")
-        except CertificateInvalidDataProvidedException as e:
+                raise PartnerIntegrationInvalidDataProvidedException("Date range cannot exceed one year.")
+        except PartnerIntegrationInvalidDataProvidedException as e:
+            logger.error("DataExtractorRequestSerializer: Invalid date range provided.", exc_info=e)
             raise e
         except Exception as e:
-            raise CertificateInvalidDataProvidedException("Invalid date format. Use ISO 8601 format.") from e
+            logger.error("DataExtractorRequestSerializer: Invalid date format provided.", exc_info=e)
+            raise PartnerIntegrationInvalidDataProvidedException("Invalid date format. Use ISO 8601 format.") from e
 
 
 class EnrollUserRequestSerializer(serializers.Serializer):
     """Serializer for enroll user request with validation."""
     course = serializers.CharField(required=False)
-    nifs = serializers.ListField(child=serializers.CharField(), required=False)
-    emails = serializers.ListField(child=serializers.EmailField(), required=False)
+    nif = serializers.CharField(required=False)
+    email = serializers.CharField(required=False)
 
     def validate(self, attrs):
         """Validates the request data."""
-
         course = attrs.get("course")
-        nifs = attrs.get("nifs", [])
-        emails = attrs.get("emails", [])
+        nif = attrs.get("nif")
+        email = attrs.get("email")
         query_security_scope = self.context.get("query_security_scope", {})
 
         if not query_security_scope:
-            raise CertificateNoDataProvidedException("No security scope configured to enroll users.")
+            raise PartnerIntegrationNoDataProvidedException("No security scope configured to enroll users.")
 
         if not course:
-            raise CertificateInvalidDataProvidedException("Course ID must be provided to enroll users.")
+            raise PartnerIntegrationNoDataProvidedException("Course ID must be provided to enroll users.")
 
-        if not nifs and not emails:
-            raise CertificateNoDataProvidedException("At least one NIF or email must be provided to enroll users.")
-
-        if len(nifs) + len(emails) > 100:
-            raise CertificateInvalidDataProvidedException("Cannot enroll more than 100 users at once.")
+        if not nif and not email:
+            raise PartnerIntegrationNoDataProvidedException(
+                "At least one of NIF or email must be provided to enroll users."
+            )
 
         return attrs
 
@@ -126,9 +129,8 @@ class CompleteEnrollmentDataSerializer(serializers.ModelSerializer):
     certificate_download_url = serializers.CharField(read_only=True)
     user_nif = serializers.CharField(source='user.nau_nif', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
+    user_name = serializers.SerializerMethodField()
     user_email = serializers.EmailField(source='user.email', read_only=True)
-    user_first_name = serializers.CharField(source='user.first_name', read_only=True)
-    user_last_name = serializers.CharField(source='user.last_name', read_only=True)
     enrollment_date = serializers.DateTimeField(source="created", read_only=True)
     active_enrollment = serializers.BooleanField(source="is_active", read_only=True)
     course_id = serializers.CharField(source="course.id", read_only=True)
@@ -139,6 +141,12 @@ class CompleteEnrollmentDataSerializer(serializers.ModelSerializer):
     course_enrollment_start = serializers.CharField(source="course.enrollment_start", read_only=True)
     course_enrollment_end = serializers.CharField(source="course.enrollment_end", read_only=True)
 
+    def get_user_name(self, obj):
+        """Returns the full name of the user, or username if full name is not available."""
+        user = obj.user
+        full_name = user.get_full_name().strip()
+        return full_name or user.username
+
     class Meta:
         model = CourseEnrollment
         fields = [
@@ -147,9 +155,8 @@ class CompleteEnrollmentDataSerializer(serializers.ModelSerializer):
             "certificate_download_url",
             "user_nif",
             "username",
+            "user_name",
             "user_email",
-            "user_first_name",
-            "user_last_name",
             "course_id",
             "course_name",
             "enrollment_date",
