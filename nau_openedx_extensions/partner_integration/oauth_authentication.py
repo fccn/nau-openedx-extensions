@@ -1,4 +1,5 @@
 """Implementation of OAuth authentication for PartnerAPIClient using JWT."""
+import logging
 from datetime import timedelta
 
 from django.conf import settings
@@ -9,6 +10,8 @@ from rest_framework import exceptions
 from rest_framework.permissions import BasePermission
 
 from .models import PartnerAPIClient
+
+logger = logging.getLogger(__name__)
 
 
 class IsAuthenticatedPartnerAPIClient(BasePermission):
@@ -39,6 +42,7 @@ class ClientJWTAuthentication(JwtAuthentication):
         try:
             client = PartnerAPIClient.objects.get(id=client_id, is_active=True)
         except PartnerAPIClient.DoesNotExist as e:
+            logger.error("ClientJWTAuthentication: Invalid client ID provided in token.")
             raise exceptions.AuthenticationFailed("Invalid client") from e
 
         request.partner_client = client
@@ -53,6 +57,7 @@ class ClientJWTAuthentication(JwtAuthentication):
         try:
             payload = cls.jwt_decode_token(raw_token)
         except Exception as e:
+            logger.error("ClientJWTAuthentication: Invalid token provided.")
             raise exceptions.AuthenticationFailed(f"Invalid token: {e}")
 
         return payload

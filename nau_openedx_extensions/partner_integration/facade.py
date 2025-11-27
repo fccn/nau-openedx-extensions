@@ -22,9 +22,10 @@ from nau_openedx_extensions.edxapp_wrapper.content import CourseOverview
 from nau_openedx_extensions.edxapp_wrapper.student import CourseEnrollment
 from nau_openedx_extensions.edxapp_wrapper.util import use_read_replica_if_available
 from nau_openedx_extensions.partner_integration.exception import (
-    CertificateInternalErrorException,
-    CertificateInvalidDataProvidedException,
-    PartnerCourseOwnerException,
+    PartnerIntegrationCourseOwnerException,
+    PartnerIntegrationDataConflictException,
+    PartnerIntegrationInternalErrorException,
+    PartnerIntegrationInvalidDataProvidedException,
 )
 
 logger = logging.getLogger(__name__)
@@ -62,7 +63,8 @@ class DataExtractorFacade:
 
             return course_query
         except Exception as e:
-            raise CertificateInternalErrorException() from e
+            logger.error("Error applying base security scope.", exc_info=e)
+            raise PartnerIntegrationInternalErrorException() from e
 
 
 class CertificateExportFacade(DataExtractorFacade):
@@ -93,7 +95,8 @@ class CertificateExportFacade(DataExtractorFacade):
 
             return certificates
         except Exception as e:
-            raise CertificateInternalErrorException() from e
+            logger.error("Error fetching certificates.", exc_info=e)
+            raise PartnerIntegrationInternalErrorException() from e
 
     def _apply_base_certificates_scope(self, base_certificates_scope, courses_base_query):
         """
@@ -129,7 +132,8 @@ class CertificateExportFacade(DataExtractorFacade):
             logger.info("Assembled certificates base query by security scope.")
             return certificates_query
         except Exception as e:
-            raise CertificateInternalErrorException() from e
+            logger.error("Error applying base certificates scope.", exc_info=e)
+            raise PartnerIntegrationInternalErrorException() from e
 
     def _execute_certificates_query(self, certificates_base_query, start_dt, end_dt, courses, nifs, emails):
         """
@@ -164,7 +168,8 @@ class CertificateExportFacade(DataExtractorFacade):
 
             return use_read_replica_if_available(certificates_query.distinct())
         except Exception as e:
-            raise CertificateInternalErrorException() from e
+            logger.error("Error executing certificates query.", exc_info=e)
+            raise PartnerIntegrationInternalErrorException() from e
 
     def _annotate_course_data(self, certificates_query):
         """Annotates the certificates queryset with course data."""
@@ -180,7 +185,8 @@ class CertificateExportFacade(DataExtractorFacade):
                 course_enrollment_end=Subquery(course_qs.values("enrollment_end")[:1]),
             )
         except Exception as e:
-            raise CertificateInternalErrorException() from e
+            logger.error("Error annotating course data.", exc_info=e)
+            raise PartnerIntegrationInternalErrorException() from e
 
     def _annotate_enrollment_data(self, certificates_query):
         """Annotates the certificates queryset with enrollment data."""
@@ -191,7 +197,8 @@ class CertificateExportFacade(DataExtractorFacade):
             )
             return certificates_query.annotate(enrollment_date=Subquery(course_enrollment_qs.values("created")[:1]))
         except Exception as e:
-            raise CertificateInternalErrorException() from e
+            logger.error("Error annotating enrollment data.", exc_info=e)
+            raise PartnerIntegrationInternalErrorException() from e
 
 
 class EnrollmentFacade(DataExtractorFacade):
@@ -222,59 +229,85 @@ class EnrollmentFacade(DataExtractorFacade):
 
             return enrollments
         except Exception as e:
-            raise CertificateInternalErrorException() from e
+            logger.error("Error fetching enrollments.", exc_info=e)
+            raise PartnerIntegrationInternalErrorException() from e
 
-    def enroll_user(self, query_security_scope, course_id, nifs, emails):
+    def enroll_user(self, query_security_scope, course_id, nif, email):
         """
-        Enrolls users in a course based on NIFs and/or emails provided.
-        It accepts a course ID, and a list of NIFs and/or emails to enroll
-        users in the specified course.
-
+        Enrolls a user in a course using his NIF or email provided.
         It implements the enrollment logic using the Open edX enrollment API.
 
         Returns:
-            list: A list of CourseEnrollment objects for the enrolled users.
+            list: The course CourseEnrollment object for the enrolled user.
         """
-        logger.info("Enrolling user in a course RestIntegrationEnrollmentFacade.")
+        logger.info("EnrollmentFacade: Start user enrollment")
+        User = get_user_model()
         try:
             base_security_scope = query_security_scope.get("base_security_scope", {})
             courses_base_query = super().apply_base_security_scope(base_security_scope)
+            course = courses_base_query.get(id=course_id)
 
-            try:
-                course = courses_base_query.get(id=course_id)
-            except CourseOverview.DoesNotExist as exc:
-                raise CertificateInvalidDataProvidedException(
-                    "The specified course ID does not exist or is not accessible."
-                ) from exc
-
-            filters = Q()
-            if emails:
-                filters |= Q(email__in=emails)
-            if nifs:
-                filters |= (
-                    Q(nauuserextendedmodel__nif__in=nifs) |
-                    Q(nauuserextendedmodel__cc_nif__in=nifs)
+            if email:
+                user = use_read_replica_if_available(User.objects.get(email=email))
+            if nif:
+                filters = (
+                    Q(nauuserextendedmodel__nif=nif) |
+                    Q(nauuserextendedmodel__cc_nif=nif)
                 )
-            User = get_user_model()
-            users = use_read_replica_if_available(User.objects.filter(filters).distinct())
+                user = use_read_replica_if_available(User.objects.get(filters))
 
-            enrollments = []
-            for user in users:
-                enrollment = enrollment_api.add_enrollment(user.username, str(course.id))
-                if enrollment:
-                    enrollment_register = use_read_replica_if_available(
-                        CourseEnrollment.objects.filter(
-                            course=course,
-                            user=user
-                        )
-                    ).select_related("user", "course")
-                    enrollments.append(enrollment_register.first())
+            if CourseEnrollment.objects.filter(course=course, user=user).exists():
+                raise PartnerIntegrationDataConflictException("The user is already enrolled in this course.")
 
-            return enrollments
-        except PartnerCourseOwnerException as e:
+            # It implements the enrollment process from Open edX enrollment API, but
+            # the return is not the CourseEnrollment object, so we need to fetch it
+            # after enrollment to maintain consistency of the returned data from our
+            # enrollment API. Doing it this way, we garantee that all enrollment logic
+            # from Open edX is executed properly, and the data returned is consistent
+            # with the rest of the system when it comes to CourseEnrollment objects,
+            # that is, all enrollment endpoints return the same serializer structure.
+            enrollment = enrollment_api.add_enrollment(user.username, str(course.id))
+            if enrollment:
+                enrollment_register = use_read_replica_if_available(
+                    CourseEnrollment.objects.filter(
+                        course=course,
+                        user=user
+                    )
+                ).select_related("user", "course").first()
+                return enrollment_register
+
+            logger.error(
+                "EnrollmentFacade: Enrollment could not be completed, "
+                "the method enrollment_api.add_enrollment returned None."
+                "The course_id: %s, user_id: %s", str(course.id), str(user.id)
+            )
+            raise PartnerIntegrationInternalErrorException(
+                "Enrollment could not be completed due to an internal error. "
+                "Please verify the request parameters."
+            )
+        except CourseOverview.DoesNotExist as e:
+            logger.error(
+                (
+                    "EnrollmentFacade: Attempt to enroll in a non-existing course,"
+                    "or this partner can't access to this course."
+                ), exc_info=e)
+            raise PartnerIntegrationInvalidDataProvidedException(
+                "The specified course ID does not exist or is not accessible by the partner.",
+            ) from e
+        except PartnerIntegrationDataConflictException as e:
+            logger.error("EnrollmentFacade: Attempt to enroll an already enrolled user.", exc_info=e)
+            raise e
+        except User.DoesNotExist as e:
+            logger.error("EnrollmentFacade: Attempt to enroll a non-existing user.", exc_info=e)
+            raise PartnerIntegrationInvalidDataProvidedException("The specified user does not exist.") from e
+        except PartnerIntegrationCourseOwnerException as e:
+            logger.error("EnrollmentFacade: Attempt to enroll in a course not owned by the partner.", exec_info=e)
+            raise e
+        except PartnerIntegrationInternalErrorException as e:
             raise e
         except Exception as e:
-            raise CertificateInternalErrorException() from e
+            logger.error("EnrollmentFacade: Internal error during enrollment.", exc_info=e)
+            raise PartnerIntegrationInternalErrorException() from e
 
     def _apply_base_enrollments_scope(self, base_enrollments_scope, courses_base_query):
         """
@@ -308,7 +341,8 @@ class EnrollmentFacade(DataExtractorFacade):
             logger.info("Assembled enrollments base query by security scope.")
             return enrollments_query
         except Exception as e:
-            raise CertificateInternalErrorException() from e
+            logger.error("Error applying base enrollments scope.", exc_info=e)
+            raise PartnerIntegrationInternalErrorException() from e
 
     def _execute_enrollments_query(self, enrollments_base_query, start_dt, end_dt, courses, nifs, emails):
         """
@@ -339,7 +373,8 @@ class EnrollmentFacade(DataExtractorFacade):
 
             return use_read_replica_if_available(enrollments_query.distinct())
         except Exception as e:
-            raise CertificateInternalErrorException() from e
+            logger.error("Error executing enrollments query.", exc_info=e)
+            raise PartnerIntegrationInternalErrorException() from e
 
     def _annotate_certificates_data(self, enrollments_query):
         """Annotates enrollments with related certificates."""
@@ -353,7 +388,8 @@ class EnrollmentFacade(DataExtractorFacade):
                 certificate_created=Subquery(certificates_qs.values("created_date")[:1]),
             )
         except Exception as e:
-            raise CertificateInternalErrorException() from e
+            logger.error("Error annotating certificates data.", exc_info=e)
+            raise PartnerIntegrationInternalErrorException() from e
 
 
 class StudentProgressExportFacade(DataExtractorFacade):
@@ -379,7 +415,8 @@ class StudentProgressExportFacade(DataExtractorFacade):
 
             return User.objects.get(email=email)
         except Exception as e:
-            raise CertificateInternalErrorException() from e
+            logger.error("Error fetching student user.", exc_info=e)
+            raise PartnerIntegrationInternalErrorException() from e
 
     def get_student_progress(self, course_id, student_id, nif, email, query_security_scope):
         """
@@ -391,7 +428,7 @@ class StudentProgressExportFacade(DataExtractorFacade):
             courses_base_query = super().apply_base_security_scope(base_security_scope)
             course = courses_base_query.filter(id=course_id)
             if not course:
-                raise PartnerCourseOwnerException()
+                raise PartnerIntegrationCourseOwnerException()
 
             course_key = CourseKey.from_string(course_id)
             student = self._get_student_user(student_id, nif, email)
@@ -432,4 +469,5 @@ class StudentProgressExportFacade(DataExtractorFacade):
 
             return student_progress
         except Exception as e:
-            raise CertificateInternalErrorException() from e
+            logger.error("Error fetching student progress.", exc_info=e)
+            raise PartnerIntegrationInternalErrorException() from e
