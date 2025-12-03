@@ -40,4 +40,17 @@ class NauOpenEdxConfig(AppConfig):
         """
         Method to perform actions after apps registry is ended
         """
+        # Override the default Video xBlock the _poster private function.
+        # Override the class was giving more work because of the html dependencies
+        # was being loaded from the new package. So it was more easy just replace the
+        # method implementation.
+        from xmodule.video_block.video_block import \
+            VideoBlock  # pylint: disable=import-error,import-outside-toplevel # noqa
+
         from nau_openedx_extensions import signals  # pylint: disable=import-outside-toplevel,unused-import # noqa
+        from nau_openedx_extensions.xblocks.video_block import \
+            get_educast_poster_factory  # pylint: disable=import-outside-toplevel # noqa
+
+        # Replace the method in the original VideoBlock class
+        prev_poster_func = VideoBlock._poster  # pylint: disable=protected-access
+        VideoBlock._poster = get_educast_poster_factory(prev_poster_func)  # pylint: disable=protected-access
