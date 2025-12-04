@@ -1,6 +1,6 @@
 # Partner Integration Module
 
-The `partner_integration` module provides secure, scalable REST APIs for partner clients to interact with LMS data. It leverages the **Facade pattern** to encapsulate data extraction logic while enforcing strict security and validation rules.
+The `partner_integration` module provides secure, scalable REST APIs for partner clients to interact with LMS data. It leverages the **Facade pattern** to encapsulate data extraction logic while enforcing strict security and validation rules. It also includes the SSO implementation, where it has the possibility of linking partner's users's account.
 
 ## Features
 
@@ -308,3 +308,152 @@ The `partner_integration` module provides:
 - **Test coverage** for all critical use cases.
 
 This module lays the foundation for future partner integrations and ensures compliance with organizational security policies.
+
+## SSO integration
+
+It classifies mainly in three states, in quick words:
+
+- A user that comes from the partner platform and has no SSO register. It redirects to login page.
+- A user that comes from the partner platform and has SSO register. It redicts to the `redirect_uri` in the url.
+- A user that comes from the partner platform and has SSO register, but with a different `external_user_id`. It redirects to login page and after authenticating it updates the `external_user_id` on the SSO register.
+
+### Important
+- All the flow respects our instance as the SSO authentication server.
+- All the features applied were created respecting the current available resources from Open Edx upstream, that is, it does not install new packages, nor uses new resources, it only implements the platform resources in a way that meets the SSO requirements. 
+
+## The key concepts
+
+#### Partner JWT
+- Issued by the partner
+- Validated by ClientJWTAuthentication
+- Identifies which partner client is calling us
+
+#### external_user_id
+- The user identifier on the partner system
+- Stored locally in SSOPartnerIntegration
+- Used as the primary lookup key during SSO
+
+#### SSOPartnerIntegration
+- This model represents “this local user is linked to this partner user”. In other words "User X in our system corresponds to external user Y from partner Z"
+
+## How it works
+
+### `Applications`
+
+The Open Edx Applications model, the one that manages the SSO applications. In this model we creates an application for each partner who wants to use our SSO integration.
+
+### `PartnerAPIClient`
+
+The model that represents each partner client that consumes our partner integration solutions (SSO and webservice).
+
+### URL format
+```bash
+http://lms.local.nau.fccn.pt/nau-openedx-extensions/partner-integration/sso/authorize/
+?client_id=wFkgI0PDXXSYkrLwC4I3pe4t7lhwmWbjScJUULW3
+&redirect_uri=https://example.com
+&jwt_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMiIsInVzZXJuYW1lIjoiZ3RyYWluaW5nIiwiZXhwIjoxNzY3MDM3NzM5LCJpYXQiOjE3NjcwMzA1MzksImlzcyI6Imh0dHA6Ly9sbXMubG9jYWwubmF1LmZjY24ucHQvb2F1dGgyIiwiYXVkIjoib3BlbmVkeCJ9.5uf1q78l9jdKJ9n-Wu94IYPgtCRQknTCacHtjeGI0m0
+&external_user_id=123456789
+```
+#### client_id
+Setup via `Applications` model, the client id of an application register. 
+
+#### redirect_uri
+Dynamically setup, the partner changes the `redirect_uri` in order to redirect the user to the corresponding course he must to go.
+
+#### jwt_token
+Obtained via webservice authentication, the `PartnerAPIClient` uses the authentication endpoint to obtain a valid jwt token.
+`https://lms.nau.edu.pt/nau-openedx-extensions/partner-integration/auth-token/`
+
+#### external_user_id
+Dynamically setup, this is the information that identifies the user in the partner's platform, e.g. email, NIF, user_id or username. The user on our platform has no possibility to edit his register.
+
+### `SSOPartnerIntegrations`
+
+The model responsible for managing the SSO registers. Visible via Django admin.
+
+## The entry point: `CustomAuthorizationView`
+
+This view overrides the OAuth2 authorization process.
+
+### Two important overridden methods
+`dispatch()` → decision & authentication
+`get()` → final redirect handling
+
+### Methods descriptions:
+`dispatch()`: decides who the user is and what to do
+`get()`: decides where to send the user
+`handle_sso_registration()`: creates or updates the user SSO register.
+
+
+## Flow description
+1. Partner calls the endpoint
+
+The partner redirects the user’s browser to this endpoint with:
+- client_id
+- jwt_token
+- external_user_id
+
+2. Partner and application validation
+
+Inside `dispatch()`:
+- The JWT is validated
+- If invalid → redirect to default partner URL: 
+    - The OAuth Application is fetched using `client_id`
+    - If it doesn’t exist → redirect to default partner URL settings (e.g. NAU home page) 
+
+This ensures only known and active partners can use the flow.
+
+## The three scenarios
+
+### Scenario 1: User has no SSO registration
+No `SSOPartnerIntegration` exists for the given `external_user_id`:
+
+#### What we do:
+- Redirect the user to the login page
+- After login, `handle_sso_registration()` is called
+- A new `SSOPartnerIntegration` is created
+- links the local user
+- stores the `external_user_id`
+- User is redirected back to the partner callback
+
+#### Outcome:
+First-time SSO users get properly linked. From now on, future logins are seamless. This is first-time partner access.
+
+### Scenario 2: User already has an SSO registration
+
+#### A `SSOPartnerIntegration` exists for:
+- this `partner_client`
+- this `external_user_id`
+
+#### What we do:
+- Authenticate the request
+- If the user is not logged in, login programmatically
+- Continue the OAuth flow and redirect
+
+#### Outcome:
+- User is transparently logged in
+- No screens, no interaction
+- Clean SSO experience
+
+This is the success path.
+
+### Scenario 3: User exists, but `external_user_id` has changed
+
+The user already has an SSO record, but the incoming `external_user_id` is different from the stored one.
+
+#### This usually happens when:
+- Partner migrates users
+- Partner reissues accounts
+- External IDs change over time
+
+#### What we do:
+- Force the user to authenticate again
+- Update the existing SSO record with the new `external_user_id`
+- Redirect back to the partner callback
+
+#### Outcome:
+- The account link is repaired
+- No duplicate users are created
+- The system remains consistent
+
+It corrects automatically a register that has changed its main information (`external_user_id`).

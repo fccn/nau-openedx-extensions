@@ -1,11 +1,17 @@
 """Views for data extraction endpoints."""
 import logging
 
+from django.conf import settings
+from django.contrib.auth import authenticate, get_user_model, login
+from django.shortcuts import redirect
+from oauth2_provider.models import get_application_model
+from oauth2_provider.views import AuthorizationView
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from nau_openedx_extensions.models import SSOPartnerIntegration
 from nau_openedx_extensions.partner_integration.exception import (
     PartnerIntegrationCourseOwnerException,
     PartnerIntegrationDataConflictException,
@@ -33,6 +39,8 @@ from nau_openedx_extensions.partner_integration.serializers import (
 )
 
 logger = logging.getLogger(__name__)
+
+Application = get_application_model()
 
 
 class DataExtractorPagination(PageNumberPagination):
@@ -371,9 +379,12 @@ class PartnerRestIntegrationEnrollUserView(APIView):
         Example of payload:
         {
             "course": "course-v1:edX+DemoX+Demo_Course",
-            "nifs": "123456789",
-            # or
-            "emails": "user@example01.com"
+            "nif": "123456789"
+        }
+        or
+        {
+            "course": "course-v1:edX+DemoX+Demo_Course",
+            "email": "user@example01.com"
         }
         """
         try:
@@ -416,3 +427,104 @@ class PartnerRestIntegrationEnrollUserView(APIView):
             logger.error(
                 "PartnerRestIntegrationEnrollmentView: Unexpected error occurred during enrollment.", exc_info=e)
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class CustomAuthorizationView(AuthorizationView):
+    """
+    Full override of the authorization screen and decisions.
+    """
+
+    DEFAULT_PARTNER_SSO_REDIRECT_URI = getattr(
+        settings,
+        "DEFAULT_PARTNER_SSO_REDIRECT_URI",
+        "https://www.nau.edu.pt"
+    )
+
+    def get(self, request, *args, **kwargs):
+        """Get method that starts the SSO process"""
+        try:
+            sso_client_id = request.GET.get("client_id")
+            redirect_uri = request.GET.get("redirect_uri")
+            external_user_id = request.GET.get("external_user_id")
+
+            if not redirect_uri:
+                application = Application.objects.get(client_id=sso_client_id)
+                if application.redirect_uris:
+                    uri = (
+                        f"{application.redirect_uris}/?nau_user_email={request.user.email}"
+                        f"&external_user_id={external_user_id}")
+                    return redirect(uri)
+
+                return redirect(self.DEFAULT_PARTNER_SSO_REDIRECT_URI)
+
+            redirect_uri = str(redirect_uri).replace(" ", "%2B")
+            redirect_uri = str(redirect_uri).replace("+", "%2B")
+
+            return redirect(redirect_uri)
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error(
+                "CustomAuthorizationView: Unexpected error occurred during SSO.", exc_info=e)
+            return redirect(self.DEFAULT_PARTNER_SSO_REDIRECT_URI)
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Override of `dispatch` method from oauth package.
+        It triggers the authentication process.
+        """
+        jwt_token = request.GET.get("jwt_token")
+        client_id = request.GET.get("client_id")
+        external_user_id = request.GET.get("external_user_id")
+
+        try:
+            partner_client = ClientJWTAuthentication().validate_token_data_and_return_client(jwt_token)
+            # Gets the application, if it does not exists throws an exception
+            Application.objects.get(client_id=client_id)
+            sso_register = SSOPartnerIntegration.objects.get(
+                external_user_id=external_user_id, partner_client=partner_client)
+
+            if not sso_register.partner_client.is_active:
+                raise PartnerIntegrationInactiveClientException()
+
+            authenticate(request=request)
+            if not request.user.is_authenticated:
+                login(request, sso_register.user, backend="django.contrib.auth.backends.ModelBackend")
+        except Application.DoesNotExist:
+            return redirect(self.DEFAULT_PARTNER_SSO_REDIRECT_URI)
+        except SSOPartnerIntegration.DoesNotExist:
+            return self.handle_sso_registration(request.user, external_user_id, client_id, jwt_token)
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error(
+                "CustomAuthorizationView: Unexpected error occurred during SSO.", exc_info=e)
+            return redirect(self.DEFAULT_PARTNER_SSO_REDIRECT_URI)
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def handle_sso_registration(self, user, external_user_id, sso_client_id, jwt_token):
+        """This method handles the SSO register. It creates a new register
+        if it does not exists, otherwise it updates the external user identification.
+        """
+        try:
+            User = get_user_model()
+            if not isinstance(user, User):
+                return self.handle_no_permission()
+
+            partner_client = ClientJWTAuthentication().validate_token_data_and_return_client(jwt_token)
+            sso_register = SSOPartnerIntegration.objects.filter(user=user)
+            if not sso_register.exists():
+                sso_register = SSOPartnerIntegration.objects.create(
+                    partner_client=partner_client,
+                    user=user,
+                    external_user_id=external_user_id,
+                )
+            else:
+                sso_register = sso_register.first()
+                sso_register.external_user_id = external_user_id
+                sso_register.save()
+
+            application = Application.objects.get(client_id=sso_client_id)
+            uri = (
+                f"{application.redirect_uris}/?nau_user_email={user.email}"
+                f"&external_user_id={external_user_id}")
+            return redirect(uri)
+        except Exception as e:
+            raise e

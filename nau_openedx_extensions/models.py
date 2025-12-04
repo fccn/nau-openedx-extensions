@@ -8,4 +8,7 @@ from nau_openedx_extensions.enrollment_by_domain.models import (  # pylint: disa
     EnrollmentAllowedDomain,
     EnrollmentAllowedList,
 )
-from nau_openedx_extensions.partner_integration.models import PartnerAPIClient  # pylint: disable=unused-import
+from nau_openedx_extensions.partner_integration.models import (  # pylint: disable=unused-import
+    PartnerAPIClient,
+    SSOPartnerIntegration,
+)
