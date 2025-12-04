@@ -3,6 +3,7 @@
 import logging
 import uuid
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 
@@ -102,7 +103,7 @@ class PartnerAPIClient(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         """String representation of the PartnerAPIClient."""
-        return f"{self.name} ({self.client_id})"
+        return f"{self.name} - {self.client_id}"
 
     class Meta:
         app_label = "nau_openedx_extensions"
@@ -187,3 +188,21 @@ class PartnerAPIClient(AbstractBaseUser, PermissionsMixin):
                     except BaseException as e:
                         logger.error(f"Removing invalid field {field} from scope: {e}")
                         del scope[field]
+
+
+User = get_user_model()
+
+
+class SSOPartnerIntegration(models.Model):
+    """This model registers the users with completed SSO process"""
+    partner_client = models.ForeignKey(PartnerAPIClient, on_delete=models.CASCADE, null=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=False)
+    external_user_id = models.CharField(max_length=128, null=False, blank=False)
+
+    class Meta:
+        app_label = "nau_openedx_extensions"
+        unique_together = ('user', 'external_user_id',)
+
+    def __str__(self):
+        """String representation of the SSOPartnerIntegration."""
+        return f"{self.partner_client.name} - {self.user.username} ({self.external_user_id})"

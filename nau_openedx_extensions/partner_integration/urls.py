@@ -24,4 +24,7 @@ urlpatterns = [
     path("auth-token/",
          views.PartnerClientTokenView.as_view(),
          name="nau_partner_client_auth_token"),
+    path("sso/authorize/",
+         views.CustomAuthorizationView.as_view(),
+         name="oauth2_provider_authorize"),
 ]

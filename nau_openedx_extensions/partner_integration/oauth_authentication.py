@@ -32,33 +32,41 @@ class ClientJWTAuthentication(JwtAuthentication):
         """
         Authenticate a client using JWT from Authorization header or cookies.
         """
-        raw_token = self.get_token_from_request(request)
-        if raw_token is None:
-            raise exceptions.AuthenticationFailed("Missing token")
-
-        token_data = self.get_validated_token(raw_token)
-        client_id = token_data.get("user_id")
-
         try:
+            raw_token = self.get_token_from_request(request)
+            if raw_token is None:
+                raise exceptions.AuthenticationFailed("Missing token")
+
+            client = self.validate_token_data_and_return_client(raw_token)
+            request.partner_client = client
+
+            return (AnonymousUser(), raw_token)
+        except Exception as e:
+            raise e
+
+    def validate_token_data_and_return_client(self, token):
+        """this method decodes the token and returns the `PartnerAPIClient`"""
+        try:
+            token_data = self.decode_token(token)
+            client_id = token_data.get("user_id")
             client = PartnerAPIClient.objects.get(id=client_id, is_active=True)
+            return client
         except PartnerAPIClient.DoesNotExist as e:
             logger.error("ClientJWTAuthentication: Invalid client ID provided in token.")
             raise exceptions.AuthenticationFailed("Invalid client") from e
-
-        request.partner_client = client
-
-        return (AnonymousUser(), raw_token)
+        except Exception as e:
+            raise e
 
     @classmethod
-    def get_validated_token(cls, raw_token):
+    def decode_token(cls, raw_token):
         """
         Decode JWT and validate using Open edX configured handler.
         """
         try:
             payload = cls.jwt_decode_token(raw_token)
         except Exception as e:
-            logger.error("ClientJWTAuthentication: Invalid token provided.")
-            raise exceptions.AuthenticationFailed(f"Invalid token: {e}")
+            logger.error("ClientJWTAuthentication: Invalid token provided.", exc_info=e)
+            raise exceptions.AuthenticationFailed("Invalid token, renew the authentication and try again.")
 
         return payload
 
