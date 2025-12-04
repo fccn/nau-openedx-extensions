@@ -3,7 +3,6 @@
 import logging
 import uuid
 
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.utils.crypto import get_random_string
@@ -71,11 +70,8 @@ class PartnerAPIClient(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         """
-        Override save to generate secure password for new PartnerAPIClient instances.
+        Override save to validate basis for new PartnerAPIClient instances.
         """
-        if not self.pk:
-            raw_secret = get_random_string(64)
-            self.password = make_password(raw_secret)
         self.validate_basis(self.query_security_scope)
         super().save(*args, **kwargs)
 
