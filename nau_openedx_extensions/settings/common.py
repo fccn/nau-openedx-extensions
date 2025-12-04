@@ -33,6 +33,12 @@ def plugin_settings(settings):
     See: https://github.com/edx/edx-platform/blob/master/openedx/core/djangoapps/plugins/README.rst
     """
 
+    # Add middleware to patch video_storage_handlers (must run early to patch before first video upload)
+    settings.MIDDLEWARE.insert(
+        0,
+        'nau_openedx_extensions.studio.middleware.VideoStorageHandlerPatchMiddleware'
+    )
+
     # Overwrite the default certificate name
     settings.CERT_NAME_SHORT = _("Certificate")
     settings.CERT_NAME_LONG = _("Certificate of Achievement")

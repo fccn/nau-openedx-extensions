@@ -40,6 +40,7 @@ class NauOpenEdxConfig(AppConfig):
         """
         Method to perform actions after apps registry is ended
         """
+        print("Starting NAU Open edX Extensions app...")
         # Override the default Video xBlock the _poster private function.
         # Override the class was giving more work because of the html dependencies
         # was being loaded from the new package. So it was more easy just replace the
