@@ -248,13 +248,13 @@ class EnrollmentFacade(DataExtractorFacade):
             course = courses_base_query.get(id=course_id)
 
             if email:
-                user = use_read_replica_if_available(User.objects.get(email=email))
-            if nif:
+                user = use_read_replica_if_available(User.objects.filter(email=email)).get()
+            elif nif:
                 filters = (
                     Q(nauuserextendedmodel__nif=nif) |
                     Q(nauuserextendedmodel__cc_nif=nif)
                 )
-                user = use_read_replica_if_available(User.objects.get(filters))
+                user = use_read_replica_if_available(User.objects.filter(filters)).get()
 
             if CourseEnrollment.objects.filter(course=course, user=user).exists():
                 raise PartnerIntegrationDataConflictException("The user is already enrolled in this course.")

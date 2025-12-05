@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
                 ('name', models.CharField(max_length=100, unique=True)),
                 ('client_id', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('password', models.CharField(default=nau_openedx_extensions.partner_integration.models.default_password, editable=False, max_length=255)),
+                ('password', models.CharField(max_length=128)),
                 ('query_security_scope', models.JSONField(blank=True, default=dict)),
                 ('is_active', models.BooleanField(default=True)),
                 ('is_staff', models.BooleanField(default=False)),
