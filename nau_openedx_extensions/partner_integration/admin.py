@@ -1,6 +1,5 @@
 """Admin implementation for PartnerAPIClient"""
 import json
-import uuid
 
 from django import forms
 from django.contrib import admin
@@ -15,12 +14,13 @@ class PartnerAPIClientForm(forms.ModelForm):
     """Admin form for better manage PartnerAPIClient registers"""
     query_security_scope = forms.JSONField(
         required=False,
+        help_text="Enter a valid JSON object. Example: {\"base_security_scope\": {\"org\": \"NAU\"}}",
         widget=forms.Textarea(attrs={
             "rows": 10,
             "cols": 80,
             "placeholder": json.dumps({
                 "base_security_scope": {
-                    "org": "FCCN",
+                    "org": "NAU",
                 },
                 "base_certificates_scope": {
                     "created_date__gte": "2024-06-01",
@@ -60,21 +60,19 @@ class PartnerAPIClientAdmin(admin.ModelAdmin):
         Display a one-time raw password and UUID for new objects.
         """
         if not obj.pk:
-            self._raw_password = get_random_string(64)  # pylint: disable=attribute-defined-outside-init
-            self._uuid = uuid.uuid4()  # pylint: disable=attribute-defined-outside-init
+            obj.password = get_random_string(64)  # pylint: disable=attribute-defined-outside-init
             return format_html(
-                "<b>Client ID:</b> {}<br><b>Password:</b> {} (copy these before saving!)",
-                self._uuid, self._raw_password
+                "<b>Secret:</b> {}<br><b>Copy before saving!</b>",
+                obj.password
             )
-        return format_html("<i>Already saved — password hidden</i>")
+        return format_html("<b>Client ID:</b> {}<br><b>Secret:</b> <i>Already saved, it's hidden</i>", obj.client_id)
 
-    credentials_preview.short_description = "Credentials"
+    credentials_preview.short_description = "Secret"
 
     def save_model(self, request, obj, form, change):
         """
         Assign `client_id` and `password` for new objects.
         """
         if not obj.pk:
-            obj.client_id = self._uuid
-            obj.password = make_password(self._raw_password)
+            obj.password = make_password(obj.password)
         super().save_model(request, obj, form, change)

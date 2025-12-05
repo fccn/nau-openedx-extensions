@@ -5,7 +5,6 @@ import uuid
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
-from django.utils.crypto import get_random_string
 
 from nau_openedx_extensions.edxapp_wrapper.certificates import GeneratedCertificate
 from nau_openedx_extensions.edxapp_wrapper.content import CourseOverview
@@ -35,17 +34,13 @@ class PartnerAPIClientManager(BaseUserManager):
         return self.create_user(name, **extra_fields)
 
 
-def default_password():
-    return get_random_string(64)
-
-
 class PartnerAPIClient(AbstractBaseUser, PermissionsMixin):
     """
     Can authenticate via JWT and works with DRF and templates.
     """
     name = models.CharField(max_length=100, unique=True)
     client_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    password = models.CharField(max_length=255, default=default_password, editable=False)
+    password = models.CharField(max_length=128)
     query_security_scope = models.JSONField(default=dict, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
