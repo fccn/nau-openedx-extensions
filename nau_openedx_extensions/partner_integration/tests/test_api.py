@@ -49,7 +49,7 @@ class BaseStructure:
                 is_active=True,
                 query_security_scope={"base_security_scope": {"org": f"TEST_ORG_{index}"}}
             )
-            partner_client.set_password("correct_password")
+            partner_client.password = "correct_password"
             partner_client.save()
             base_data["partner_clients"].append(partner_client)
 
@@ -110,7 +110,7 @@ class TestPartnerClientTokenView(TransactionTestCase):
 
     def test_invalid_password_returns_403(self):
         """test that an invalid password returns 403."""
-        self.partner_client.set_password("correct_password")
+        self.partner_client.password = "correct_password"
         self.partner_client.save()
         self.http_client.credentials(
             HTTP_AUTHORIZATION="Token wrong_password",
@@ -123,7 +123,7 @@ class TestPartnerClientTokenView(TransactionTestCase):
     @patch.object(ClientJWTAuthentication, 'issue_client_jwt', return_value="mocked_jwt")
     def test_successful_token_returns_200_mocked_jwt(self, mock_jwt):
         """test that a valid password returns 200 and a token."""
-        self.partner_client.set_password("correct_password")
+        self.partner_client.password = "correct_password"
         self.partner_client.save()
         self.http_client.credentials(
             HTTP_AUTHORIZATION="Token correct_password",
@@ -136,7 +136,7 @@ class TestPartnerClientTokenView(TransactionTestCase):
 
     def test_successful_token_returns_200(self):
         """test that a valid password returns 200 and a token."""
-        self.partner_client.set_password("correct_password")
+        self.partner_client.password = "correct_password"
         self.partner_client.save()
         self.http_client.credentials(
             HTTP_AUTHORIZATION="Token correct_password",
@@ -164,7 +164,7 @@ class TestPartnerClientTokenView(TransactionTestCase):
 
     def test_check_token_format(self):
         """test that a valid password returns a JWT formatted token."""
-        self.partner_client.set_password("correct_password")
+        self.partner_client.password = "correct_password"
         self.partner_client.save()
         self.http_client.credentials(
             HTTP_AUTHORIZATION="Token correct_password",
@@ -520,7 +520,7 @@ class TestCertificateRestExportView(TransactionTestCase, BaseStructure):
             is_active=True,
             query_security_scope={"base_security_scope": {"org": org}}
         )
-        partner_client.set_password("correct_password")
+        partner_client.password = "correct_password"
         partner_client.save()
 
         courses = CourseOverviewFactory.create_batch(5, org=org)
@@ -988,7 +988,7 @@ class TestEnrollmentRestExportView(TransactionTestCase, BaseStructure):
             is_active=True,
             query_security_scope={"base_security_scope": {"org": org}}
         )
-        partner_client.set_password("correct_password")
+        partner_client.password = "correct_password"
         partner_client.save()
 
         courses = CourseOverviewFactory.create_batch(5, org=org)

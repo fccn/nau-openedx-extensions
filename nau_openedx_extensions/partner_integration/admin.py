@@ -3,15 +3,19 @@ import json
 
 from django import forms
 from django.contrib import admin
-from django.contrib.auth.hashers import make_password
 from django.utils.crypto import get_random_string
-from django.utils.html import format_html
 
 from .models import PartnerAPIClient
 
 
 class PartnerAPIClientForm(forms.ModelForm):
     """Admin form for better manage PartnerAPIClient registers"""
+    password = forms.CharField(
+        required=True,
+        label="Secret",
+        help_text="The password field of PartnerAPIClient model",
+        widget=forms.TextInput(attrs={"size": 80})
+    )
     query_security_scope = forms.JSONField(
         required=False,
         help_text="Enter a valid JSON object. Example: {\"base_security_scope\": {\"org\": \"NAU\"}}",
@@ -41,11 +45,11 @@ class PartnerAPIClientAdmin(admin.ModelAdmin):
     """Admin registration for PartnerAPIClient model"""
     form = PartnerAPIClientForm
     list_display = ('name', 'client_id', 'is_active', 'is_staff', 'created_at', 'updated_at')
-    readonly_fields = ('client_id', 'created_at', 'updated_at', 'credentials_preview')
+    readonly_fields = ('client_id', 'created_at', 'updated_at')
 
     fieldsets = (
         (None, {
-            'fields': ('name', 'credentials_preview', 'is_active', 'is_staff', 'query_security_scope')
+            'fields': ('name', 'password', 'is_active', 'is_staff', 'query_security_scope')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
@@ -55,24 +59,8 @@ class PartnerAPIClientAdmin(admin.ModelAdmin):
         }),
     )
 
-    def credentials_preview(self, obj):
-        """
-        Display a one-time raw password and UUID for new objects.
-        """
-        if not obj.pk:
-            obj.password = get_random_string(64)  # pylint: disable=attribute-defined-outside-init
-            return format_html(
-                "<b>Secret:</b> {}<br><b>Copy before saving!</b>",
-                obj.password
-            )
-        return format_html("<b>Client ID:</b> {}<br><b>Secret:</b> <i>Already saved, it's hidden</i>", obj.client_id)
-
-    credentials_preview.short_description = "Secret"
-
-    def save_model(self, request, obj, form, change):
-        """
-        Assign `client_id` and `password` for new objects.
-        """
-        if not obj.pk:
-            obj.password = make_password(obj.password)
-        super().save_model(request, obj, form, change)
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        current_form = super().get_form(request, obj, **kwargs)
+        if not obj:
+            current_form.base_fields["password"].initial = get_random_string(64)
+        return current_form

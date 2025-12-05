@@ -70,6 +70,12 @@ class PartnerAPIClient(AbstractBaseUser, PermissionsMixin):
         self.validate_basis(self.query_security_scope)
         super().save(*args, **kwargs)
 
+    def check_password(self, password):
+        """
+        Override check_password in order to have a different behavior.
+        """
+        return password == self.password
+
     @property
     def email(self):
         """
