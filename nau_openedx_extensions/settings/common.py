@@ -58,7 +58,7 @@ def plugin_settings(settings):
         "nau_openedx_extensions.edxapp_wrapper.backends.registration_l_v1"
     )
     settings.NAU_COURSE_MODULE = (
-        "nau_openedx_extensions.edxapp_wrapper.backends.course_module_l_v1"
+        "nau_openedx_extensions.edxapp_wrapper.backends.course_module_t_v1"
     )
     settings.NAU_EMAIL_MODULE = (
         "nau_openedx_extensions.edxapp_wrapper.backends.email_module_l_v1"
