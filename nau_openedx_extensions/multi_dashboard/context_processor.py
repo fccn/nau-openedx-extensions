@@ -3,11 +3,11 @@ Shared multi organization LMS dashboard. It allows to adds an other sites enroll
 the dashboard, so the user can find other courses that he is already enrolled more easy.
 """
 
-from common.djangoapps.student.views.dashboard import get_course_enrollments  # pylint: disable=import-error
-from common.djangoapps.student.views.dashboard import get_dashboard_course_limit  # pylint: disable=import-error
+# pylint: disable=import-error
+from common.djangoapps.student.views.dashboard import get_course_enrollments, get_dashboard_course_limit
 from django.conf import settings
-from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers  # pylint: disable=import-error
-from organizations.api import get_organizations  # pylint: disable=import-error
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
+from organizations.api import get_organizations
 
 
 def get_multi_dashboard_context(existing_context, *args, **kwargs):
@@ -15,7 +15,8 @@ def get_multi_dashboard_context(existing_context, *args, **kwargs):
     Processor to get additional course enrollments for the same user but out of the current site.
     The site must contain a list of orgs that will be shown under the key: `other_sites_orgs`.
 
-    See: https://github.com/openedx/edx-django-utils/tree/master/edx_django_utils/plugins/docs/decisions/0001-plugin-contexts.rst#plugin-contexts
+    See: https://github.com/openedx/edx-django-utils/tree/master/edx_django_utils/plugins/docs/
+    decisions/0001-plugin-contexts.rst#plugin-contexts
     Returns:
         dictionary of lists: dictionary with one enrollments
             dict["other_sites_enrollments"] = list of enrollment objects.

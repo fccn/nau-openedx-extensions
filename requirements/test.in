@@ -1,13 +1,15 @@
 
--r base.txt
--c constraints.txt
+# -r base.txt
+# -c constraints.txt
 
 # quality
 edx-lint
 pycodestyle
 pylint
 pytest
+pytest-timeout
 coverage
 django_mock_queries
 faker
 ddt
+autopep8
