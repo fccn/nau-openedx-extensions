@@ -18,7 +18,7 @@ jobs:
       matrix:
         include:
           - edx_platform_repository: fccn/edx-platform
-            edx_platform_ref: nau/redwood.master
+            edx_platform_ref: nau/teak.master
             python-version: "3.11"
     steps:
     - name: Checkout nau-openedx-extensions
