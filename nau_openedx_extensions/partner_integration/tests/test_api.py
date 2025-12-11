@@ -772,6 +772,32 @@ class TestEnrollmentRestExportView(TransactionTestCase, BaseStructure):
         self.assertIn(str(courses[0].id), returned_courses)
         self.assertIn(str(courses[1].id), returned_courses)
 
+    def test_multiple_courses_with_only_codes(self):
+        """
+        Test that multiple course filters return combined results.
+        1. Authenticates a partner client.
+        2. Calls the data extractor endpoint with multiple course codes.
+        3. Validates the response contains enrollments for all specified courses.
+        """
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        courses = self.base_data["courses"][:2]
+
+        self.http_client.credentials(**{"HTTP_AUTHORIZATION": f"Bearer {access_token}"})
+        response = self.http_client.post(self.endpoint,
+                                         data={"courses": [
+                                            str(course.id).split("+")[1]
+                                            for course in courses]},
+                                         format="json",
+                                         )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        returned_courses = [r["course_id"] for r in response.data["results"]]
+        self.assertIn(str(courses[0].id), returned_courses)
+        self.assertIn(str(courses[1].id), returned_courses)
+
     def test_date_filter_limits_results(self):
         """
         Test that date filters limit the results correctly.

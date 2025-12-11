@@ -353,7 +353,11 @@ class EnrollmentFacade(DataExtractorFacade):
             enrollments_query = enrollments_base_query
 
             if courses:
-                enrollments_query = enrollments_query.filter(course__id__in=courses).select_related("user")
+                q = Q()
+                for code in courses:
+                    q |= Q(course__id__icontains=code)
+
+                enrollments_query = enrollments_query.filter(q).select_related("user")
 
             if not start_dt or not end_dt:
                 start = datetime.now()
