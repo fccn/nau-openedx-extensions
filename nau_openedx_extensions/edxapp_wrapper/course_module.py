@@ -1,30 +1,38 @@
-""" CourseMetadata backend abstraction """
+""" Course block backend abstraction """
 
-from importlib import import_module
+import logging
 
-from django.conf import settings
 from opaque_keys.edx.keys import CourseKey
 
-
-def get_other_course_settings(*args, **kwargs):
-    """ Get Other Course Settings """
-    backend_module = settings.NAU_COURSE_MODULE
-    backend = import_module(backend_module)
-
-    return backend.get_other_course_settings(*args, **kwargs)
+log = logging.getLogger(__name__)
 
 
-def get_course_name(*args, **kwargs):
-    """ Get course name """
-    backend_module = settings.NAU_COURSE_MODULE
-    backend = import_module(backend_module)
+def get_other_course_settings(course_id):
+    """Get Other Course Settings."""
+    from cms.djangoapps.models.settings.course_metadata import CourseMetadata  # pylint: disable=import-error
+    from xmodule.modulestore.django import modulestore  # pylint: disable=import-error
+    try:
+        course = modulestore().get_course(course_id)
+        other_course_settings = CourseMetadata.fetch_all(course).get('other_course_settings', {})
+    except Exception as e:  # pylint: disable=broad-except
+        other_course_settings = {}
+        log.error(f'Error fetching other_course_settings for {e}')
 
-    return backend.get_course_name(*args, **kwargs)
+    return other_course_settings
+
+
+def get_course_name(course_id):
+    """Get the course name."""
+    from xmodule.modulestore.django import modulestore  # pylint: disable=import-error
+    try:
+        course = modulestore().get_course(course_id)
+        return course.display_name_with_default
+    except Exception as e:  # pylint: disable=broad-except
+        log.error(f'Error fetching course {course_id} for {e}')
+        return ""
 
 
 def get_course(course_key: CourseKey):
-    """ Get course """
-    backend_module = settings.NAU_COURSE_MODULE
-    backend = import_module(backend_module)
-
-    return backend.get_course(course_key)
+    """Get the course."""
+    from xmodule.modulestore.django import modulestore  # pylint: disable=import-error
+    return modulestore().get_course(course_key)

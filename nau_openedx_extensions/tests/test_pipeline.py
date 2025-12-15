@@ -21,9 +21,6 @@ from nau_openedx_extensions.filters.pipeline import (
     NAU_STUDENT_MODULE=(
         "nau_openedx_extensions.edxapp_wrapper.backends.student_l_v1_tests"
     ),
-    NAU_COURSE_MODULE=(
-        "nau_openedx_extensions.edxapp_wrapper.backends.course_module_l_v1_tests"
-    ),
 )
 class FilterEnrollmentByDomainTest(TestCase):
     """
@@ -243,7 +240,8 @@ class FilterEnrollmentByDomainTest(TestCase):
         fnmatch_mock.assert_not_called()
 
     @override_settings(PLATFORM_NAME='NAU')
-    def test_inactive_user_with_email_not_in_allowed_domains(self):
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_inactive_user_with_email_not_in_allowed_domains(self, get_other_course_settings_mock):
         """
         Test the filter when the user is inactive and the user email domain isn't an allowed
         domain and check that it failing with the error message related that the user needs to
@@ -252,6 +250,10 @@ class FilterEnrollmentByDomainTest(TestCase):
         course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
         user = MagicMock(email="example@example.com", is_active=False)
         mode = "audit"
+
+        allowed_domains_list = ["xample.com", "eexample.com"]
+        get_other_course_settings_mock.return_value = {
+            "value": {"filter_enrollment_by_domain_list": allowed_domains_list}}
 
         with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment) as pe:
             FilterEnrollmentByDomain.run_filter(self, user, course_key, mode)
