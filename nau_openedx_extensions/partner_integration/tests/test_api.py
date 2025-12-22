@@ -619,7 +619,7 @@ class TestCertificateRestExportView(TransactionTestCase, BaseStructure):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]), 30)
+        self.assertEqual(len(response.data["results"]), 50)
 
     def test_no_results_returns_empty_list(self):
         """

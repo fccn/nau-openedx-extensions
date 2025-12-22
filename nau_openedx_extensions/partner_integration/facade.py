@@ -119,14 +119,13 @@ class CertificateExportFacade(DataExtractorFacade):
         try:
             certificates_query = use_read_replica_if_available(
                 GeneratedCertificate.objects.filter(
-                    course_id__in=courses_base_query.values("id")
-                ).select_related("user")
+                    course_id__in=courses_base_query
+                )
             )
-            certificates_query = self._annotate_course_data(certificates_query)
 
             if base_certificates_scope:
                 certificates_query = use_read_replica_if_available(
-                    GeneratedCertificate.objects.filter(**base_certificates_scope).select_related("user")
+                    GeneratedCertificate.objects.filter(**base_certificates_scope)
                 )
 
             logger.info("Assembled certificates base query by security scope.")
@@ -134,6 +133,18 @@ class CertificateExportFacade(DataExtractorFacade):
         except Exception as e:
             logger.error("Error applying base certificates scope.", exc_info=e)
             raise PartnerIntegrationInternalErrorException() from e
+
+    def apply_heavy_operations(self, certificate_ids):
+        """
+        Apply the heavy operations of the query
+        """
+        certificates_query = GeneratedCertificate.objects.filter(id__in=certificate_ids)
+        certificates_query = certificates_query.select_related("user")
+        certificates_query = certificates_query.distinct()
+        certificates_query = self._annotate_course_data(certificates_query)
+        certificates_query = self._annotate_enrollment_data(certificates_query)
+
+        return certificates_query
 
     def _execute_certificates_query(self, certificates_base_query, start_dt, end_dt, courses, nifs, emails):
         """
@@ -148,7 +159,7 @@ class CertificateExportFacade(DataExtractorFacade):
                 for code in courses:
                     q |= Q(course_id__icontains=code)
 
-                certificates_query = certificates_query.filter(q).select_related("user")
+                certificates_query = certificates_query.filter(q)
 
             if not start_dt or not end_dt:
                 start = datetime.now()
@@ -163,10 +174,7 @@ class CertificateExportFacade(DataExtractorFacade):
                 filters |= Q(user__nauuserextendedmodel__cc_nif__in=nifs)
             filters &= Q(created_date__range=(start_dt, end_dt))
 
-            certificates_query = certificates_query.filter(filters)
-            certificates_query = self._annotate_enrollment_data(certificates_query)
-
-            return use_read_replica_if_available(certificates_query.distinct())
+            return use_read_replica_if_available(certificates_query.values_list("id", flat=True))
         except Exception as e:
             logger.error("Error executing certificates query.", exc_info=e)
             raise PartnerIntegrationInternalErrorException() from e
@@ -329,13 +337,13 @@ class EnrollmentFacade(DataExtractorFacade):
         try:
             enrollments_query = use_read_replica_if_available(
                 CourseEnrollment.objects.filter(
-                    course__id__in=courses_base_query.values("id")
+                    course__id__in=courses_base_query
                 )
-            ).select_related("user", "course")
+            )
 
             if base_enrollments_scope:
                 enrollments_query = use_read_replica_if_available(
-                    CourseEnrollment.objects.filter(**base_enrollments_scope).select_related("user")
+                    CourseEnrollment.objects.filter(**base_enrollments_scope)
                 )
 
             logger.info("Assembled enrollments base query by security scope.")
@@ -343,6 +351,17 @@ class EnrollmentFacade(DataExtractorFacade):
         except Exception as e:
             logger.error("Error applying base enrollments scope.", exc_info=e)
             raise PartnerIntegrationInternalErrorException() from e
+
+    def apply_heavy_operations(self, enrollment_ids):
+        """
+        Apply the heavy operations of the query
+        """
+        enrollments_query = CourseEnrollment.objects.filter(id__in=enrollment_ids)
+        enrollments_query = enrollments_query.select_related("user", "course")
+        enrollments_query = self._annotate_certificates_data(enrollments_query)
+        enrollments_query = enrollments_query.distinct()
+
+        return enrollments_query
 
     def _execute_enrollments_query(self, enrollments_base_query, start_dt, end_dt, courses, nifs, emails):
         """
@@ -357,7 +376,7 @@ class EnrollmentFacade(DataExtractorFacade):
                 for code in courses:
                     q |= Q(course__id__icontains=code)
 
-                enrollments_query = enrollments_query.filter(q).select_related("user")
+                enrollments_query = enrollments_query.filter(q)
 
             if not start_dt or not end_dt:
                 start = datetime.now()
@@ -373,9 +392,8 @@ class EnrollmentFacade(DataExtractorFacade):
             filters &= Q(created__range=(start_dt, end_dt))
 
             enrollments_query = enrollments_query.filter(filters)
-            enrollments_query = self._annotate_certificates_data(enrollments_query)
 
-            return use_read_replica_if_available(enrollments_query.distinct())
+            return use_read_replica_if_available(enrollments_query.values_list("id", flat=True))
         except Exception as e:
             logger.error("Error executing enrollments query.", exc_info=e)
             raise PartnerIntegrationInternalErrorException() from e
