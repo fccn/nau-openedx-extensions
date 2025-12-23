@@ -14,15 +14,18 @@ class EnrollmentAllowedList(models.Model):
     code = models.CharField(
         max_length=100,
         unique=True,
-        help_text=_("Unique code to identify this allowed list")
+        help_text=_("Unique code to identify this allowed list"),
+        verbose_name=_("Code"),
     )
     description = models.TextField(
         blank=True,
-        help_text=_("Description of this allowed list")
+        help_text=_("Description of this allowed list"),
+        verbose_name=_("Description"),
     )
     custom_exception_message = models.TextField(
         blank=True,
-        help_text=_("Custom message to show when enrollment is blocked. If empty, uses default message.")
+        help_text=_("Custom message to show when enrollment is blocked. If empty, uses default message."),
+        verbose_name=_("Custom Exception Message"),
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -43,11 +46,13 @@ class EnrollmentAllowedDomain(models.Model):
     allowed_list = models.ForeignKey(
         EnrollmentAllowedList,
         on_delete=models.CASCADE,
-        related_name='domains'
+        related_name='domains',
+        verbose_name=_("Allowed List")
     )
     domain = models.CharField(
         max_length=255,
-        help_text=_("Domain name (e.g., 'example.com')")
+        help_text=_("Domain name (e.g., 'example.com')"),
+        verbose_name=_("Domain"),
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
