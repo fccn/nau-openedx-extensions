@@ -49,7 +49,7 @@ class BaseStructure:
                 is_active=True,
                 query_security_scope={"base_security_scope": {"org": f"TEST_ORG_{index}"}}
             )
-            partner_client.set_password("correct_password")
+            partner_client.password = "correct_password"
             partner_client.save()
             base_data["partner_clients"].append(partner_client)
 
@@ -110,7 +110,7 @@ class TestPartnerClientTokenView(TransactionTestCase):
 
     def test_invalid_password_returns_403(self):
         """test that an invalid password returns 403."""
-        self.partner_client.set_password("correct_password")
+        self.partner_client.password = "correct_password"
         self.partner_client.save()
         self.http_client.credentials(
             HTTP_AUTHORIZATION="Token wrong_password",
@@ -123,7 +123,7 @@ class TestPartnerClientTokenView(TransactionTestCase):
     @patch.object(ClientJWTAuthentication, 'issue_client_jwt', return_value="mocked_jwt")
     def test_successful_token_returns_200_mocked_jwt(self, mock_jwt):
         """test that a valid password returns 200 and a token."""
-        self.partner_client.set_password("correct_password")
+        self.partner_client.password = "correct_password"
         self.partner_client.save()
         self.http_client.credentials(
             HTTP_AUTHORIZATION="Token correct_password",
@@ -136,7 +136,7 @@ class TestPartnerClientTokenView(TransactionTestCase):
 
     def test_successful_token_returns_200(self):
         """test that a valid password returns 200 and a token."""
-        self.partner_client.set_password("correct_password")
+        self.partner_client.password = "correct_password"
         self.partner_client.save()
         self.http_client.credentials(
             HTTP_AUTHORIZATION="Token correct_password",
@@ -164,7 +164,7 @@ class TestPartnerClientTokenView(TransactionTestCase):
 
     def test_check_token_format(self):
         """test that a valid password returns a JWT formatted token."""
-        self.partner_client.set_password("correct_password")
+        self.partner_client.password = "correct_password"
         self.partner_client.save()
         self.http_client.credentials(
             HTTP_AUTHORIZATION="Token correct_password",
@@ -520,7 +520,7 @@ class TestCertificateRestExportView(TransactionTestCase, BaseStructure):
             is_active=True,
             query_security_scope={"base_security_scope": {"org": org}}
         )
-        partner_client.set_password("correct_password")
+        partner_client.password = "correct_password"
         partner_client.save()
 
         courses = CourseOverviewFactory.create_batch(5, org=org)
@@ -619,7 +619,7 @@ class TestCertificateRestExportView(TransactionTestCase, BaseStructure):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]), 30)
+        self.assertEqual(len(response.data["results"]), 50)
 
     def test_no_results_returns_empty_list(self):
         """
@@ -763,6 +763,32 @@ class TestEnrollmentRestExportView(TransactionTestCase, BaseStructure):
         self.http_client.credentials(**{"HTTP_AUTHORIZATION": f"Bearer {access_token}"})
         response = self.http_client.post(self.endpoint,
                                          data={"courses": [str(course.id) for course in courses]},
+                                         format="json",
+                                         )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        returned_courses = [r["course_id"] for r in response.data["results"]]
+        self.assertIn(str(courses[0].id), returned_courses)
+        self.assertIn(str(courses[1].id), returned_courses)
+
+    def test_multiple_courses_with_only_codes(self):
+        """
+        Test that multiple course filters return combined results.
+        1. Authenticates a partner client.
+        2. Calls the data extractor endpoint with multiple course codes.
+        3. Validates the response contains enrollments for all specified courses.
+        """
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        courses = self.base_data["courses"][:2]
+
+        self.http_client.credentials(**{"HTTP_AUTHORIZATION": f"Bearer {access_token}"})
+        response = self.http_client.post(self.endpoint,
+                                         data={"courses": [
+                                            str(course.id).split("+")[1]
+                                            for course in courses]},
                                          format="json",
                                          )
 
@@ -988,7 +1014,7 @@ class TestEnrollmentRestExportView(TransactionTestCase, BaseStructure):
             is_active=True,
             query_security_scope={"base_security_scope": {"org": org}}
         )
-        partner_client.set_password("correct_password")
+        partner_client.password = "correct_password"
         partner_client.save()
 
         courses = CourseOverviewFactory.create_batch(5, org=org)

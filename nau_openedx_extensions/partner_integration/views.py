@@ -151,7 +151,7 @@ class CertificateRestExportView(APIView):
             serializer.is_valid(raise_exception=True)
             validated_data = serializer.validated_data
 
-            certificates = CertificateExportFacade().get_certificates(
+            certificate_ids = CertificateExportFacade().get_certificates(
                 query_security_scope,
                 validated_data.get("start_date"),
                 validated_data.get("end_date"),
@@ -161,8 +161,9 @@ class CertificateRestExportView(APIView):
             )
 
             paginator = self.pagination_class()
-            certificates_page = paginator.paginate_queryset(certificates, request)
-
+            paginated_certificate_ids = paginator.paginate_queryset(certificate_ids, request)
+            certificates_page = CertificateExportFacade().apply_heavy_operations(
+                paginated_certificate_ids)
             serializer = CompleteCertificateDataSerializer(certificates_page, many=True)
             response = paginator.get_paginated_response(serializer.data)
 
@@ -231,7 +232,7 @@ class EnrollmentRestExportView(APIView):
             serializer.is_valid(raise_exception=True)
             validated_data = serializer.validated_data
 
-            enrollments = EnrollmentFacade().get_enrollments(
+            enrollment_ids = EnrollmentFacade().get_enrollments(
                 query_security_scope,
                 validated_data.get("start_date"),
                 validated_data.get("end_date"),
@@ -241,7 +242,8 @@ class EnrollmentRestExportView(APIView):
             )
 
             paginator = self.pagination_class()
-            enrollments_page = paginator.paginate_queryset(enrollments, request)
+            paginated_enrollment_ids = paginator.paginate_queryset(enrollment_ids, request)
+            enrollments_page = EnrollmentFacade().apply_heavy_operations(paginated_enrollment_ids)
 
             serializer = CompleteEnrollmentDataSerializer(enrollments_page, many=True)
             response = paginator.get_paginated_response(serializer.data)
