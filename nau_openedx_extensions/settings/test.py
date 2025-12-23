@@ -5,6 +5,8 @@ from __future__ import absolute_import, unicode_literals
 
 from lms.envs.test import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+from .common import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 DEBUG = True
 
 DATABASES = {
