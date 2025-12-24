@@ -1,0 +1,19 @@
+# University domains
+university.edu
+student.university.edu
+faculty.university.edu
+research.university.edu
+
+# Partner institutions
+partner.org
+collaborator.ac.uk
+institute.fr
+
+# Alumni associations
+alumni.university.edu
+graduates.university.edu
+alumno.master.edu.co
+
+# Invalid examples
+@collaborator.com
+invalid domain with spaces

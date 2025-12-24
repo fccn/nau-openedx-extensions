@@ -3,7 +3,10 @@ Settings for nau_openedx_extensions
 """
 from __future__ import absolute_import, unicode_literals
 
-from lms.envs.test import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from .common import *  # pylint: disable=wildcard-import,unused-wildcard-import,disable=wrong-import-order
+
+from lms.envs.test import *  # pylint: disable=wildcard-import,unused-wildcard-import,disable=wrong-import-order  # isort:skip
+
 
 DEBUG = True
 

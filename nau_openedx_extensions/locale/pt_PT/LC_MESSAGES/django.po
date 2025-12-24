@@ -7,16 +7,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2025-07-23 16:26-0500\n"
+"POT-Creation-Date: 2025-12-24 00:21+0000\n"
 "PO-Revision-Date: 2025-07-17 15:32+0100\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
 "Language-Team: pt_PT <LL@li.org>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.9.0\n"
+"Generated-By: Babel 2.15.0\n"
 
 #: nau_openedx_extensions/certificate_export/views.py:23
 msgid "Export task started successfully."
@@ -127,6 +127,57 @@ msgstr ""
 "href='https://www.nau.edu.pt/legal/consentimento-para-o-envio-de-"
 "newsletters/'>consentimento para o envio de newsletters</a>"
 
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:24
+msgid "Allowed Domain"
+msgstr "Domínio permitido"
+
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:25
+msgid "Allowed Domains"
+msgstr "Domínios permitidos"
+
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:46
+msgid "Basic Information"
+msgstr "Informações básicas"
+
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:49
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:83
+msgid "Custom Message"
+msgstr "Mensagem personalizada"
+
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:51
+msgid "This message has priority 2. Course settings have priority 1."
+msgstr ""
+"Esta mensagem tem prioridade 2. As definições da disciplina têm "
+"prioridade 1."
+
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:53
+msgid "Statistics"
+msgstr "Estatísticas"
+
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:57
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:134
+msgid "Timestamps"
+msgstr "Registos temporais"
+
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:72
+#: nau_openedx_extensions/enrollment_by_domain/models.py:23
+msgid "Description"
+msgstr "Descrição"
+
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:77
+msgid "Domain Count"
+msgstr "Nº de domínios"
+
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:112
+#, python-format
+msgid "Successfully duplicated %(count)d allowed list(s)."
+msgstr "Duplicou com sucesso %(count)d lista(s) permitida(s)."
+
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:114
+msgid "Duplicate selected allowed lists"
+msgstr "Duplicar listas selecionadas"
+
+#: nau_openedx_extensions/enrollment_by_domain/domain_filter.py:94
 #: nau_openedx_extensions/filters/pipeline.py:62
 #, python-brace-format
 msgid ""
@@ -137,6 +188,67 @@ msgstr ""
 "Tem de activar a sua conta antes de poder inscrever-se no curso. "
 "Verifique no seu e-mail {email} o link de ativação da conta "
 "{platform_name}."
+
+#: nau_openedx_extensions/enrollment_by_domain/domain_filter.py:232
+msgid ""
+"You can't enroll on this course because your email domain is not allowed."
+" If you think this is an error, contact the course support."
+msgstr ""
+"Não pode inscrever-se neste curso porque o seu domínio de correio "
+"eletrónico não é permitido. Se pensa que isto é um erro, contacte o "
+"suporte do curso."
+
+#: nau_openedx_extensions/enrollment_by_domain/models.py:17
+msgid "Unique code to identify this allowed list"
+msgstr "Código único para identificar esta lista autorizada"
+
+#: nau_openedx_extensions/enrollment_by_domain/models.py:18
+msgid "Code"
+msgstr "Código"
+
+#: nau_openedx_extensions/enrollment_by_domain/models.py:22
+msgid "Description of this allowed list"
+msgstr "Descrição desta lista de autorizados"
+
+#: nau_openedx_extensions/enrollment_by_domain/models.py:27
+msgid ""
+"Custom message to show when enrollment is blocked. If empty, uses default"
+" message."
+msgstr ""
+"Mensagem personalizada a mostrar quando o registo é bloqueado. Se estiver"
+" vazia, utiliza a mensagem predefinida mensagem."
+
+#: nau_openedx_extensions/enrollment_by_domain/models.py:28
+msgid "Custom Exception Message"
+msgstr "Mensagem de exceção personalizada"
+
+#: nau_openedx_extensions/enrollment_by_domain/models.py:34
+msgid "Enrollment Allowed List"
+msgstr "Lista de inscrições permitidas"
+
+#: nau_openedx_extensions/enrollment_by_domain/models.py:35
+msgid "Enrollment Allowed Lists"
+msgstr "Listas de inscrições permitidas"
+
+#: nau_openedx_extensions/enrollment_by_domain/models.py:50
+msgid "Allowed List"
+msgstr "Lista permitida"
+
+#: nau_openedx_extensions/enrollment_by_domain/models.py:54
+msgid "Domain name (e.g., 'example.com')"
+msgstr "Nome de domínio (por exemplo, 'exemplo.com')"
+
+#: nau_openedx_extensions/enrollment_by_domain/models.py:55
+msgid "Domain"
+msgstr "Domínio"
+
+#: nau_openedx_extensions/enrollment_by_domain/models.py:60
+msgid "Enrollment Allowed Domain"
+msgstr "Inscrição Domínio permitido"
+
+#: nau_openedx_extensions/enrollment_by_domain/models.py:61
+msgid "Enrollment Allowed Domains"
+msgstr "Registo Domínios permitidos"
 
 #: nau_openedx_extensions/filters/pipeline.py:75
 msgid "If you think this is an error, contact the course support."
