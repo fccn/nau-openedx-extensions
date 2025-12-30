@@ -5,7 +5,7 @@ from django import forms
 from django.contrib import admin
 from django.utils.crypto import get_random_string
 
-from .models import PartnerAPIClient
+from .models import PartnerAPIClient, SSOPartnerIntegration
 
 
 class PartnerAPIClientForm(forms.ModelForm):
@@ -64,3 +64,9 @@ class PartnerAPIClientAdmin(admin.ModelAdmin):
         if not obj:
             current_form.base_fields["password"].initial = get_random_string(64)
         return current_form
+
+
+@admin.register(SSOPartnerIntegration)
+class SSOPartnerIntegrationAdmin(admin.ModelAdmin):
+    """Admin registration for SSOPartnerIntegration model"""
+    list_display = ('partner_client', 'user', 'external_user_id')
