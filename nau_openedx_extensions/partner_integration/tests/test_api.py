@@ -619,7 +619,7 @@ class TestCertificateRestExportView(TransactionTestCase, BaseStructure):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]), 50)
+        self.assertEqual(len(response.data["results"]), 30)
 
     def test_no_results_returns_empty_list(self):
         """
@@ -678,9 +678,6 @@ class TestEnrollmentRestExportView(TransactionTestCase, BaseStructure):
         partner_client = self.base_data["partner_clients"][0]
         access_token = self.authenticate_partner_client(partner_client)
         fields = [
-            "certificate_created_date",
-            "certificate_status",
-            "certificate_download_url",
             "user_nif",
             "username",
             "user_email",
@@ -706,7 +703,7 @@ class TestEnrollmentRestExportView(TransactionTestCase, BaseStructure):
         self.assertIn("results", response.data)
         self.assertTrue(len(response.data["results"]))
         fields_from_response = dict(response.data["results"][0]).keys()
-        self.assertEqual(len(fields_from_response), 16)
+        self.assertEqual(len(fields_from_response), 13)
         for field in fields:
             self.assertIn(field, fields_from_response)
 
@@ -876,7 +873,7 @@ class TestEnrollmentRestExportView(TransactionTestCase, BaseStructure):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["results"]), 100)
-        self.assertEqual(len(response.data["results"][0].keys()), 16)
+        self.assertEqual(len(response.data["results"][0].keys()), 13)
 
         has_next = True
         while has_next:

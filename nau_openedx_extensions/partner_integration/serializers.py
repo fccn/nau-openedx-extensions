@@ -124,9 +124,6 @@ class EnrollUserRequestSerializer(serializers.Serializer):
 
 class CompleteEnrollmentDataSerializer(serializers.ModelSerializer):
     """Serializer to flatten course enrollment, user, and course data."""
-    certificate_created_date = serializers.DateTimeField(source='certificate_created', read_only=True)
-    certificate_status = serializers.CharField(read_only=True)
-    certificate_download_url = serializers.CharField(read_only=True)
     user_nif = serializers.CharField(source='user.nau_nif', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
     user_name = serializers.SerializerMethodField()
@@ -150,9 +147,6 @@ class CompleteEnrollmentDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseEnrollment
         fields = [
-            "certificate_created_date",
-            "certificate_status",
-            "certificate_download_url",
             "user_nif",
             "username",
             "user_name",
