@@ -174,7 +174,7 @@ class CertificateExportFacade(DataExtractorFacade):
                 filters |= Q(user__nauuserextendedmodel__cc_nif__in=nifs)
             filters &= Q(created_date__range=(start_dt, end_dt))
 
-            return use_read_replica_if_available(certificates_query.values_list("id", flat=True))
+            return use_read_replica_if_available(certificates_query.filter(filters).values_list("id", flat=True))
         except Exception as e:
             logger.error("Error executing certificates query.", exc_info=e)
             raise PartnerIntegrationInternalErrorException() from e
@@ -358,7 +358,6 @@ class EnrollmentFacade(DataExtractorFacade):
         """
         enrollments_query = CourseEnrollment.objects.filter(id__in=enrollment_ids)
         enrollments_query = enrollments_query.select_related("user", "course")
-        enrollments_query = self._annotate_certificates_data(enrollments_query)
         enrollments_query = enrollments_query.distinct()
 
         return enrollments_query
@@ -391,26 +390,9 @@ class EnrollmentFacade(DataExtractorFacade):
                 filters |= Q(user__nauuserextendedmodel__cc_nif__in=nifs)
             filters &= Q(created__range=(start_dt, end_dt))
 
-            enrollments_query = enrollments_query.filter(filters)
-
-            return use_read_replica_if_available(enrollments_query.values_list("id", flat=True))
+            return use_read_replica_if_available(enrollments_query.filter(filters).values_list("id", flat=True))
         except Exception as e:
             logger.error("Error executing enrollments query.", exc_info=e)
-            raise PartnerIntegrationInternalErrorException() from e
-
-    def _annotate_certificates_data(self, enrollments_query):
-        """Annotates enrollments with related certificates."""
-        try:
-            certificates_qs = GeneratedCertificate.objects.filter(
-                course_id=OuterRef("course_id")
-            )
-            return enrollments_query.annotate(
-                certificate_download_url=Subquery(certificates_qs.values("download_url")[:1]),
-                certificate_status=Subquery(certificates_qs.values("status")[:1]),
-                certificate_created=Subquery(certificates_qs.values("created_date")[:1]),
-            )
-        except Exception as e:
-            logger.error("Error annotating certificates data.", exc_info=e)
             raise PartnerIntegrationInternalErrorException() from e
 
 
