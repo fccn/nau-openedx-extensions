@@ -104,7 +104,7 @@ class TestCustomAuthorizationView(TransactionTestCase):
         self.assertEqual(sso_register.user.email, user.email)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(str(response.url).startswith("https://example.com/auth/callback"))
-        self.assertTrue(user.email in str(response.url))
+        self.assertTrue(user.username in str(response.url))
 
     def test_sso_updates_external_id(self):
         """
@@ -128,11 +128,11 @@ class TestCustomAuthorizationView(TransactionTestCase):
         sso_register = SSOPartnerIntegration.objects.get(external_user_id="987654321")
         self.assertIsNotNone(sso_register)
         self.assertEqual(sso_register.partner_client.client_id, self.partner_client.client_id)
-        self.assertEqual(sso_register.user.email, user.email)
+        self.assertEqual(sso_register.user.username, user.username)
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(str(response.url).startswith("https://example.com/auth/callback"))
-        self.assertTrue(user.email in str(response.url))
+        self.assertTrue(user.username in str(response.url))
 
     def test_sso_auth_redirect_success_nau_page(self):
         url = self.build_oauth_url(external_user_id="123456789", redirect_uri="https://nau.edu.pt")
@@ -161,7 +161,7 @@ class TestCustomAuthorizationView(TransactionTestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(str(response.url).startswith("https://example.com/auth/callback"))
-        self.assertTrue(user.email in str(response.url))
+        self.assertTrue(user.username in str(response.url))
 
     def test_sso_invalid_JWT_token_redirects_to_nau(self):
         url = self.build_oauth_url(external_user_id="123456789", jwt_token="invalid")
