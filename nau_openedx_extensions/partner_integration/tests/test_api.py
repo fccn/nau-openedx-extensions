@@ -596,6 +596,38 @@ class TestCertificateRestExportView(TransactionTestCase, BaseStructure):
         self.assertIn("test_nif_filter_returns_correct_certificates", response.data["results"][0]["name"])
         self.assertEqual(response.data["results"][0]["user_nif"], "010101010")
 
+    def test_username_filter_returns_correct_certificates(self):
+        """
+        Test that username filter returns correct certificates.
+        1. Authenticates a partner client.
+        2. Updates a user's username to a known value.
+        3. Calls the data extractor endpoint with that username.
+        4. Validates the response contains only certificates for that username.
+        5. Validates the user info in the response is correct.
+        """
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        user_ext = self.base_data["users"][0]
+        user = user_ext.user
+        user_ext.nif = "010101010"
+        user.first_name = "test_nif_filter_returns_correct_certificates"
+        user.username = "test_username_filter_user"
+        user.save()
+        user_ext.save()
+
+        self.http_client.credentials(**{"HTTP_AUTHORIZATION": f"Bearer {access_token}"})
+        response = self.http_client.post(
+            self.endpoint,
+            data={"usernames": ["test_username_filter_user"]},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("test_nif_filter_returns_correct_certificates", response.data["results"][0]["name"])
+        self.assertEqual(response.data["results"][0]["user_nif"], "010101010")
+        self.assertEqual(response.data["results"][0]["username"], "test_username_filter_user")
+
     def test_combined_filters_reduce_result_set(self):
         """
         Test that combined NIF and email filters reduce the result set correctly.
@@ -1090,6 +1122,38 @@ class TestEnrollmentRestExportView(TransactionTestCase, BaseStructure):
         self.assertIn("test_nif_filter_returns_correct_enrollments", response.data["results"][0]["user_name"])
         self.assertEqual(response.data["results"][0]["user_nif"], "010101010")
 
+    def test_username_filter_returns_correct_enrollments(self):
+        """
+        Test that username filter returns correct enrollments.
+        1. Authenticates a partner client.
+        2. Updates a user's username to a known value.
+        3. Calls the enrollment data extractor endpoint with that username.
+        4. Validates the response contains only enrollments for that username.
+        5. Validates the user info in the response is correct.
+        """
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        user_ext = self.base_data["users"][0]
+        user = user_ext.user
+        user_ext.nif = "010101010"
+        user.first_name = "test_username_filter_returns_correct_enrollments"
+        user.username = "test_username_filter_user"
+        user.save()
+        user_ext.save()
+
+        self.http_client.credentials(**{"HTTP_AUTHORIZATION": f"Bearer {access_token}"})
+        response = self.http_client.post(
+            self.endpoint,
+            data={"usernames": ["test_username_filter_user"]},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("test_username_filter_returns_correct_enrollments",
+                      response.data["results"][0]["user_name"])
+        self.assertEqual(response.data["results"][0]["username"], "test_username_filter_user")
+
     def test_combined_filters_reduce_result_set(self):
         """
         Test that combined NIF and email filters reduce the result set correctly.
@@ -1231,6 +1295,41 @@ class TestPartnerRestIntegrationEnrollUserView(TransactionTestCase, BaseStructur
         self.assertEqual(response.data["user_email"], "success_nif_201@example.com")
         self.assertEqual(response.data["course_id"], str(course_id))
 
+    def test_enroll_user_success_username_201(self):
+        """
+        Test successful user enrollment using username.
+        1. Authenticates a partner client.
+        2. Creates an external user with a known username.
+        3. Calls the enroll-user endpoint with the course ID and username.
+        4. Validates the response indicates successful enrollment with correct details.
+        """
+        course_id = self.base_data["courses"][0].id
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        external_user = NauUserExtendedModelFactory.create()
+        external_user.nif = "202020202"
+        external_user.user.email = "success_nif_201@example.com"
+        external_user.user.username = "username_202020202"
+        external_user.save()
+        external_user.user.save()
+
+        data = {
+            "course": str(course_id),
+            "username": external_user.user.username,
+        }
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data=data,
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data.keys()), 13)
+        self.assertEqual(response.data["username"], "username_202020202")
+        self.assertEqual(response.data["user_email"], "success_nif_201@example.com")
+        self.assertEqual(response.data["course_id"], str(course_id))
+
     def test_enroll_user_missing_course_returns_400(self):
         """
         Test that missing course ID returns 400 error.
@@ -1281,7 +1380,8 @@ class TestPartnerRestIntegrationEnrollUserView(TransactionTestCase, BaseStructur
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("At least one of NIF or email must be provided", str(response.data))
+        self.assertIn("At least one of NIF, email, or username must be provided to enroll users.",
+                      str(response.data))
 
     def test_enroll_user_already_enrolled_returns_409(self):
         """
