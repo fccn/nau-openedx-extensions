@@ -477,7 +477,6 @@ class StudentProgressExportFacade(DataExtractorFacade):
                 'completion_summary': get_course_blocks_completion_summary(course_key, student),
                 'course_grade': course_grade,
                 'grading_policy': grading_policy,
-                'section_scores': list(course_grade.chapter_grades.values()),
             }
 
             return student_progress

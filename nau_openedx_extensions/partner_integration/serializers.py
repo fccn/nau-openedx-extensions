@@ -233,4 +233,3 @@ class CourseProgressSerializer(serializers.Serializer):
     completion_summary = CompletionSummarySerializer()
     course_grade = CourseGradeSerializer()
     grading_policy = GradingPolicySerializer()
-    section_scores = ChapterGradeSerializer(many=True)
