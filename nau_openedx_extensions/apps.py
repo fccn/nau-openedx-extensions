@@ -54,3 +54,14 @@ class NauOpenEdxConfig(AppConfig):
         # Replace the method in the original VideoBlock class
         prev_poster_func = VideoBlock._poster  # pylint: disable=protected-access
         VideoBlock._poster = get_educast_poster_factory(prev_poster_func)  # pylint: disable=protected-access
+
+        # Override the default bulk email _get_course_email_context private function
+        # to inject custom organization data into email context
+        from lms.djangoapps.bulk_email import \
+            tasks as bulk_email_tasks  # pylint: disable=import-error,import-outside-toplevel # noqa
+
+        prev_email_context_func = bulk_email_tasks._get_course_email_context  # pylint: disable=protected-access
+        from nau_openedx_extensions.utils.bulk_email import \
+            get_course_email_context_factory  # pylint: disable=import-outside-toplevel # noqa
+        bulk_email_tasks._get_course_email_context = \
+            get_course_email_context_factory(prev_email_context_func)  # pylint: disable=protected-access
