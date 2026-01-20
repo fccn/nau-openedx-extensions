@@ -1330,6 +1330,41 @@ class TestPartnerRestIntegrationEnrollUserView(TransactionTestCase, BaseStructur
         self.assertEqual(response.data["user_email"], "success_nif_201@example.com")
         self.assertEqual(response.data["course_id"], str(course_id))
 
+    def test_enroll_user_success_course_code_201(self):
+        """
+        Test successful user enrollment using course code.
+        1. Authenticates a partner client.
+        2. Creates an external user with a known username.
+        3. Calls the enroll-user endpoint with the course code and username.
+        4. Validates the response indicates successful enrollment with correct details.
+        """
+        course_id = self.base_data["courses"][0].id
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        external_user = NauUserExtendedModelFactory.create()
+        external_user.nif = "202020202"
+        external_user.user.email = "success_nif_201@example.com"
+        external_user.user.username = "username_202020202"
+        external_user.save()
+        external_user.user.save()
+
+        data = {
+            "course": str(course_id.course),
+            "username": external_user.user.username,
+        }
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data=data,
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data.keys()), 13)
+        self.assertEqual(response.data["username"], "username_202020202")
+        self.assertEqual(response.data["user_email"], "success_nif_201@example.com")
+        self.assertEqual(response.data["course_id"], str(course_id))
+
     def test_enroll_user_missing_course_returns_400(self):
         """
         Test that missing course ID returns 400 error.
