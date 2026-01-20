@@ -242,7 +242,7 @@ class EnrollmentFacade(DataExtractorFacade):
             logger.error("Error fetching enrollments.", exc_info=e)
             raise PartnerIntegrationInternalErrorException() from e
 
-    def enroll_user(self, query_security_scope, course_id, nif, email, username):
+    def enroll_user(self, query_security_scope, course_id, nif, email, username):  # pylint: disable=too-many-statements
         """
         Enrolls a user in a course using his NIF or email provided.
         It implements the enrollment logic using the Open edX enrollment API.
@@ -255,7 +255,16 @@ class EnrollmentFacade(DataExtractorFacade):
         try:
             base_security_scope = query_security_scope.get("base_security_scope", {})
             courses_base_query = super().apply_base_security_scope(base_security_scope)
-            course = courses_base_query.get(id=course_id)
+
+            try:
+                course = courses_base_query.get(id=course_id)
+            except Exception as e:  # pylint: disable=broad-except
+                courses = courses_base_query.filter(id__regex=course_id)
+                courses = [course for course in courses if course.is_enrollment_open()]
+                if not courses:
+                    raise CourseOverview.DoesNotExist()
+
+                course = courses[0]
 
             user = None
             if email:
@@ -439,14 +448,23 @@ class StudentProgressExportFacade(DataExtractorFacade):
 
             base_security_scope = query_security_scope.get("base_security_scope")
             courses_base_query = super().apply_base_security_scope(base_security_scope)
-            course = courses_base_query.filter(id=course)
-            if not course:
-                raise PartnerIntegrationCourseOwnerException()
-
-            course_key = CourseKey.from_string(course)
             student = self._get_student_user(student_id, nif, email, username)
 
-            course = get_course_or_403(student, 'load', course_key, check_if_enrolled=False)
+            try:
+                course_to_extract = courses_base_query.get(id=course)
+            except Exception as e:  # pylint: disable=broad-except
+                courses = courses_base_query.filter(id__regex=course)
+                courses = [c for c in courses if c.is_enrollment_open()]
+                if not courses:
+                    raise CourseOverview.DoesNotExist()
+
+                course_to_extract = courses[0]
+
+            if not course_to_extract:
+                raise PartnerIntegrationCourseOwnerException()
+
+            course_key = CourseKey.from_string(str(course_to_extract.id))
+            course_to_extract = get_course_or_403(student, 'load', course_key, check_if_enrolled=False)
             collected_block_structure = get_block_structure_manager(course_key).get_collected()
 
             course_grade = CourseGradeFactory().read(student, collected_block_structure=collected_block_structure)
