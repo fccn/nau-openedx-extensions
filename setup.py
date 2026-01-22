@@ -77,9 +77,13 @@ setup(
             "nau_openedx_extensions = nau_openedx_extensions.apps:NauOpenEdxConfig",
             "coursecertificate = nau_openedx_extensions.coursecertificate.apps:CoursecertificateConfig",
             "enrollment_by_domain = nau_openedx_extensions.enrollment_by_domain.apps:EnrollmentByDomainConfig",
+            "email_channel = nau_openedx_extensions.email_channel.apps:EmailChannelConfig",
         ],
         "cms.djangoapp": [
             "nau_openedx_extensions = nau_openedx_extensions.studio.apps:NauOpenCmsConfig",
+        ],
+        "openedx.ace.channel": [
+            "django_email_bulk = nau_openedx_extensions.email_channel.django_email_bulk:DjangoEmailBulkChannel",
         ],
     }
 )
