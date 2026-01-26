@@ -41,7 +41,11 @@ def get_course_email_context_factory(prev_get_course_email_context_func):
                 email_context['organization_name'] = organization.get('name', None)
                 organization_logo = organization.get('logo', None)
                 if organization_logo:
-                    email_context['organization_logo'] = f'{settings.LMS_ROOT_URL}{organization_logo.url}'
+                    logo_url = organization_logo.url
+                    # Only prepend LMS_ROOT_URL if the URL is relative (not absolute)
+                    if not logo_url.startswith(('http://', 'https://')):
+                        logo_url = f'{settings.LMS_ROOT_URL}{logo_url}'
+                    email_context['organization_logo'] = logo_url
         except Exception:  # pylint: disable=broad-except
             # If anything fails in getting organization data, just continue
             # with the base email context
