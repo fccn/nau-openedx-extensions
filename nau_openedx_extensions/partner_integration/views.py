@@ -118,6 +118,10 @@ class CertificateRestExportView(APIView):
         {
             "start_date": "2025-08-16",
             "end_date": "2025-09-16",
+            "usernames": [
+                "user1",
+                "user2"
+            ],
             "nifs": [
                 "123456789",
                 "987654321"
@@ -165,7 +169,8 @@ class CertificateRestExportView(APIView):
                 validated_data.get("end_date"),
                 validated_data.get("courses"),
                 validated_data.get("nifs"),
-                validated_data.get("emails")
+                validated_data.get("emails"),
+                validated_data.get("usernames")
             )
 
             paginator = self.pagination_class()
@@ -212,6 +217,28 @@ class EnrollmentRestExportView(APIView):
     """
     EnrollmentRestExportView is an endpoint to retrieve enrollments based on provided specific parameters,
     or based on the client's query security scope.
+
+    Example of payload:
+        {
+            "start_date": "2025-08-16",
+            "end_date": "2025-09-16",
+            "usernames": [
+                "user1",
+                "user2"
+            ],
+            "nifs": [
+                "123456789",
+                "987654321"
+            ],
+            "emails": [
+                "user1@example.com",
+                "user2@example.com"
+            ],
+            "courses": [
+                "course-v1:edX+DemoX+Demo_Course1",
+                "course-v1:edX+DemoX+Demo_Course2"
+            ]
+        }
     """
     authentication_classes = [ClientJWTAuthentication]
     permission_classes = [IsAuthenticatedPartnerAPIClient]
@@ -246,7 +273,8 @@ class EnrollmentRestExportView(APIView):
                 validated_data.get("end_date"),
                 validated_data.get("courses"),
                 validated_data.get("nifs"),
-                validated_data.get("emails")
+                validated_data.get("emails"),
+                validated_data.get("usernames")
             )
 
             paginator = self.pagination_class()
@@ -299,11 +327,24 @@ class StudentProgressRestExportView(APIView):
 
     def post(self, request):
         """
-        Handles POST requests to retrieve certificates based on provided parameters
-        or client's security scope.
+        Handles POST requests to retrieve student progress based on provided
+        parameters.
 
-        Returns:
-            list: An object matching the query parameters or query security scope.
+        Example of payload:
+        {
+            "course": "course-v1:edX+DemoX+Demo_Course",
+            "nif": "123456789"
+        }
+        or
+        {
+            "course": "course-v1:edX+DemoX+Demo_Course",
+            "email": "user@example01.com"
+        }
+        or
+        {
+            "course": "course-v1:edX+DemoX+Demo_Course",
+            "username": "user01"
+        }
         """
         try:
             logger.info("StudentProgressRestExportView: POST request received.")
@@ -313,20 +354,21 @@ class StudentProgressRestExportView(APIView):
             if not client.is_active:
                 raise PartnerIntegrationInactiveClientException()
 
-            course_id = request.data.get("course_id")
+            course = request.data.get("course")
             student_id = request.data.get("student_id")
             nif = request.data.get("nif")
             email = request.data.get("email")
+            username = request.data.get("username")
 
-            if not course_id:
+            if not course:
                 return Response({"error": "Invalid request data, it must to have a valid course id."},
                                 status=status.HTTP_400_BAD_REQUEST)
-            elif not student_id and not nif and not email:
+            elif not student_id and not nif and not email and not username:
                 return Response(
                     {
                         "error": (
                             "Invalid request data, it must to have one of the user's "
-                            "identifier: id, nif or email."
+                            "identifier: id, nif, email or username."
                         )
                     },
                     status=status.HTTP_400_BAD_REQUEST
@@ -334,10 +376,11 @@ class StudentProgressRestExportView(APIView):
 
             student_progress_facade = StudentProgressExportFacade()
             student_progress = student_progress_facade.get_student_progress(
-                course_id,
+                course,
                 student_id,
                 nif,
                 email,
+                username,
                 query_security_scope
             )
             data = CourseProgressSerializer(student_progress).data
@@ -406,7 +449,8 @@ class PartnerRestIntegrationEnrollUserView(APIView):
                 query_security_scope,
                 validated_data.get("course"),
                 validated_data.get("nif"),
-                validated_data.get("email")
+                validated_data.get("email"),
+                validated_data.get("username")
             )
             serializer = CompleteEnrollmentDataSerializer(enrollment)
 
@@ -451,7 +495,7 @@ class CustomAuthorizationView(AuthorizationView):
                 application = Application.objects.get(client_id=sso_client_id)
                 if application.redirect_uris:
                     uri = (
-                        f"{application.redirect_uris}/?nau_user_email={request.user.email}"
+                        f"{application.redirect_uris}/?nau_user={request.user.username}"
                         f"&external_user_id={external_user_id}")
                     return redirect(uri)
 
@@ -509,7 +553,7 @@ class CustomAuthorizationView(AuthorizationView):
                 return self.handle_no_permission()
 
             partner_client = ClientJWTAuthentication().validate_token_data_and_return_client(jwt_token)
-            sso_register = SSOPartnerIntegration.objects.filter(user=user)
+            sso_register = SSOPartnerIntegration.objects.filter(user=user, partner_client=partner_client)
             if not sso_register.exists():
                 sso_register = SSOPartnerIntegration.objects.create(
                     partner_client=partner_client,
@@ -523,7 +567,7 @@ class CustomAuthorizationView(AuthorizationView):
 
             application = Application.objects.get(client_id=sso_client_id)
             uri = (
-                f"{application.redirect_uris}/?nau_user_email={user.email}"
+                f"{application.redirect_uris}/?nau_user={user.username}"
                 f"&external_user_id={external_user_id}")
             return redirect(uri)
         except Exception as e:

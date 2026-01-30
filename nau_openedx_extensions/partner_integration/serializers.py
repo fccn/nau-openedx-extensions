@@ -55,6 +55,7 @@ class DataExtractorRequestSerializer(serializers.Serializer):
     courses = serializers.ListField(child=serializers.CharField(), required=False)
     nifs = serializers.ListField(child=serializers.CharField(), required=False)
     emails = serializers.ListField(child=serializers.EmailField(), required=False)
+    usernames = serializers.ListField(child=serializers.CharField(), required=False)
 
     def validate(self, attrs):
         """Validates the request data."""
@@ -65,9 +66,10 @@ class DataExtractorRequestSerializer(serializers.Serializer):
 
         nifs = attrs.get("nifs", [])
         emails = attrs.get("emails", [])
+        usernames = attrs.get("usernames", [])
         query_security_scope = self.context.get("query_security_scope", {})
 
-        if not nifs and not emails:
+        if not nifs and not emails and not usernames:
             if not query_security_scope:
                 raise PartnerIntegrationNoDataProvidedException()
 
@@ -100,12 +102,14 @@ class EnrollUserRequestSerializer(serializers.Serializer):
     course = serializers.CharField(required=False)
     nif = serializers.CharField(required=False)
     email = serializers.CharField(required=False)
+    username = serializers.CharField(required=False)
 
     def validate(self, attrs):
         """Validates the request data."""
         course = attrs.get("course")
         nif = attrs.get("nif")
         email = attrs.get("email")
+        username = attrs.get("username")
         query_security_scope = self.context.get("query_security_scope", {})
 
         if not query_security_scope:
@@ -114,9 +118,9 @@ class EnrollUserRequestSerializer(serializers.Serializer):
         if not course:
             raise PartnerIntegrationNoDataProvidedException("Course ID must be provided to enroll users.")
 
-        if not nif and not email:
+        if not nif and not email and not username:
             raise PartnerIntegrationNoDataProvidedException(
-                "At least one of NIF or email must be provided to enroll users."
+                "At least one of NIF, email, or username must be provided to enroll users."
             )
 
         return attrs
@@ -124,9 +128,6 @@ class EnrollUserRequestSerializer(serializers.Serializer):
 
 class CompleteEnrollmentDataSerializer(serializers.ModelSerializer):
     """Serializer to flatten course enrollment, user, and course data."""
-    certificate_created_date = serializers.DateTimeField(source='certificate_created', read_only=True)
-    certificate_status = serializers.CharField(read_only=True)
-    certificate_download_url = serializers.CharField(read_only=True)
     user_nif = serializers.CharField(source='user.nau_nif', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
     user_name = serializers.SerializerMethodField()
@@ -150,9 +151,6 @@ class CompleteEnrollmentDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseEnrollment
         fields = [
-            "certificate_created_date",
-            "certificate_status",
-            "certificate_download_url",
             "user_nif",
             "username",
             "user_name",
@@ -235,4 +233,3 @@ class CourseProgressSerializer(serializers.Serializer):
     completion_summary = CompletionSummarySerializer()
     course_grade = CourseGradeSerializer()
     grading_policy = GradingPolicySerializer()
-    section_scores = ChapterGradeSerializer(many=True)
