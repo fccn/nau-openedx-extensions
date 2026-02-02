@@ -205,6 +205,49 @@ class DjangoEmailBulkChannel(BulkEmailChannelMixin, DjangoEmailChannel):
 
     channel_type = ChannelType.EMAIL
 
+    def overrides_delivery_for_message(self, message):
+        """
+        Indicate that this channel overrides delivery for specific message types.
+
+        This method is used by ACE to determine if this channel should be used
+        for delivering a given message based on configured delivery policies.
+
+        This uses the `ACE_CHANNEL_MESSAGE_TYPE_OVERRIDES` setting to check if the
+        message type is configured to use this bulk email channel.
+
+        Args:
+            message: The ACE message object
+
+        Returns:
+            bool: True if this channel overrides delivery for the message
+        """
+        # This channel is intended for bulk email types only
+
+        # Check if the message type is configured for bulk delivery on ACE_CHANNEL_MESSAGE_TYPE_OVERRIDES setting
+        # Get the full message type class path (e.g., 'lms.djangoapps.bulk_email.message_types.BulkEmail')
+        message_type = message.__class__.__module__ + '.' + message.__class__.__name__
+
+        # Get the channel overrides configuration
+        channel_overrides = getattr(settings, 'ACE_CHANNEL_MESSAGE_TYPE_OVERRIDES', {})
+
+        # Check if this message type is configured to use this channel
+        if message_type in channel_overrides:
+            configured_channel = channel_overrides[message_type]
+            # The channel name for this class is 'django_email_bulk' (registered in setup.py)
+            if configured_channel == 'django_email_bulk':
+                logger.info(
+                    'Message type "%s" is configured for bulk delivery via django_email_bulk channel',
+                    message_type
+                )
+                return True
+
+        logger.debug(
+            'Message type "%s" is not configured for bulk delivery (configured for: %s)',
+            message_type,
+            channel_overrides.get(message_type, 'default')
+        )
+        return False
+
     def deliver(self, message, rendered_message):
         """
         Deliver an email message using the bulk SMTP relay.
