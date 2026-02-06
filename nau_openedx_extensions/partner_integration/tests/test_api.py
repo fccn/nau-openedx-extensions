@@ -257,6 +257,31 @@ class TestCertificateRestExportView(TransactionTestCase, BaseStructure):
         self.assertIn("results", response.data)
         self.assertEqual(response.data["results"][0]["course_id"], str(certificate.course_id))
 
+    def test_successful_export_with_valid_certificate_url(self):
+        """
+        Tests a successful export with a valid course filter.
+        1. Authenticates a partner client.
+        2. Calls the data extractor endpoint with a valid course id.
+        3. Validates the response contains a certificate url that matches
+        the certificate's `verify_uuid`.
+        """
+        course_id = self.base_data["courses"][0].id
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"courses": [str(course_id)]},
+            format="json",
+        )
+
+        certificate = GeneratedCertificate.objects.filter(course_id=str(course_id)).first()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("results", response.data)
+        self.assertTrue(str(certificate.verify_uuid) in response.data["results"][0]["certificate_url"])
+
     def test_empty_body_returns_all_courses(self):
         """
         Tests that an empty body returns all courses.
