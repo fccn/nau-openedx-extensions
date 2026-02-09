@@ -3,6 +3,7 @@
 import logging
 from datetime import datetime
 
+from django.conf import settings
 from rest_framework import serializers
 
 from nau_openedx_extensions.edxapp_wrapper.certificates import GeneratedCertificate
@@ -14,11 +15,12 @@ from nau_openedx_extensions.partner_integration.exception import (
 
 logger = logging.getLogger(__name__)
 
+LMS_ROOT = getattr(settings, "LMS_ROOT_URL", "http://lms.nau.edu.pt")
+
 
 class CompleteCertificateDataSerializer(serializers.ModelSerializer):
     """Serializer to flatten certificate, user, and course enrollment data."""
     certificate_date = serializers.DateTimeField(source='created_date', read_only=True)
-    certificate_url = serializers.CharField(source='download_url', read_only=True)
     user_nif = serializers.CharField(source='user.nau_nif', read_only=True)
     user_email = serializers.EmailField(source='user.email', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
@@ -26,12 +28,17 @@ class CompleteCertificateDataSerializer(serializers.ModelSerializer):
     course_name = serializers.CharField(source='course_display_name', read_only=True)
     enrollment_date = serializers.DateTimeField(read_only=True)
     name = serializers.SerializerMethodField()
+    certificate_url = serializers.SerializerMethodField()
 
     def get_name(self, obj):
         """Returns the full name of the user, or username if full name is not available."""
         user = obj.user
         full_name = user.get_full_name().strip()
         return full_name or user.username
+
+    def get_certificate_url(self, obj):
+        """Returns a computed value for certificate url."""
+        return f"{LMS_ROOT}/certificates/{obj.verify_uuid}"
 
     class Meta:
         model = GeneratedCertificate
