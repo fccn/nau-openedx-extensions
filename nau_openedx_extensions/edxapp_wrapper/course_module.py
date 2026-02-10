@@ -9,11 +9,10 @@ log = logging.getLogger(__name__)
 
 def get_other_course_settings(course_id):
     """Get Other Course Settings."""
-    from cms.djangoapps.models.settings.course_metadata import CourseMetadata  # pylint: disable=import-error
     from xmodule.modulestore.django import modulestore  # pylint: disable=import-error
     try:
         course = modulestore().get_course(course_id)
-        other_course_settings = CourseMetadata.fetch_all(course).get('other_course_settings', {})
+        other_course_settings = course.other_course_settings or {}
     except Exception as e:  # pylint: disable=broad-except
         other_course_settings = {}
         log.error(f'Error fetching other_course_settings for {e}')
