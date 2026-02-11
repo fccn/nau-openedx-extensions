@@ -2,9 +2,9 @@
 Defined filters.
 """
 
+import importlib.resources as resources
 from fnmatch import fnmatch
 
-import pkg_resources
 from django.conf import settings
 from django.db.models.query import QuerySet
 from django.template.loader import render_to_string
@@ -232,5 +232,5 @@ class FilterCertificateExportTab(PipelineStep):
 
     def resource_string(self, path):
         """Helper to get resources from the extension package."""
-        data = pkg_resources.resource_string("nau_openedx_extensions", path)
+        data = resources.files("nau_openedx_extensions").joinpath(path).read_bytes()
         return data.decode("utf8")
