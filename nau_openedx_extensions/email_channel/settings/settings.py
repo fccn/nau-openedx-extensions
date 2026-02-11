@@ -110,9 +110,9 @@ def plugin_settings(settings):
         settings.ACE_CHANNEL_MESSAGE_TYPE_OVERRIDES = {
             # BulkEmail messages from lms.djangoapps.bulk_email go to bulk channel
             'lms.djangoapps.bulk_email.message_types.BulkEmail': 'django_email_bulk',
-
-            # Add more message type mappings here as needed
-            # Uncomment and modify these examples:
-            # 'lms.djangoapps.verify_student.messages.VerificationReminder': 'django_email_transactional',
-            # 'openedx.core.djangoapps.ace_common.message.CourseAnnouncement': 'django_email_announcements',
+            # All schedule module message types go to bulk channel
+            'openedx.core.djangoapps.schedules.message_types.RecurringNudge': 'django_email_bulk',
+            'openedx.core.djangoapps.schedules.message_types.UpgradeReminder': 'django_email_bulk',
+            'openedx.core.djangoapps.schedules.message_types.CourseUpdate': 'django_email_bulk',
+            'openedx.core.djangoapps.schedules.message_types.InstructorLedCourseUpdate': 'django_email_bulk',
         }
