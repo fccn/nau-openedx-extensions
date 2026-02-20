@@ -476,7 +476,7 @@ class ExportCourseCertificatesCommandTest(TestCase):
         super().setUp()
         self.valid_course_id = "course-v1:NAU+Demo+DemoCourse"
         self.valid_course_key = CourseKey.from_string(self.valid_course_id)
-        self.valid_download_url = "https://example.com/certificates/"
+        self.valid_download_url = "https://example.com/certificates"
         self.lms_root_url = "https://lms.example.com"
 
         # Use the renamed import
@@ -628,7 +628,7 @@ class ExportCourseCertificatesCommandTest(TestCase):
         self.assertEqual(data_row[6], expected_web_link)
 
         # Verify download link format
-        expected_download_link = f"{self.valid_download_url}test-uuid-123"
+        expected_download_link = f"{self.valid_download_url}/test-uuid-123"
         self.assertEqual(data_row[7], expected_download_link)
 
     @patch_use_read_replica
