@@ -80,7 +80,7 @@ class Command(BaseCommand):
             # iterate each certificate and append each certificate as a row
             for certificate in course_generated_certificates:
                 certificate_web_link_url = f"{lms_root_url}/certificates/{certificate.verify_uuid}"
-                certificate_download_pdf_link = certificate_download_url + certificate.verify_uuid
+                certificate_download_pdf_link = f"{certificate_download_url}/{certificate.verify_uuid}"
 
                 rows.append(
                     [
