@@ -1,10 +1,10 @@
 # tests/test_views_and_serializers.py
 import base64
 from datetime import datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from common.djangoapps.student.tests.factories import CourseEnrollmentFactory
-from django.test import TransactionTestCase, override_settings
+from django.test import TransactionTestCase
 from django.utils import timezone
 from lms.djangoapps.certificates.tests.factories import GeneratedCertificateFactory
 from openedx.core.djangoapps.content.course_overviews.tests.factories import CourseOverviewFactory
@@ -1585,14 +1585,6 @@ class TestPartnerRestIntegrationEnrollUserView(TransactionTestCase, BaseStructur
         self.assertIn("The specified course ID does not exist or is not accessible by the partner.", str(response.data))
 
 
-# TO DO: Create tests for the following view.
-# This view must be tested using the Open Edx test apporach implemented. It is a complex view,
-# which counts on other complex subsystems, e.g. CourseGradeFactory, get_course_blocks, etc.
-# It also depends on modulestore and other Open edX internals. That is, the tests implementation
-# would require a significant amount of setup and mocking to isolate the view's functionality, that
-# is already implemented in the upstream subsystems. It is necessary to investigate the best approach
-# to test this view properly, possibly involving integration tests or using a more comprehensive
-# testing framework that can handle Open edX's complexity.
 class TestStudentProgressRestExportView(TransactionTestCase, BaseStructure):
     """Tests for the StudentProgressRestExportView API endpoint."""
     def setUp(self):
@@ -1618,3 +1610,103 @@ class TestStudentProgressRestExportView(TransactionTestCase, BaseStructure):
 
         assert response.status_code == 200, f"Auth failed: {response.data}"
         return response.data["access_token"]
+
+    @patch("nau_openedx_extensions.partner_integration.facade.get_block_structure_manager")
+    @patch("nau_openedx_extensions.partner_integration.facade.get_course_blocks_completion_summary")
+    @patch("nau_openedx_extensions.partner_integration.facade.CourseGradeFactory")
+    @patch("nau_openedx_extensions.partner_integration.facade.modulestore")
+    @patch("nau_openedx_extensions.partner_integration.facade.get_course_or_403")
+    def test_student_progress_export_success(
+        self,
+        block_structure_manager_mock,
+        modulestore_mock,
+        course_grade_factory_mock,
+        completion_summary_mock,
+        get_course_or_403_mock
+    ):
+        course_id = self.base_data["courses"][0].id
+        partner_client = self.base_data["partner_clients"][0]
+        user_ext = self.base_data["users"][0]
+        user = user_ext.user
+        get_course_or_403_mock.return_value = MagicMock(id=course_id)
+
+        mock_grade = MagicMock()
+        mock_grade.percent = 0.84
+        mock_grade.passed = True
+        mock_grade.lowest_passing_grade = 0.5
+        mock_grade.letter_grade = "Approved"
+
+        course_grade_factory_mock().read.return_value = mock_grade
+
+        mock_course = MagicMock()
+        grading_policy = {
+            "GRADER": [
+                {
+                    "type": "Avaliação Módulo 1",
+                    "min_count": 1,
+                    "drop_count": 0,
+                    "short_label": "AS1",
+                    "weight": 0.33,
+                },
+                {
+                    "type": "Avaliação Módulo 2",
+                    "min_count": 1,
+                    "drop_count": 0,
+                    "short_label": "AS2",
+                    "weight": 0.33,
+                },
+                {
+                    "type": "Avaliação Módulo 3",
+                    "min_count": 1,
+                    "drop_count": 0,
+                    "short_label": "AS3",
+                    "weight": 0.34,
+                },
+            ],
+            "GRADE_CUTOFFS": {
+                "Aprovado": 0.5
+            },
+        }
+        mock_course.grading_policy = grading_policy
+
+        modulestore_instance = MagicMock()
+        modulestore_instance.get_course.return_value = mock_course
+        modulestore_mock.return_value = modulestore_instance
+
+        completion_summary_mock.return_value = {
+            "complete_count": 28,
+            "incomplete_count": 51,
+            "locked_count": 0,
+        }
+
+        mock_block_manager = MagicMock()
+        mock_block_manager.get_collected.return_value = {}
+        block_structure_manager_mock.return_value = mock_block_manager
+
+        access_token = self.authenticate_partner_client(partner_client)
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={
+                "course": str(course_id),
+                "email": user.email
+            },
+            format="json",
+        )
+
+        response_data = response.json()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response_data["username"], user.username)
+        self.assertTrue(response_data["user_has_passing_grade"], "User should have passing grade")
+
+        expected_summary = {
+            "complete_count": 28,
+            "incomplete_count": 51,
+            "locked_count": 0
+        }
+
+        self.assertEqual(response_data["completion_summary"], expected_summary)
+        self.assertEqual(response_data["course_grade"]["percent"], 0.84)
+        self.assertEqual(response_data["course_grade"]["passed"], True)
+        self.assertEqual(response_data["course_grade"]["letter_grade"], "Approved")

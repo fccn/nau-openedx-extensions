@@ -445,7 +445,7 @@ class StudentProgressExportFacade(DataExtractorFacade):
         Fetches student progress based on the client's `query_security_scope` and request parameters.
         """
         try:
-
+            logger.info("Executing student progress data extraction.")
             base_security_scope = query_security_scope.get("base_security_scope")
             courses_base_query = super().apply_base_security_scope(base_security_scope)
             student = self._get_student_user(student_id, nif, email, username)
@@ -463,6 +463,7 @@ class StudentProgressExportFacade(DataExtractorFacade):
             if not course_to_extract:
                 raise PartnerIntegrationCourseOwnerException()
 
+            logger.info("Course to extract: %s", course_to_extract.id)
             course_key = CourseKey.from_string(str(course_to_extract.id))
             course_to_extract = get_course_or_403(student, 'load', course_key, check_if_enrolled=False)
             collected_block_structure = get_block_structure_manager(course_key).get_collected()
@@ -484,7 +485,7 @@ class StudentProgressExportFacade(DataExtractorFacade):
             user_has_passing_grade = False
             if not student.is_anonymous:
                 user_grade = course_grade.percent
-                user_has_passing_grade = user_grade >= course.lowest_passing_grade
+                user_has_passing_grade = user_grade >= course_grade.lowest_passing_grade
 
             block = modulestore().get_course(course_key)
             grading_policy = block.grading_policy
