@@ -1628,12 +1628,12 @@ class TestStudentProgressRestExportView(TransactionTestCase, BaseStructure):
         partner_client = self.base_data["partner_clients"][0]
         user_ext = self.base_data["users"][0]
         user = user_ext.user
-        
+
         course_mock = MagicMock()
         course_mock.id = course_id
         course_mock.lowest_passing_grade = 0.5
         get_course_or_403_mock.return_value = course_mock
-        
+
         mock_grade = MagicMock()
         mock_grade.percent = 0.84
         mock_grade.passed = True
