@@ -1618,22 +1618,25 @@ class TestStudentProgressRestExportView(TransactionTestCase, BaseStructure):
     @patch("nau_openedx_extensions.partner_integration.facade.get_course_or_403")
     def test_student_progress_export_success(
         self,
-        block_structure_manager_mock,
+        get_course_or_403_mock,
         modulestore_mock,
         course_grade_factory_mock,
         completion_summary_mock,
-        get_course_or_403_mock
+        block_structure_manager_mock
     ):
         course_id = self.base_data["courses"][0].id
         partner_client = self.base_data["partner_clients"][0]
         user_ext = self.base_data["users"][0]
         user = user_ext.user
-        get_course_or_403_mock.return_value = MagicMock(id=course_id)
-
+        
+        course_mock = MagicMock()
+        course_mock.id = course_id
+        course_mock.lowest_passing_grade = 0.5
+        get_course_or_403_mock.return_value = course_mock
+        
         mock_grade = MagicMock()
         mock_grade.percent = 0.84
         mock_grade.passed = True
-        mock_grade.lowest_passing_grade = 0.5
         mock_grade.letter_grade = "Approved"
 
         course_grade_factory_mock().read.return_value = mock_grade

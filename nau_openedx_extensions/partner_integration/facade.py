@@ -485,7 +485,7 @@ class StudentProgressExportFacade(DataExtractorFacade):
             user_has_passing_grade = False
             if not student.is_anonymous:
                 user_grade = course_grade.percent
-                user_has_passing_grade = user_grade >= course_grade.lowest_passing_grade
+                user_has_passing_grade = user_grade >= course_to_extract.lowest_passing_grade
 
             block = modulestore().get_course(course_key)
             grading_policy = block.grading_policy
