@@ -3,6 +3,7 @@
 import logging
 from datetime import datetime, time, timedelta
 
+from common.djangoapps.student.models import EnrollmentNotAllowed
 from django.contrib.auth import get_user_model
 from django.db.models import OuterRef, Q, Subquery
 from lms.djangoapps.course_blocks.api import get_course_blocks  # pylint: disable=unused-import
@@ -24,6 +25,7 @@ from nau_openedx_extensions.edxapp_wrapper.util import use_read_replica_if_avail
 from nau_openedx_extensions.partner_integration.exception import (
     PartnerIntegrationCourseOwnerException,
     PartnerIntegrationDataConflictException,
+    PartnerIntegrationEnrollmentPreventedException,
     PartnerIntegrationInternalErrorException,
     PartnerIntegrationInvalidDataProvidedException,
 )
@@ -327,6 +329,12 @@ class EnrollmentFacade(DataExtractorFacade):
             raise e
         except PartnerIntegrationInternalErrorException as e:
             raise e
+        except EnrollmentNotAllowed as e:
+            logger.warning(
+                "EnrollmentFacade: Enrollment prevented by filter pipeline: %s",
+                str(e),
+            )
+            raise PartnerIntegrationEnrollmentPreventedException(str(e)) from e
         except Exception as e:
             logger.error("EnrollmentFacade: Internal error during enrollment.", exc_info=e)
             raise PartnerIntegrationInternalErrorException() from e

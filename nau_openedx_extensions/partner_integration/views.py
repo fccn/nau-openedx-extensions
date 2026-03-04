@@ -15,6 +15,7 @@ from nau_openedx_extensions.models import SSOPartnerIntegration
 from nau_openedx_extensions.partner_integration.exception import (
     PartnerIntegrationCourseOwnerException,
     PartnerIntegrationDataConflictException,
+    PartnerIntegrationEnrollmentPreventedException,
     PartnerIntegrationInactiveClientException,
     PartnerIntegrationInternalErrorException,
     PartnerIntegrationInvalidDataProvidedException,
@@ -464,6 +465,9 @@ class PartnerRestIntegrationEnrollUserView(APIView):
         except PartnerIntegrationNoDataProvidedException as e:
             logger.error("PartnerRestIntegrationEnrollmentView: No data provided for enrollment.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
+        except PartnerIntegrationEnrollmentPreventedException as e:
+            logger.warning("PartnerRestIntegrationEnrollmentView: Enrollment prevented by filter.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_403_FORBIDDEN)
         except PartnerIntegrationInternalErrorException as e:
             logger.error("PartnerRestIntegrationEnrollmentView: Internal error occurred during enrollment.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

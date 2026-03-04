@@ -88,3 +88,21 @@ class PartnerIntegrationCourseOwnerException(Exception):
             self.message = message
         else:
             self.message = "You are not allowed to get information about this course."
+
+
+class PartnerIntegrationEnrollmentPreventedException(Exception):
+    """
+    Custom exception for filter-based enrollment rejections.
+
+    Raised when an Open edX enrollment filter (e.g., FilterSSOPartnerAccountLink)
+    prevents enrollment via CourseEnrollmentStarted.PreventEnrollment.
+    """
+
+    def __init__(self, message=None):
+        if message:
+            self.message = message
+        else:
+            self.message = (
+                "Enrollment was prevented by the enrollment filter pipeline. "
+                "Please verify the user's account configuration."
+            )
