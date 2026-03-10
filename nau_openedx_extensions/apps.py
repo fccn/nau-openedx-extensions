@@ -65,3 +65,18 @@ class NauOpenEdxConfig(AppConfig):
             get_course_email_context_factory  # pylint: disable=import-outside-toplevel # noqa
         bulk_email_tasks._get_course_email_context = \
             get_course_email_context_factory(prev_email_context_func)  # pylint: disable=protected-access
+
+        # Monkey-patch get_student_features_with_custom in instructor_analytics basic module
+        # to append NAU per-course additional student profile fields defined in the course
+        # advanced setting nau_additional_features_on_instructor_analytics_student_profile_info,
+        # filtered against the Django allowlist
+        # NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO.
+        from lms.djangoapps.instructor_analytics import \
+            basic as instructor_analytics_basic  # pylint: disable=import-error,import-outside-toplevel # noqa
+
+        from nau_openedx_extensions.utils.instructor_analytics import \
+            get_student_features_with_custom_factory  # pylint: disable=import-outside-toplevel # noqa
+
+        prev_get_student_features_with_custom = instructor_analytics_basic.get_student_features_with_custom
+        instructor_analytics_basic.get_student_features_with_custom = \
+            get_student_features_with_custom_factory(prev_get_student_features_with_custom)

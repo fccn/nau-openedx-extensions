@@ -90,3 +90,17 @@ def plugin_settings(settings):
     settings.NAU_INSTRUCTOR_TASK_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.instructor_task_r_v1"
     settings.NAU_SITE_CONFIGURATION_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_r_v1"
     settings.NAU_CONTENT_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.content_r_v1"
+
+    # Global allowlist of all User attribute names that may ever be appended to the
+    # Student Profile Info CSV report via the per-course advanced setting
+    # ``nau_additional_features_on_instructor_analytics_student_profile_info``.
+    # Only fields present here will be accepted; any other field requested at the
+    # course level will be skipped with a warning.
+    #
+    # Example::
+    #
+    #   NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO = [
+    #       "nau_nif",
+    #       "nau_user_extended_model_cc_nic",
+    #   ]
+    settings.NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO = []
