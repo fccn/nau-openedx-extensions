@@ -2,7 +2,7 @@
 """
 Test cases for instructor analytics utilities.
 
-This module tests the monkey-patching of ``get_student_features_with_custom``
+This module tests the monkey-patching of ``get_additional_student_profile_attributes``
 which appends additional student profile fields when the course advanced setting
 ``nau_additional_features_on_instructor_analytics_student_profile_info`` is configured,
 subject to the global Django allowlist
@@ -15,10 +15,10 @@ from django.test import TestCase, override_settings
 from nau_openedx_extensions.utils.instructor_analytics import (
     _COURSE_SETTING_KEY,
     _DJANGO_ALLOWLIST_SETTING,
-    get_student_features_with_custom_factory,
+    get_additional_student_profile_attributes_factory,
 )
 
-_BASE_FEATURES = ("id", "username", "name", "email", "year_of_birth")
+_BASE_ATTRIBUTES = ["year_of_birth", "gender"]
 _ALL_EXTRA_FEATURES = ["nau_nif", "nau_user_extended_model_cc_nic"]
 
 
@@ -27,9 +27,11 @@ def _make_course_key():
     return Mock()
 
 
-def _make_original(features=_BASE_FEATURES):
-    """Return a mock original function that always returns *features*."""
-    return Mock(return_value=features)
+def _make_original(attributes=None):
+    """Return a mock original function that always returns *attributes*."""
+    if attributes is None:
+        attributes = _BASE_ATTRIBUTES
+    return Mock(return_value=attributes)
 
 
 def _make_course_settings(extra_features=None):
@@ -45,9 +47,9 @@ def _make_course_settings(extra_features=None):
     return {"value": value}
 
 
-class TestGetStudentFeaturesWithCustomFactory(TestCase):
+class TestGetAdditionalStudentProfileAttributesFactory(TestCase):
     """
-    Unit tests for get_student_features_with_custom_factory.
+    Unit tests for get_additional_student_profile_attributes_factory.
 
     Two layers of configuration are tested:
 
@@ -64,10 +66,10 @@ class TestGetStudentFeaturesWithCustomFactory(TestCase):
     @patch('nau_openedx_extensions.utils.instructor_analytics.get_other_course_settings')
     @override_settings(**{_DJANGO_ALLOWLIST_SETTING: _ALL_EXTRA_FEATURES})
     def test_original_function_always_called(self, mock_get_other_course_settings):
-        """The original get_student_features_with_custom is always invoked regardless of settings."""
+        """The original get_additional_student_profile_attributes is always invoked regardless of settings."""
         mock_get_other_course_settings.return_value = _make_course_settings(["nau_nif"])
         original = _make_original()
-        wrapper = get_student_features_with_custom_factory(original)
+        wrapper = get_additional_student_profile_attributes_factory(original)
         course_key = _make_course_key()
 
         wrapper(course_key)
@@ -80,7 +82,7 @@ class TestGetStudentFeaturesWithCustomFactory(TestCase):
         """get_other_course_settings is called with the same course_key passed to the wrapper."""
         mock_get_other_course_settings.return_value = _make_course_settings()
         original = _make_original()
-        wrapper = get_student_features_with_custom_factory(original)
+        wrapper = get_additional_student_profile_attributes_factory(original)
         course_key = _make_course_key()
 
         wrapper(course_key)
@@ -93,35 +95,35 @@ class TestGetStudentFeaturesWithCustomFactory(TestCase):
 
     @patch('nau_openedx_extensions.utils.instructor_analytics.get_other_course_settings')
     @override_settings(**{_DJANGO_ALLOWLIST_SETTING: _ALL_EXTRA_FEATURES})
-    def test_no_course_setting_returns_original_features(self, mock_get_other_course_settings):
-        """When the course setting key is absent, the original features are returned unchanged."""
+    def test_no_course_setting_returns_original_attributes(self, mock_get_other_course_settings):
+        """When the course setting key is absent, the original attributes are returned unchanged."""
         mock_get_other_course_settings.return_value = _make_course_settings()
         original = _make_original()
-        wrapper = get_student_features_with_custom_factory(original)
+        wrapper = get_additional_student_profile_attributes_factory(original)
 
         result = wrapper(_make_course_key())
 
-        self.assertEqual(result, _BASE_FEATURES)
+        self.assertEqual(result, _BASE_ATTRIBUTES)
 
     @patch('nau_openedx_extensions.utils.instructor_analytics.get_other_course_settings')
     @override_settings(**{_DJANGO_ALLOWLIST_SETTING: _ALL_EXTRA_FEATURES})
-    def test_empty_other_course_settings_returns_original_features(self, mock_get_other_course_settings):
+    def test_empty_other_course_settings_returns_original_attributes(self, mock_get_other_course_settings):
         """An empty dict from get_other_course_settings does not break the wrapper."""
         mock_get_other_course_settings.return_value = {}
 
-        result = get_student_features_with_custom_factory(_make_original())(_make_course_key())
+        result = get_additional_student_profile_attributes_factory(_make_original())(_make_course_key())
 
-        self.assertEqual(result, _BASE_FEATURES)
+        self.assertEqual(result, _BASE_ATTRIBUTES)
 
     @patch('nau_openedx_extensions.utils.instructor_analytics.get_other_course_settings')
     @override_settings(**{_DJANGO_ALLOWLIST_SETTING: _ALL_EXTRA_FEATURES})
-    def test_empty_course_setting_list_returns_original_features(self, mock_get_other_course_settings):
-        """An empty list in the course setting returns original features unchanged."""
+    def test_empty_course_setting_list_returns_original_attributes(self, mock_get_other_course_settings):
+        """An empty list in the course setting returns original attributes unchanged."""
         mock_get_other_course_settings.return_value = _make_course_settings([])
 
-        result = get_student_features_with_custom_factory(_make_original())(_make_course_key())
+        result = get_additional_student_profile_attributes_factory(_make_original())(_make_course_key())
 
-        self.assertEqual(result, _BASE_FEATURES)
+        self.assertEqual(result, _BASE_ATTRIBUTES)
 
     # ------------------------------------------------------------------
     # Happy path: fields appended correctly
@@ -135,9 +137,9 @@ class TestGetStudentFeaturesWithCustomFactory(TestCase):
             ["nau_nif", "nau_user_extended_model_cc_nic"]
         )
 
-        result = get_student_features_with_custom_factory(_make_original())(_make_course_key())
+        result = get_additional_student_profile_attributes_factory(_make_original())(_make_course_key())
 
-        self.assertEqual(result, _BASE_FEATURES + ("nau_nif", "nau_user_extended_model_cc_nic"))
+        self.assertEqual(result, _BASE_ATTRIBUTES + ["nau_nif", "nau_user_extended_model_cc_nic"])
 
     @patch('nau_openedx_extensions.utils.instructor_analytics.get_other_course_settings')
     @override_settings(**{_DJANGO_ALLOWLIST_SETTING: _ALL_EXTRA_FEATURES})
@@ -147,10 +149,10 @@ class TestGetStudentFeaturesWithCustomFactory(TestCase):
             ["nau_user_extended_model_cc_nic", "nau_nif"]
         )
 
-        result = get_student_features_with_custom_factory(_make_original())(_make_course_key())
+        result = get_additional_student_profile_attributes_factory(_make_original())(_make_course_key())
 
         self.assertEqual(
-            result, _BASE_FEATURES + ("nau_user_extended_model_cc_nic", "nau_nif")
+            result, _BASE_ATTRIBUTES + ["nau_user_extended_model_cc_nic", "nau_nif"]
         )
 
     # ------------------------------------------------------------------
@@ -158,16 +160,16 @@ class TestGetStudentFeaturesWithCustomFactory(TestCase):
     # ------------------------------------------------------------------
 
     @patch('nau_openedx_extensions.utils.instructor_analytics.get_other_course_settings')
-    @override_settings(**{_DJANGO_ALLOWLIST_SETTING: ["name", "nau_nif"]})
+    @override_settings(**{_DJANGO_ALLOWLIST_SETTING: ["gender", "nau_nif"]})
     def test_field_already_in_base_not_duplicated(self, mock_get_other_course_settings):
         """A field that is already in the original result is not appended again."""
         mock_get_other_course_settings.return_value = _make_course_settings(
-            ["name", "nau_nif"]  # "name" already in _BASE_FEATURES
+            ["gender", "nau_nif"]  # "gender" already in _BASE_ATTRIBUTES
         )
 
-        result = get_student_features_with_custom_factory(_make_original())(_make_course_key())
+        result = get_additional_student_profile_attributes_factory(_make_original())(_make_course_key())
 
-        self.assertEqual(result.count("name"), 1)
+        self.assertEqual(result.count("gender"), 1)
         self.assertIn("nau_nif", result)
 
     # ------------------------------------------------------------------
@@ -183,7 +185,7 @@ class TestGetStudentFeaturesWithCustomFactory(TestCase):
         )
 
         with self.assertLogs('nau_openedx_extensions.utils.instructor_analytics', level='WARNING') as log:
-            result = get_student_features_with_custom_factory(_make_original())(_make_course_key())
+            result = get_additional_student_profile_attributes_factory(_make_original())(_make_course_key())
 
         self.assertIn("nau_nif", result)
         self.assertNotIn("nau_user_extended_model_cc_nic", result)
@@ -198,9 +200,9 @@ class TestGetStudentFeaturesWithCustomFactory(TestCase):
         )
 
         with self.assertLogs('nau_openedx_extensions.utils.instructor_analytics', level='WARNING') as log:
-            result = get_student_features_with_custom_factory(_make_original())(_make_course_key())
+            result = get_additional_student_profile_attributes_factory(_make_original())(_make_course_key())
 
-        self.assertEqual(result, _BASE_FEATURES)
+        self.assertEqual(result, _BASE_ATTRIBUTES)
         # One warning per blocked field
         warning_messages = [m for m in log.output if 'WARNING' in m]
         self.assertEqual(len(warning_messages), 2)
@@ -214,7 +216,7 @@ class TestGetStudentFeaturesWithCustomFactory(TestCase):
         )
 
         with self.assertLogs('nau_openedx_extensions.utils.instructor_analytics', level='WARNING') as log:
-            result = get_student_features_with_custom_factory(_make_original())(_make_course_key())
+            result = get_additional_student_profile_attributes_factory(_make_original())(_make_course_key())
 
         self.assertIn("nau_nif", result)
         self.assertNotIn("unknown_field", result)
@@ -226,9 +228,9 @@ class TestGetStudentFeaturesWithCustomFactory(TestCase):
         mock_get_other_course_settings.return_value = _make_course_settings(["nau_nif"])
 
         with self.assertLogs('nau_openedx_extensions.utils.instructor_analytics', level='WARNING'):
-            result = get_student_features_with_custom_factory(_make_original())(_make_course_key())
+            result = get_additional_student_profile_attributes_factory(_make_original())(_make_course_key())
 
-        self.assertEqual(result, _BASE_FEATURES)
+        self.assertEqual(result, _BASE_ATTRIBUTES)
 
     # ------------------------------------------------------------------
     # Malformed course setting value
@@ -241,7 +243,7 @@ class TestGetStudentFeaturesWithCustomFactory(TestCase):
         mock_get_other_course_settings.return_value = _make_course_settings("bad-value")
 
         with self.assertLogs('nau_openedx_extensions.utils.instructor_analytics', level='WARNING') as log:
-            result = get_student_features_with_custom_factory(_make_original())(_make_course_key())
+            result = get_additional_student_profile_attributes_factory(_make_original())(_make_course_key())
 
-        self.assertEqual(result, _BASE_FEATURES)
+        self.assertEqual(result, _BASE_ATTRIBUTES)
         self.assertTrue(any("not a list" in msg for msg in log.output))
