@@ -77,7 +77,7 @@ _venv: _check_python ## Create virtual environment if it doesn't exist
 	fi
 .PHONY: _venv
 
-requirements: | _prerequire _venv ## Install requirements from both edx-platform and nau-openedx-extensions
+requirements: | _prerequire _venv pre-requirements ## Install requirements from both edx-platform and nau-openedx-extensions
 	@echo "Installing edx-platform testing requirements..."
 	$(PIP) install -r ${EDX_PLATFORM_PATH}/requirements/edx/testing.txt
 	@echo "Installing edx-platform in editable mode..."
@@ -209,9 +209,9 @@ lint-fix: | _prerequire _venv ## Fix Python import sort
 # Define PIP_COMPILE_OPTS=-v to get more information during make upgrade.
 PIP_COMPILE = pip-compile --rebuild --upgrade $(PIP_COMPILE_OPTS)
 
-pre-requirements: ## install Python requirements for running pip-tools
-	pip install -r requirements/pip.txt
-	pip install -r requirements/pip-tools.txt
+pre-requirements: _venv ## install Python requirements for running pip-tools
+	$(PIP) install -r requirements/pip.txt
+	$(PIP) install -r requirements/pip-tools.txt
 .PHONY: pre-requirements
 
 compile-requirements: export CUSTOM_COMPILE_COMMAND=make compile-requirements
