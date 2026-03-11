@@ -77,6 +77,6 @@ class NauOpenEdxConfig(AppConfig):
         from nau_openedx_extensions.utils.instructor_analytics import \
             get_additional_student_profile_attributes_factory  # pylint: disable=import-outside-toplevel # noqa
 
-        prev_get_additional_student_profile_attributes = instructor_analytics_basic.get_additional_student_profile_attributes
+        prev_method = instructor_analytics_basic.get_additional_student_profile_attributes
         instructor_analytics_basic.get_additional_student_profile_attributes = \
-            get_additional_student_profile_attributes_factory(prev_get_additional_student_profile_attributes)
+            get_additional_student_profile_attributes_factory(prev_method)
