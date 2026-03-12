@@ -278,8 +278,13 @@ class EnrollmentFacade(DataExtractorFacade):
             elif username and not user:
                 user = use_read_replica_if_available(User.objects.filter(username=username)).get()
 
-            if CourseEnrollment.objects.filter(course=course, user=user).exists():
-                raise PartnerIntegrationDataConflictException("The user is already enrolled in this course.")
+            course_enrollment = CourseEnrollment.objects.filter(course=course, user=user)
+            if course_enrollment.exists():
+                if course_enrollment.first().is_active:
+                    raise PartnerIntegrationDataConflictException("The user is already enrolled in this course.")
+
+                raise PartnerIntegrationDataConflictException(
+                    "The user is already enrolled in this course but the enrollment is not active.")
 
             # It implements the enrollment process from Open edX enrollment API, but
             # the return is not the CourseEnrollment object, so we need to fetch it

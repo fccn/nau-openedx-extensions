@@ -1475,6 +1475,39 @@ class TestPartnerRestIntegrationEnrollUserView(TransactionTestCase, BaseStructur
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
         self.assertIn("The user is already enrolled in this course", str(response.data))
 
+    def test_inactive_enrollment_returns_409(self):
+        """
+        Test that enrolling an already enrolled user returns 409 conflict.
+        1. Authenticates a partner client.
+        2. Creates an external user and enrolls them in a course.
+        3. Calls the enroll-user endpoint with the same course ID and user NIF.
+        4. Validates the response is a 409 with appropriate error message.
+        """
+        course = self.base_data["courses"][0]
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        external_user = NauUserExtendedModelFactory.create()
+        external_user.nif = "202020202"
+        external_user.user.email = "already_enrolled_returns_409@example.com"
+        external_user.save()
+        external_user.user.save()
+
+        CourseEnrollmentFactory.create(user=external_user.user, course_id=course.id, is_active=False)
+        data = {
+            "course": str(course.id),
+            "nif": external_user.nif,
+        }
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data=data,
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertIn(
+            "The user is already enrolled in this course but the enrollment is not active.", str(response.data))
+
     def test_enroll_user_does_not_exist_nif_returns_400(self):
         """
         Test that enrolling a non-existent user by NIF returns 400 error.
