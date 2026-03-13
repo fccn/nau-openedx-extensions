@@ -11,6 +11,8 @@ from django.apps import apps
 from openedx_filters import PipelineStep
 from openedx_filters.learning.filters import CourseEnrollmentStarted
 
+from nau_openedx_extensions.edxapp_wrapper.course_module import get_other_course_settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,6 +29,9 @@ class FilterSSOPartnerAccountLink(PipelineStep):
 
     The partner's base_security_scope defines which courses they can access,
     and is validated against the CourseOverview model fields.
+
+    To activate it, the course needs to have the setting `filter_enroll_only_if_sso_completed`
+    set to `true` inside the course other settings on the advanced settings.
 
     Example usage:
 
@@ -47,6 +52,8 @@ class FilterSSOPartnerAccountLink(PipelineStep):
         Filter implementation.
 
         Validates SSO partner account link and partner course access.
+        Only activated if the course has `filter_enroll_only_if_sso_completed`
+        set to true in its advanced settings.
 
         Args:
             user: The user attempting to enroll.
@@ -54,12 +61,20 @@ class FilterSSOPartnerAccountLink(PipelineStep):
             mode: The enrollment mode (unused).
 
         Returns:
-            Empty dict if validation passes.
+            Empty dict if validation passes or filter is not active.
 
         Raises:
             CourseEnrollmentStarted.PreventEnrollment: If user is not linked to a partner
                 or the partner doesn't have access to the course.
         """
+        other_course_settings = get_other_course_settings(course_key)
+        filter_enabled = other_course_settings.get("value", {}).get(
+            "filter_enroll_only_if_sso_completed"
+        )
+
+        if not filter_enabled:
+            return {}
+
         try:
             SSOPartnerIntegration = apps.get_model(
                 "nau_openedx_extensions",
