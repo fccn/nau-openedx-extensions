@@ -13,7 +13,14 @@ from nau_openedx_extensions.custom_registration_form.factories import NauUserExt
 from nau_openedx_extensions.partner_integration.course_filters import FilterSSOPartnerAccountLink
 from nau_openedx_extensions.partner_integration.factories import PartnerAPIClientFactory, SSOPartnerIntegrationFactory
 
+MOCK_COURSE_SETTINGS_ENABLED = {"value": {"filter_enroll_only_if_sso_completed": True}}
+MOCK_COURSE_SETTINGS_DISABLED = {"value": {}}
 
+
+@patch(
+    "nau_openedx_extensions.partner_integration.course_filters.get_other_course_settings",
+    return_value=MOCK_COURSE_SETTINGS_ENABLED,
+)
 class FilterSSOPartnerAccountLinkTests(TestCase):
     """Test cases for FilterSSOPartnerAccountLink."""
 
@@ -22,7 +29,7 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
         self.user = UserFactory()
         self.course = CourseOverviewFactory()
 
-    def test_filter_passes_when_user_has_valid_sso_record_and_course_allowed(self):
+    def test_filter_passes_when_user_has_valid_sso_record_and_course_allowed(self, _mock_settings):
         """Test filter passes when user has SSO record and course is in partner's scope."""
         partner = PartnerAPIClientFactory.create(
             query_security_scope={
@@ -37,7 +44,7 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
         )
         self.assertEqual(filter_instance, {})
 
-    def test_filter_raises_when_user_has_no_sso_record(self):
+    def test_filter_raises_when_user_has_no_sso_record(self, _mock_settings):
         """Test filter raises PreventEnrollment when user has no SSO record."""
         with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment) as context:
             FilterSSOPartnerAccountLink.run_filter(None, self.user, self.course.id, "honor")
@@ -46,7 +53,7 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
         self.assertIn("ligação de conta", error_message)
         self.assertIn("parceiro", error_message)
 
-    def test_filter_raises_when_partner_has_no_security_scope(self):
+    def test_filter_raises_when_partner_has_no_security_scope(self, _mock_settings):
         """Test filter raises PreventEnrollment when partner has empty security scope."""
         partner = PartnerAPIClientFactory.create(
             query_security_scope={
@@ -72,7 +79,7 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
             error_message = str(context.exception)
             self.assertIn("acesso configurado", error_message)
 
-    def test_filter_raises_when_course_not_in_partner_scope(self):
+    def test_filter_raises_when_course_not_in_partner_scope(self, _mock_settings):
         """Test filter raises PreventEnrollment when course is not allowed by partner."""
         partner = PartnerAPIClientFactory.create(
             query_security_scope={
@@ -89,7 +96,7 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
         self.assertIn("permissão", error_message)
         self.assertIn("curso", error_message)
 
-    def test_filter_passes_with_multiple_orgs_in_scope(self):
+    def test_filter_passes_with_multiple_orgs_in_scope(self, _mock_settings):
         """Test filter passes when course org is one of multiple allowed orgs."""
         partner = PartnerAPIClientFactory.create(
             query_security_scope={
@@ -102,7 +109,7 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
         result = FilterSSOPartnerAccountLink.run_filter(None, self.user, self.course.id, "honor")
         self.assertEqual(result, {})
 
-    def test_filter_passes_with_course_id_in_scope(self):
+    def test_filter_passes_with_course_id_in_scope(self, _mock_settings):
         """Test filter passes when specific course IDs are allowed."""
         partner = PartnerAPIClientFactory.create(
             query_security_scope={
@@ -118,7 +125,7 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
         result = FilterSSOPartnerAccountLink.run_filter(None, self.user, self.course.id, "honor")
         self.assertEqual(result, {})
 
-    def test_is_course_allowed_for_partner_with_valid_scope(self):
+    def test_is_course_allowed_for_partner_with_valid_scope(self, _mock_settings):
         """Test _is_course_allowed_for_partner with valid scope."""
         base_security_scope = {"org": self.course.org}
         result = FilterSSOPartnerAccountLink._is_course_allowed_for_partner(
@@ -126,7 +133,7 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
         )
         self.assertTrue(result)
 
-    def test_is_course_allowed_for_partner_with_invalid_scope(self):
+    def test_is_course_allowed_for_partner_with_invalid_scope(self, _mock_settings):
         """Test _is_course_allowed_for_partner with invalid scope."""
         base_security_scope = {"org": "non_existent_org"}
         result = FilterSSOPartnerAccountLink._is_course_allowed_for_partner(
@@ -134,7 +141,7 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
         )
         self.assertFalse(result)
 
-    def test_is_course_allowed_for_partner_handles_exceptions(self):
+    def test_is_course_allowed_for_partner_handles_exceptions(self, _mock_settings):
         """Test _is_course_allowed_for_partner handles exceptions gracefully."""
         with patch("django.apps.apps.get_model") as mock_get_model:
             mock_model = MagicMock()
@@ -147,7 +154,7 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
             )
             self.assertFalse(result)
 
-    def test_filter_logs_when_user_has_no_sso_record(self):
+    def test_filter_logs_when_user_has_no_sso_record(self, _mock_settings):
         """Test filter logs warning when user has no SSO record."""
         with patch("nau_openedx_extensions.partner_integration.course_filters.logger") as mock_logger:
             with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment):
@@ -157,7 +164,7 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
             call_args = mock_logger.warning.call_args[0][0]
             self.assertIn("no SSO partner integration record", call_args)
 
-    def test_filter_logs_when_course_not_allowed(self):
+    def test_filter_logs_when_course_not_allowed(self, _mock_settings):
         """Test filter logs warning when course is not allowed by partner."""
         partner = PartnerAPIClientFactory.create(
             query_security_scope={
@@ -175,7 +182,7 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
             call_args = mock_logger.warning.call_args[0][0]
             self.assertIn("does not have access to course", call_args)
 
-    def test_filter_logs_success(self):
+    def test_filter_logs_success(self, _mock_settings):
         """Test filter logs info when validation passes."""
         partner = PartnerAPIClientFactory.create(
             query_security_scope={
@@ -192,6 +199,12 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
             call_args = mock_logger.info.call_args[0][0]
             self.assertIn("validated for enrollment", call_args)
 
+    def test_filter_skipped_when_course_setting_not_enabled(self, mock_settings):
+        """Test filter is a no-op when filter_enroll_only_if_sso_completed is not set."""
+        mock_settings.return_value = MOCK_COURSE_SETTINGS_DISABLED
+        result = FilterSSOPartnerAccountLink.run_filter(None, self.user, self.course.id, "honor")
+        self.assertEqual(result, {})
+
 
 FILTER_PIPELINE_CONFIG = {
     "org.openedx.learning.course.enrollment.started.v1": {
@@ -203,13 +216,17 @@ FILTER_PIPELINE_CONFIG = {
 }
 
 
+@patch(
+    "nau_openedx_extensions.partner_integration.course_filters.get_other_course_settings",
+    return_value=MOCK_COURSE_SETTINGS_ENABLED,
+)
 class FilterSSOPartnerAccountLinkIntegrationTests(TransactionTestCase):
     """
     Integration tests for FilterSSOPartnerAccountLink.
 
     These tests validate the filter works end-to-end when triggered via
     the enroll-user API endpoint, with the filter pipeline enabled via
-    OPEN_EDX_FILTERS_CONFIG.
+    OPEN_EDX_FILTERS_CONFIG and the course setting filter_enroll_only_if_sso_completed.
     """
 
     def setUp(self):
@@ -250,7 +267,7 @@ class FilterSSOPartnerAccountLinkIntegrationTests(TransactionTestCase):
         )
 
     @override_settings(OPEN_EDX_FILTERS_CONFIG=FILTER_PIPELINE_CONFIG)
-    def test_api_enrollment_blocked_when_user_has_no_sso_record(self):
+    def test_api_enrollment_blocked_when_user_has_no_sso_record(self, _mock_settings):
         """
         Integration test: enrollment via API is blocked when the user has no
         SSOPartnerIntegration record.
@@ -276,7 +293,7 @@ class FilterSSOPartnerAccountLinkIntegrationTests(TransactionTestCase):
         )
 
     @override_settings(OPEN_EDX_FILTERS_CONFIG=FILTER_PIPELINE_CONFIG)
-    def test_api_enrollment_blocked_when_partner_has_empty_security_scope(self):
+    def test_api_enrollment_blocked_when_partner_has_empty_security_scope(self, _mock_settings):
         """
         Integration test: enrollment via API is blocked when the partner
         has an empty base_security_scope.
@@ -323,7 +340,7 @@ class FilterSSOPartnerAccountLinkIntegrationTests(TransactionTestCase):
         )
 
     @override_settings(OPEN_EDX_FILTERS_CONFIG=FILTER_PIPELINE_CONFIG)
-    def test_api_enrollment_blocked_when_course_not_in_partner_scope(self):
+    def test_api_enrollment_blocked_when_course_not_in_partner_scope(self, _mock_settings):
         """
         Integration test: enrollment via API is blocked when the course
         is not within the SSO partner's base_security_scope.
@@ -359,7 +376,7 @@ class FilterSSOPartnerAccountLinkIntegrationTests(TransactionTestCase):
         )
 
     @override_settings(OPEN_EDX_FILTERS_CONFIG=FILTER_PIPELINE_CONFIG)
-    def test_api_enrollment_succeeds_when_all_conditions_met(self):
+    def test_api_enrollment_succeeds_when_all_conditions_met(self, _mock_settings):
         """
         Integration test: enrollment via API succeeds when the user has a
         valid SSO record and the partner's scope includes the course.
@@ -384,7 +401,7 @@ class FilterSSOPartnerAccountLinkIntegrationTests(TransactionTestCase):
         self.assertEqual(response.data["user_email"], "valid_sso@example.com")
 
     @override_settings(OPEN_EDX_FILTERS_CONFIG=FILTER_PIPELINE_CONFIG)
-    def test_api_enrollment_succeeds_with_multiple_orgs_in_scope(self):
+    def test_api_enrollment_succeeds_with_multiple_orgs_in_scope(self, _mock_settings):
         """
         Integration test: enrollment via API succeeds when the partner has
         org__in scope containing the course's org among multiple orgs.
@@ -426,7 +443,7 @@ class FilterSSOPartnerAccountLinkIntegrationTests(TransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["course_id"], str(self.course.id))
 
-    def test_api_enrollment_succeeds_without_filter_configured(self):
+    def test_api_enrollment_succeeds_without_filter_configured(self, _mock_settings):
         """
         Baseline test: enrollment via API succeeds normally when the
         OPEN_EDX_FILTERS_CONFIG is not set (filter pipeline is not active).
@@ -439,6 +456,29 @@ class FilterSSOPartnerAccountLinkIntegrationTests(TransactionTestCase):
         external_user.user.email = "no_filter@example.com"
         external_user.user.save()
 
+        response = self._enroll_via_api(
+            access_token, self.course.id, external_user.user.email
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["course_id"], str(self.course.id))
+
+    @override_settings(OPEN_EDX_FILTERS_CONFIG=FILTER_PIPELINE_CONFIG)
+    def test_api_enrollment_succeeds_when_course_setting_not_enabled(self, mock_settings):
+        """
+        Integration test: enrollment succeeds even with filter pipeline active,
+        when the course does NOT have filter_enroll_only_if_sso_completed set.
+
+        This verifies that the filter is a no-op for courses without the setting.
+        """
+        mock_settings.return_value = MOCK_COURSE_SETTINGS_DISABLED
+        access_token = self._authenticate()
+
+        external_user = NauUserExtendedModelFactory.create()
+        external_user.user.email = "no_course_setting@example.com"
+        external_user.user.save()
+
+        # User has no SSO record, but filter should not block because course setting is off
         response = self._enroll_via_api(
             access_token, self.course.id, external_user.user.email
         )

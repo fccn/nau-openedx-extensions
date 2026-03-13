@@ -4,10 +4,11 @@
 
 The `FilterSSOPartnerAccountLink` is an Open edX enrollment filter that validates whether users attempting to enroll in courses have:
 
-1. **Completed SSO account linking** - User has a `SSOPartnerIntegration` record linking them to a partner account
-2. **Partner has course access** - The partner's `base_security_scope` grants access to the course being enrolled in
+1. **Course setting enabled** - The course must have `filter_enroll_only_if_sso_completed: true` in its advanced settings
+2. **Completed SSO account linking** - User has a `SSOPartnerIntegration` record linking them to a partner account
+3. **Partner has course access** - The partner's `base_security_scope` grants access to the course being enrolled in
 
-This filter ensures that only users with valid partner account links can enroll in courses authorized for that partner.
+This filter ensures that only users with valid partner account links can enroll in courses authorized for that partner. The filter is a **no-op** for courses that do not have the `filter_enroll_only_if_sso_completed` setting enabled.
 
 ## Implementation Details
 
@@ -24,17 +25,21 @@ The filter integrates with the Open edX Filter Framework using the `PipelineStep
 ```
 User attempts enrollment
     ↓
-Does user have SSOPartnerIntegration? 
-    ├─ NO → Raise error: "Account link not completed"
+Does course have filter_enroll_only_if_sso_completed = true?
+    ├─ NO → Filter skipped, enrollment allowed ✓
     └─ YES → Continue
             ↓
-            Does partner have base_security_scope?
-                ├─ NO → Raise error: "Partner has no access configured"
+            Does user have SSOPartnerIntegration? 
+                ├─ NO → Raise error: "Account link not completed"
                 └─ YES → Continue
                         ↓
-                        Is course allowed by partner's scope?
-                            ├─ NO → Raise error: "Partner doesn't have permission for this course"
-                            └─ YES → Enrollment allowed ✓
+                        Does partner have base_security_scope?
+                            ├─ NO → Raise error: "Partner has no access configured"
+                            └─ YES → Continue
+                                    ↓
+                                    Is course allowed by partner's scope?
+                                        ├─ NO → Raise error: "Partner doesn't have permission for this course"
+                                        └─ YES → Enrollment allowed ✓
 ```
 
 ### Security Scope Matching
@@ -52,7 +57,7 @@ The filter applies these filters to `CourseOverview` to determine access.
 
 ## Configuration
 
-### Add to OPEN_EDX_FILTERS_CONFIG
+### 1. Add to OPEN_EDX_FILTERS_CONFIG
 
 In your Django settings file (`lms.env.yml` or equivalent), add the filter to the enrollment pipeline:
 
@@ -82,6 +87,25 @@ Or in JSON format:
   }
 }
 ```
+
+### 2. Enable per Course (Advanced Settings)
+
+The filter is **only active for courses** that have the following setting in their **Advanced Settings** (Other Course Settings):
+
+```json
+{
+  "filter_enroll_only_if_sso_completed": true
+}
+```
+
+**How to set it:**
+
+1. Go to **Studio** → **Your Course** → **Settings** → **Advanced Settings**
+2. Find the **Other Course Settings** field
+3. Add `"filter_enroll_only_if_sso_completed": true` to the JSON object
+4. Save
+
+> **Note:** If this setting is not present or is set to `false`, the filter is a **no-op** — it will not block any enrollments for that course, even if the filter pipeline is globally enabled. This follows the same pattern used by `FilterEnrollmentByDomain` with its `filter_enrollment_by_domain_list` setting.
 
 ### Set fail_silently
 
@@ -145,12 +169,14 @@ Comprehensive tests are provided in [`tests/test_course_filters.py`](./tests/tes
 ### Test Coverage
 
 1. ✅ Valid SSO record with allowed course
-2. ✅ User has no SSO record → error
-3. ✅ Partner has no security scope → error
-4. ✅ Course not in partner's scope → error
+2. ✅ User has no SSO record → 403 error
+3. ✅ Partner has no security scope → 403 error
+4. ✅ Course not in partner's scope → 403 error
 5. ✅ Multiple orgs in scope
 6. ✅ Specific course IDs in scope
 7. ✅ Error handling and logging
+8. ✅ Filter skipped when course setting is not enabled
+9. ✅ Filter skipped when course setting is not enabled (integration test via API)
 
 ### Running Tests
 
@@ -203,11 +229,11 @@ Both operations are efficient and use database indexes on:
 
 ## Backwards Compatibility
 
-The filter is **opt-in** and only affects enrollment when:
-1. The filter is added to the `OPEN_EDX_FILTERS_CONFIG`
-2. The user has an `SSOPartnerIntegration` record
+The filter is **opt-in** and only affects enrollment when **both** conditions are met:
+1. The filter is added to the `OPEN_EDX_FILTERS_CONFIG` pipeline
+2. The course has `filter_enroll_only_if_sso_completed: true` in its advanced settings
 
-Existing users without SSO integration records are not affected.
+Courses without this setting are not affected. Users enrolling in courses that do not have the setting enabled will not be blocked, regardless of whether they have an SSO record or not.
 
 ## Troubleshooting
 
@@ -215,8 +241,9 @@ Existing users without SSO integration records are not affected.
 
 Check that:
 1. Filter is in `OPEN_EDX_FILTERS_CONFIG` pipeline
-2. `fail_silently` is set appropriately
-3. Settings have been reloaded (restart LMS/CMS)
+2. Course has `filter_enroll_only_if_sso_completed: true` in Advanced Settings
+3. `fail_silently` is set appropriately
+4. Settings have been reloaded (restart LMS/CMS)
 
 ### All Users Blocked
 
@@ -224,6 +251,12 @@ Check:
 1. User has `SSOPartnerIntegration` record (Django admin)
 2. Partner's `base_security_scope` is configured
 3. Course org/ID matches security scope
+
+### Filter Blocking Non-Partner Users
+
+If regular users (not coming through SSO) are being blocked, verify that:
+1. The course has `filter_enroll_only_if_sso_completed: true` — remove it if the course should be open to all users
+2. The filter is only meant for courses that require SSO partner account linking
 
 ### Database Errors
 
