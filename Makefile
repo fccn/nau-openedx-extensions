@@ -271,6 +271,8 @@ compile_translations:
 .PHONY: compile_translations
 
 check_miss_run_update_translations: | extract_translations update_translations_po_files clean_translations_intermediate ## Check if `make update_translations` should be run
-	git diff --numstat *.po | awk '{if ($$1>1 || $$2>1) { exit 1 } else { exit 0 }}'
-	@echo "OK"
+	@for lang in $(lang_targets) ; do \
+		git diff --numstat */$$lang/*.po | awk '{if ($$1>1 || $$2>1) { exit 1 } else { exit 0 }}'; \
+	done
+	@echo "✓ No missing translations detected."
 .PHONY: check_miss_run_update_translations
