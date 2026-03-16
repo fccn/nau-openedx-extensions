@@ -111,6 +111,14 @@ def generate_report_url_data(course_id, lms_url, report, additional_info):
         return f"{lms_url}/nau-openedx-extensions/certificate-export/courses/{course_id}/csv", {}
     elif report == "export_course_certificates_pdfs":
         return f"{lms_url}/nau-openedx-extensions/certificate-export/courses/{course_id}/pdf", {}
+    elif report == "student_answers_values":
+        if additional_info:
+            data = {
+                "block_id": additional_info[0],
+            }
+        else:
+            data = {}
+        return f"{lms_url}/nau-openedx-extensions/certificate-export/courses/{course_id}/student-answers-values", data
     else:
         raise RuntimeError(
             f'Unsupported report {report} request')
@@ -182,6 +190,7 @@ def main():
                             # NAU custom reports
                             "export_course_certificates",
                             "export_course_certificates_pdfs",
+                            "student_answers_values",
                         ])
 
     try:

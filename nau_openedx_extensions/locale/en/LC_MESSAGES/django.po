@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2025-12-29 21:59+0000\n"
+"POT-Creation-Date: 2026-03-18 16:13+0000\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -18,16 +18,20 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: nau_openedx_extensions/certificate_export/views.py:23
+#: nau_openedx_extensions/certificate_export/views.py:26
 msgid "Export task started successfully."
 msgstr ""
 
-#: nau_openedx_extensions/certificate_export/views.py:24
+#: nau_openedx_extensions/certificate_export/views.py:27
 msgid "The supplied course_id key is not valid."
 msgstr ""
 
-#: nau_openedx_extensions/certificate_export/views.py:25
+#: nau_openedx_extensions/certificate_export/views.py:28
 msgid "You do not have permission to export certificates for this course."
+msgstr ""
+
+#: nau_openedx_extensions/certificate_export/views.py:29
+msgid "The block_id field is required."
 msgstr ""
 
 #: nau_openedx_extensions/custom_registration_form/forms.py:39
@@ -255,28 +259,47 @@ msgid ""
 " account."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:204
+#: nau_openedx_extensions/filters/pipeline.py:209
 msgid "CSV export task started successfully!"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:205
+#: nau_openedx_extensions/filters/pipeline.py:210
 msgid "Failed to start CSV export task."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:206
+#: nau_openedx_extensions/filters/pipeline.py:211
 msgid "ZIP export task started successfully!"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:207
+#: nau_openedx_extensions/filters/pipeline.py:212
 msgid "Failed to start ZIP export task."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:208
+#: nau_openedx_extensions/filters/pipeline.py:213
+msgid "Student answers values report task started successfully!"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:214
+msgid "Failed to start student answers values report task."
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:215
 msgid "An unexpected error occurred. Please try again later."
 msgstr ""
 
+#: nau_openedx_extensions/filters/pipeline.py:217
+msgid ""
+"Generate a report where each row is an enrollment (user + course) and "
+"each column is a question answer. Select a problem block to generate the "
+"report from."
+msgstr ""
+
 #: nau_openedx_extensions/filters/pipeline.py:222
-msgid "Certificate Export"
+msgid "Data Download"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:236
+msgid "NAU custom reports"
 msgstr ""
 
 #: nau_openedx_extensions/management/commands/add_archived_course_message.py:111
@@ -296,12 +319,12 @@ msgstr ""
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:6
 msgid ""
-"In this section you can export the course certificates in different "
-"formats."
+"In this section you can export course certificates and generate custom "
+"NAU reports."
 msgstr ""
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:9
-msgid "Export options"
+msgid "Certificate Export"
 msgstr ""
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:13
@@ -310,33 +333,53 @@ msgid ""
 "this course."
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:18
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:16
 msgid "Export certificates CSVs"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:25
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:23
 msgid ""
 "Download a ZIP file containing all certificates in PDF format for this "
 "course."
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:30
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:26
 msgid "Export certificates PDF as ZIP"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:37
-msgid "Error"
-msgstr ""
-
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:38
-msgid "Success"
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:33
+msgid "Student Answers Values Report"
 msgstr ""
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:39
+msgid "Problem location (block key):"
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:47
+msgid "Generate Student Answers Values Report"
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:54
+msgid "Generated report files are available on the"
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:55
+msgid "tab."
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:61
+msgid "Error"
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:62
+msgid "Success"
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:63
 msgid "Info"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:40
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:64
 msgid "Warning"
 msgstr ""
 
@@ -366,5 +409,13 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Send Message"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "In this section you can export the"
+#~ " course certificates in different formats."
+#~ msgstr ""
+
+#~ msgid "Export options"
 #~ msgstr ""
 
