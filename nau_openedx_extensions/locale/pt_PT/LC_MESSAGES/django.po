@@ -309,24 +309,24 @@ msgid ""
 "The SSO partner integration has not been completed. Please complete the "
 "SSO partner integration before enrolling."
 msgstr ""
-"O processo de ligação de contas é obrigatório para se inscrever neste"
-" curso. Por favor, conclua este processo e tente novamente."
+"O processo de ligação de contas é obrigatório para se inscrever neste "
+"curso. Por favor, conclua este processo e tente novamente."
 
 #: nau_openedx_extensions/partner_integration/course_filters.py:108
 msgid ""
 "The partner integration has no access configured for any course. Please "
 "contact support."
 msgstr ""
-"A integração com o parceiro não tem acesso configurado para nenhum "
-"curso. Por favor, contacte o suporte."
+"A integração com o parceiro não tem acesso configurado para nenhum curso."
+" Por favor, contacte o suporte."
 
 #: nau_openedx_extensions/partner_integration/course_filters.py:118
 msgid ""
 "The partner integration does not have permission to enroll users in this "
 "course. Please contact support."
 msgstr ""
-"A integração com o parceiro não tem permissão para inscrever utilizadores "
-"neste curso. Por favor, contacte o suporte."
+"A integração com o parceiro não tem permissão para inscrever utilizadores"
+" neste curso. Por favor, contacte o suporte."
 
 #: nau_openedx_extensions/settings/common.py:37
 msgid "Certificate"
