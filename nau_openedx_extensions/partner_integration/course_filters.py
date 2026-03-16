@@ -8,6 +8,7 @@ course enrollment.
 import logging
 
 from django.apps import apps
+from django.utils.translation import gettext as _
 from openedx_filters import PipelineStep
 from openedx_filters.learning.filters import CourseEnrollmentStarted
 
@@ -90,9 +91,9 @@ class FilterSSOPartnerAccountLink(PipelineStep):
             logger.warning(
                 f"User {user.id} ({user.username}) has no SSO partner integration record"
             )
-            exception_msg = (
-                "A ligação de conta com a plataforma do parceiro não foi concluída. "
-                "Por favor, complete o processo de ligação de conta antes de se inscrever."
+            exception_msg = _(
+                "The SSO partner integration has not been completed. "
+                "Please complete the SSO partner integration before enrolling."
             )
             raise CourseEnrollmentStarted.PreventEnrollment(exception_msg) from exc
 
@@ -103,9 +104,9 @@ class FilterSSOPartnerAccountLink(PipelineStep):
             logger.warning(
                 f"Partner {partner_client.name} has no base_security_scope configured"
             )
-            exception_msg = (
-                "O parceiro de integração não tem acesso configurado para nenhum curso. "
-                "Por favor, contacte o suporte."
+            exception_msg = _(
+                "The partner integration has no access configured for any course. "
+                "Please contact support."
             )
             raise CourseEnrollmentStarted.PreventEnrollment(exception_msg)
 
@@ -113,9 +114,9 @@ class FilterSSOPartnerAccountLink(PipelineStep):
             logger.warning(
                 f"Partner {partner_client.name} does not have access to course {course_key}"
             )
-            exception_msg = (
-                "O parceiro de integração não tem permissão para inscrever utilizadores "
-                "neste curso. Por favor, contacte o suporte."
+            exception_msg = _(
+                "The partner integration does not have permission to enroll users in this course. "
+                "Please contact support."
             )
             raise CourseEnrollmentStarted.PreventEnrollment(exception_msg)
 

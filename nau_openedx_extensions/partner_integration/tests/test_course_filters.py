@@ -50,8 +50,11 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
             FilterSSOPartnerAccountLink.run_filter(None, self.user, self.course.id, "honor")
 
         error_message = str(context.exception)
-        self.assertIn("ligação de conta", error_message)
-        self.assertIn("parceiro", error_message)
+        self.assertIn(
+            "The SSO partner integration has not been completed. "
+            "Please complete the SSO partner integration before enrolling.",
+            error_message
+        )
 
     def test_filter_raises_when_partner_has_no_security_scope(self, _mock_settings):
         """Test filter raises PreventEnrollment when partner has empty security scope."""
@@ -77,7 +80,10 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
                 FilterSSOPartnerAccountLink.run_filter(None, self.user, self.course.id, "honor")
 
             error_message = str(context.exception)
-            self.assertIn("acesso configurado", error_message)
+            self.assertIn(
+                "The partner integration has no access configured for any course. "
+                "Please contact support.", error_message
+            )
 
     def test_filter_raises_when_course_not_in_partner_scope(self, _mock_settings):
         """Test filter raises PreventEnrollment when course is not allowed by partner."""
@@ -93,8 +99,10 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
             FilterSSOPartnerAccountLink.run_filter(None, self.user, self.course.id, "honor")
 
         error_message = str(context.exception)
-        self.assertIn("permissão", error_message)
-        self.assertIn("curso", error_message)
+        self.assertIn(
+            "The partner integration does not have permission to enroll users in this course. "
+            "Please contact support.", error_message
+        )
 
     def test_filter_passes_with_multiple_orgs_in_scope(self, _mock_settings):
         """Test filter passes when course org is one of multiple allowed orgs."""
@@ -288,7 +296,8 @@ class FilterSSOPartnerAccountLinkIntegrationTests(TransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertIn(
-            "A ligação de conta com a plataforma do parceiro não foi concluída",
+            "The SSO partner integration has not been completed. "
+            "Please complete the SSO partner integration before enrolling.",
             response.data["error"]
         )
 
@@ -335,7 +344,8 @@ class FilterSSOPartnerAccountLinkIntegrationTests(TransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertIn(
-            "O parceiro de integração não tem acesso configurado para nenhum curso",
+            "The partner integration has no access configured for any course. "
+            "Please contact support.",
             response.data["error"]
         )
 
@@ -371,7 +381,8 @@ class FilterSSOPartnerAccountLinkIntegrationTests(TransactionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertIn(
-            "O parceiro de integração não tem permissão para inscrever utilizadores neste curso",
+            "The partner integration does not have permission to enroll users in this course. "
+            "Please contact support.",
             response.data["error"]
         )
 
