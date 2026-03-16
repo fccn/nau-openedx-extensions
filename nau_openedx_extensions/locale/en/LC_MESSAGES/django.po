@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2025-12-29 21:59+0000\n"
+"POT-Creation-Date: 2026-03-16 11:29+0000\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -284,6 +284,24 @@ msgstr ""
 msgid ""
 "This is an archived course and no longer allows activities to be carried "
 "out in order to obtain a certificate."
+msgstr ""
+
+#: nau_openedx_extensions/partner_integration/course_filters.py:95
+msgid ""
+"The SSO partner integration has not been completed. Please complete the "
+"SSO partner integration before enrolling."
+msgstr ""
+
+#: nau_openedx_extensions/partner_integration/course_filters.py:108
+msgid ""
+"The partner integration has no access configured for any course. Please "
+"contact support."
+msgstr ""
+
+#: nau_openedx_extensions/partner_integration/course_filters.py:118
+msgid ""
+"The partner integration does not have permission to enroll users in this "
+"course. Please contact support."
 msgstr ""
 
 #: nau_openedx_extensions/settings/common.py:37
