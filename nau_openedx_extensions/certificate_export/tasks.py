@@ -62,6 +62,166 @@ def export_course_certificates_task(course_id):
     command.handle(**options)
 
 
+def pivot_student_state_csv(csv_content):
+    """
+    Pivot the student_state_from_block CSV from one-row-per-answer to one-row-per-enrollment.
+
+    Input format (one row per answer):
+        username, title, location, ID da Resposta, Pergunta, Resposta, Resposta Correta, block_key, state
+
+    Output format (one row per user):
+        username, title, location, block_key, state, {question_id}_Resposta, {question_id}_Resposta_Correta, ...
+
+    Args:
+        csv_content (str): The CSV content as a string.
+
+    Returns:
+        list: A list of rows (each row is a list of values), with the first row being the header.
+    """
+    import csv
+    import io
+    from collections import OrderedDict
+
+    reader = csv.DictReader(io.StringIO(csv_content), delimiter='\t')
+
+    # Collect all data grouped by username
+    users_data = OrderedDict()
+    all_question_ids = OrderedDict()
+
+    for row in reader:
+        username = row.get("username", "")
+        question_id = row.get("ID da Resposta", "")
+        resposta = row.get("Resposta", "")
+        resposta_correta = row.get("Resposta Correta", "")
+
+        if username not in users_data:
+            users_data[username] = {
+                "username": username,
+                "title": row.get("title", ""),
+                "location": row.get("location", ""),
+                "block_key": row.get("block_key", ""),
+                "state": row.get("state", ""),
+                "answers": OrderedDict(),
+            }
+
+        if question_id:
+            all_question_ids[question_id] = True
+            users_data[username]["answers"][question_id] = {
+                "Resposta": resposta,
+                "Resposta Correta": resposta_correta,
+            }
+
+    # Build header
+    fixed_columns = ["username", "title", "location", "block_key", "state"]
+    question_columns = []
+    for qid in all_question_ids:
+        question_columns.append(f"{qid}_Resposta")
+        question_columns.append(f"{qid}_Resposta_Correta")
+
+    header = fixed_columns + question_columns
+
+    # Build rows
+    rows = [header]
+    for username, user_data in users_data.items():
+        row = [
+            user_data["username"],
+            user_data["title"],
+            user_data["location"],
+            user_data["block_key"],
+            user_data["state"],
+        ]
+        for qid in all_question_ids:
+            answer = user_data["answers"].get(qid, {})
+            row.append(answer.get("Resposta", ""))
+            row.append(answer.get("Resposta Correta", ""))
+        rows.append(row)
+
+    return rows
+
+
+@shared_task(
+    queue=getattr(settings, "NAU_CERTIFICATE_QUEUE", settings.HIGH_MEM_QUEUE),
+)
+def student_answers_values_report_task(course_id, block_id):
+    """
+    Celery task to generate the Student Answers Values Report.
+
+    Steps:
+    1. Find the latest student_state_from_block report in the report store.
+    2. Read the CSV content.
+    3. Pivot it: one row per answer -> one row per enrollment (user + course).
+    4. Upload the pivoted CSV to the report store.
+
+    Args:
+        course_id (str): The course ID string.
+        block_id (str): The block key used to identify the correct report file.
+    """
+    from nau_openedx_extensions.edxapp_wrapper.instructor_task import (
+        get_report_store,
+        upload_csv_to_report_store,
+    )
+
+    course_key = CourseKey.from_string(course_id)
+    start_date = datetime.now()
+
+    # Get the report store and find the latest student_state_from report
+    report_store = get_report_store()
+
+    # Normalize the block_id for matching against file names
+    # block-v1:ORG+COURSE+RUN+type@problem+block@ID -> block_id part for matching
+    normalized_block_id = block_id.replace(":", "_").replace("@", "\\@").replace("+", "\\+")
+    normalized_course_id = course_id.split(":")[1].replace("+", "_")
+
+    # List all report files for this course
+    report_files = report_store.links_for(course_key)
+
+    # Find the latest student_state_from file matching our block
+    import re
+
+    matching_files = []
+    for name, url in report_files:
+        # Match files like: ORG_COURSE_RUN_student_state_from_BLOCK_TIMESTAMP.csv
+        if "student_state_from" in name and normalized_course_id in name:
+            matching_files.append((name, url))
+
+    if not matching_files:
+        logger.error(
+            f"No student_state_from report found for course {course_id} with block {block_id}. "
+            f"Please generate the report first using the Data Download tab."
+        )
+        return
+
+    # Sort by name (which includes timestamp) and pick the latest
+    matching_files.sort(key=lambda x: x[0], reverse=True)
+    latest_file_name, latest_file_url = matching_files[0]
+
+    logger.info(f"Found latest student_state_from report: {latest_file_name}")
+
+    # Download the report content
+    import requests
+
+    response = requests.get(latest_file_url, timeout=60)
+    response.raise_for_status()
+    csv_content = response.text
+
+    # Pivot the CSV
+    pivoted_rows = pivot_student_state_csv(csv_content)
+
+    if len(pivoted_rows) <= 1:
+        logger.warning(f"No data rows found in the student_state_from report for course {course_id}")
+        return
+
+    # Upload the pivoted CSV to the report store
+    upload_csv_to_report_store(
+        pivoted_rows,
+        "student_answers_values",
+        course_key,
+        start_date,
+    )
+
+    logger.info(f"Student answers values report generated and uploaded for course {course_id}")
+
+
 @shared_task(
     bind=True,
     max_retries=3,
