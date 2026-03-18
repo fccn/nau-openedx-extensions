@@ -201,7 +201,6 @@ class SSOPartnerIntegration(models.Model):
 
     class Meta:
         app_label = "nau_openedx_extensions"
-        unique_together = ('user', 'external_user_id',)
 
     def __str__(self):
         """String representation of the SSOPartnerIntegration."""
