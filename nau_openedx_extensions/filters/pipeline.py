@@ -20,7 +20,7 @@ from nau_openedx_extensions.edxapp_wrapper.student import get_enrollment, get_st
 from nau_openedx_extensions.utils.nif import is_nif_valid
 
 TEMPLATE_ABSOLUTE_PATH = "/instructor_dashboard/"
-BLOCK_CATEGORY = "certificate_export"
+BLOCK_CATEGORY = "nau_custom_reports"
 
 
 class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public-methods
@@ -175,12 +175,13 @@ class FilterUsersWithAllowedNewsletter(PipelineStep):
 
 class FilterCertificateExportTab(PipelineStep):
     """
-    Add a Certificate export tab to the instructor dashboard.
+    Add a NAU custom reports tab to the instructor dashboard.
+    Includes certificate export and student answers values report.
     """
 
     def run_filter(self, context, template_name):  # pylint: disable=unused-argument, arguments-differ
         """
-        Add a Certificate export tab to the instructor dashboard.
+        Add a NAU custom reports tab to the instructor dashboard.
 
         Args:
             context (dict): The context of the template.
@@ -199,13 +200,26 @@ class FilterCertificateExportTab(PipelineStep):
                 "certificate_export_pdf_url": reverse(
                     "nau-openedx-extensions:nau_export_certificates_pdf", kwargs={"course_id": course.id}
                 ),
+                "student_answers_values_report_url": reverse(
+                    "nau-openedx-extensions:nau_student_answers_values_report", kwargs={"course_id": course.id}
+                ),
                 "course": course,
+                "data_download_url": f"/courses/{course.id}/instructor#view-data_download",
                 # Add translated messages for JavaScript
                 "csv_success": _("CSV export task started successfully!"),
                 "csv_failure": _("Failed to start CSV export task."),
                 "zip_success": _("ZIP export task started successfully!"),
                 "zip_failure": _("Failed to start ZIP export task."),
+                "student_answers_success": _("Student answers values report task started successfully!"),
+                "student_answers_failure": _("Failed to start student answers values report task."),
                 "error_msg": _("An unexpected error occurred. Please try again later."),
+                "report_description": _(
+                    "Generate a report where each row is an enrollment"
+                    " (user + course) and each column is a question"
+                    " answer. Select a problem block to generate the"
+                    " report from."
+                ),
+                "data_download_text": _("Data Download"),
             }
         )
 
@@ -219,7 +233,7 @@ class FilterCertificateExportTab(PipelineStep):
         section_data = {
             "fragment": frag,
             "section_key": BLOCK_CATEGORY,
-            "section_display_name": _("Certificate Export"),
+            "section_display_name": _("NAU custom reports"),
             "course_id": str(course.id),
             "template_path_prefix": TEMPLATE_ABSOLUTE_PATH,
         }

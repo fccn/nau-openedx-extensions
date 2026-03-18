@@ -12,10 +12,12 @@ from rest_framework.test import APIRequestFactory, APITestCase, force_authentica
 
 from nau_openedx_extensions.certificate_export.views import (
     INVALID_COURSE_MESSAGE,
+    MISSING_BLOCK_ID_MESSAGE,
     NO_PERMISSION_MESSAGE,
     SUCCESS_MESSAGE,
     CertificateExportAPIView,
     CertificateExportPdfAPIView,
+    StudentAnswersValuesReportAPIView,
 )
 
 VIEWS_MODULE_PATH = "nau_openedx_extensions.certificate_export.views"
@@ -24,6 +26,7 @@ export_certificates_patch = patch(f"{VIEWS_MODULE_PATH}.PDFCommand.handle")
 course_staff_role_patch = patch(f"{VIEWS_MODULE_PATH}.CourseStaffRole")
 course_data_researcher_role_patch = patch(f"{VIEWS_MODULE_PATH}.CourseDataResearcherRole")
 export_csv_task_patch = patch(f"{VIEWS_MODULE_PATH}.export_course_certificates_task")
+student_answers_task_patch = patch(f"{VIEWS_MODULE_PATH}.student_answers_values_report_task")
 
 
 class CertificateExportPdfAPIViewTest(APITestCase):
@@ -253,9 +256,7 @@ class CertificateExportAPIViewTest(APITestCase):
 
         response = self._make_request()
 
-        # Verify task was called with delay (asynchronous)
         export_csv_task_mock.delay.assert_called_once_with(self.course_id)
-        # Verify task was not called synchronously
         export_csv_task_mock.assert_not_called()
         self._assert_success_response(response)
 
@@ -295,7 +296,6 @@ class CertificateExportAPIViewTest(APITestCase):
 
         response = self._make_request()
 
-        # Verify response structure
         self.assertIn("success", response.data)
         self.assertIn("message", response.data)
         self.assertIsInstance(response.data["success"], bool)
@@ -312,19 +312,148 @@ class CertificateExportAPIViewTest(APITestCase):
         export_csv_task_mock: MagicMock,
     ):
         """Test that permission checks are performed in correct order."""
-        # Setup: user has staff role but not instructor role
         course_staff_role_mock.return_value.has_user.return_value = True
         course_data_researcher_role_mock.return_value.has_user.return_value = True
         export_csv_task_mock.delay.return_value = MagicMock()
 
         response = self._make_request()
 
-        # Verify both role checks were performed
         course_staff_role_mock.assert_called_once_with(self.course_key)
         course_data_researcher_role_mock.assert_called_once_with(self.course_key)
-
-        # Verify the staff role check
         course_staff_role_mock.return_value.has_user.assert_called_once_with(self.user)
         course_data_researcher_role_mock.return_value.has_user.assert_called_once_with(self.user)
 
         self._assert_success_response(response)
+
+
+class StudentAnswersValuesReportAPIViewTest(APITestCase):
+    """Test cases for StudentAnswersValuesReportAPIView."""
+
+    def setUp(self):
+        """Set up test data."""
+        super().setUp()
+        self.factory = APIRequestFactory()
+        self.course_id = "course-v1:NAU+Demo+DemoCourse"
+        self.course_key = CourseKey.from_string(self.course_id)
+        self.block_id = "block-v1:NAU+Demo+DemoCourse+type@problem+block@problem1"
+        self.view = StudentAnswersValuesReportAPIView.as_view()
+
+        self.user = MagicMock()
+        self.user.is_staff = False
+        self.user.is_authenticated = True
+
+    def _make_request(self, course_id: str | None = None, data: dict | None = None) -> Any:
+        """Make a POST request to the student answers report endpoint."""
+        course_id = course_id or self.course_id
+        if data is None:
+            data = {"block_id": self.block_id}
+        url = f"nau-openedx-extensions/certificate-export/courses/{course_id}/student-answers-values"
+        request = self.factory.post(url, data, format="json")
+        force_authenticate(request, user=self.user)
+        return self.view(request, course_id=course_id)
+
+    @student_answers_task_patch
+    @course_staff_role_patch
+    @course_data_researcher_role_patch
+    def test_successful_report_with_data_researcher_role(
+        self,
+        course_staff_role_mock: MagicMock,
+        course_data_researcher_role_mock: MagicMock,
+        task_mock: MagicMock,
+    ):
+        """Test successful report generation with data researcher role."""
+        course_staff_role_mock.return_value.has_user.return_value = False
+        course_data_researcher_role_mock.return_value.has_user.return_value = True
+        task_mock.delay.return_value = MagicMock()
+
+        response = self._make_request()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["success"], True)
+        task_mock.delay.assert_called_once_with(self.course_id, self.block_id)
+
+    @student_answers_task_patch
+    @course_staff_role_patch
+    @course_data_researcher_role_patch
+    def test_successful_report_with_staff_role(
+        self,
+        course_staff_role_mock: MagicMock,
+        course_data_researcher_role_mock: MagicMock,
+        task_mock: MagicMock,
+    ):
+        """Test successful report generation with staff role."""
+        course_staff_role_mock.return_value.has_user.return_value = True
+        course_data_researcher_role_mock.return_value.has_user.return_value = False
+        task_mock.delay.return_value = MagicMock()
+
+        response = self._make_request()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        task_mock.delay.assert_called_once_with(self.course_id, self.block_id)
+
+    def test_invalid_course_id(self):
+        """Test report with invalid course ID."""
+        response = self._make_request("invalid-course-id")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["course_id"], INVALID_COURSE_MESSAGE)
+
+    @course_staff_role_patch
+    @course_data_researcher_role_patch
+    def test_no_permission(
+        self,
+        course_staff_role_mock: MagicMock,
+        course_data_researcher_role_mock: MagicMock,
+    ):
+        """Test report when user has no permissions."""
+        course_staff_role_mock.return_value.has_user.return_value = False
+        course_data_researcher_role_mock.return_value.has_user.return_value = False
+
+        response = self._make_request()
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.data["message"], NO_PERMISSION_MESSAGE)
+
+    def test_unauthenticated_access(self):
+        """Test report when user is not authenticated."""
+        self.user.is_authenticated = False
+        response = self._make_request()
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @student_answers_task_patch
+    @course_staff_role_patch
+    @course_data_researcher_role_patch
+    def test_missing_block_id(
+        self,
+        course_staff_role_mock: MagicMock,
+        course_data_researcher_role_mock: MagicMock,
+        task_mock: MagicMock,
+    ):
+        """Test report when block_id is not provided."""
+        course_staff_role_mock.return_value.has_user.return_value = True
+        course_data_researcher_role_mock.return_value.has_user.return_value = True
+
+        response = self._make_request(data={})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["message"], MISSING_BLOCK_ID_MESSAGE)
+        task_mock.delay.assert_not_called()
+
+    @student_answers_task_patch
+    @course_staff_role_patch
+    @course_data_researcher_role_patch
+    def test_task_receives_correct_parameters(
+        self,
+        course_staff_role_mock: MagicMock,
+        course_data_researcher_role_mock: MagicMock,
+        task_mock: MagicMock,
+    ):
+        """Test that the Celery task receives both course_id and block_id."""
+        course_staff_role_mock.return_value.has_user.return_value = True
+        course_data_researcher_role_mock.return_value.has_user.return_value = True
+        task_mock.delay.return_value = MagicMock()
+
+        different_block = "block-v1:MIT+6.00x+2023_T1+type@problem+block@different"
+        response = self._make_request(data={"block_id": different_block})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        task_mock.delay.assert_called_once_with(self.course_id, different_block)

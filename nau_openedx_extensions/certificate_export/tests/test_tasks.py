@@ -499,3 +499,192 @@ class ExportCourseCertificatesTaskTest(TestCase):
 
         expected_options = {"course_ids": [none_course_id]}
         self.mock_command_instance.handle.assert_called_once_with(**expected_options)
+
+
+class PivotStudentStateCsvTest(TestCase):
+    """Tests for the pivot_student_state_csv function."""
+
+    def _make_tsv(self, rows):
+        """Build a TSV string from a list of dicts."""
+        import io
+        import csv
+
+        output = io.StringIO()
+        fieldnames = ["username", "title", "location", "ID da Resposta", "Pergunta", "Resposta", "Resposta Correta",
+                       "block_key", "state"]
+        writer = csv.DictWriter(output, fieldnames=fieldnames, delimiter='\t')
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+        return output.getvalue()
+
+    def test_basic_pivot_two_users(self):
+        """Test basic pivot with two users and two questions each."""
+        from nau_openedx_extensions.certificate_export.tasks import pivot_student_state_csv
+
+        rows = [
+            {"username": "user1", "title": "T", "location": "L", "ID da Resposta": "q1",
+             "Pergunta": "Q1", "Resposta": "A", "Resposta Correta": "A,B", "block_key": "bk1", "state": "{}"},
+            {"username": "user1", "title": "T", "location": "L", "ID da Resposta": "q2",
+             "Pergunta": "Q2", "Resposta": "B", "Resposta Correta": "B,C", "block_key": "bk1", "state": "{}"},
+            {"username": "user2", "title": "T", "location": "L", "ID da Resposta": "q1",
+             "Pergunta": "Q1", "Resposta": "C", "Resposta Correta": "A,B", "block_key": "bk1", "state": "{}"},
+            {"username": "user2", "title": "T", "location": "L", "ID da Resposta": "q2",
+             "Pergunta": "Q2", "Resposta": "D", "Resposta Correta": "B,C", "block_key": "bk1", "state": "{}"},
+        ]
+        csv_content = self._make_tsv(rows)
+        result = pivot_student_state_csv(csv_content)
+
+        # Header + 2 users
+        self.assertEqual(len(result), 3)
+        header = result[0]
+        self.assertIn("q1_Resposta", header)
+        self.assertIn("q1_Resposta_Correta", header)
+        self.assertIn("q2_Resposta", header)
+        self.assertIn("q2_Resposta_Correta", header)
+
+        # user1 row
+        user1_row = result[1]
+        self.assertEqual(user1_row[0], "user1")
+        q1_idx = header.index("q1_Resposta")
+        self.assertEqual(user1_row[q1_idx], "A")
+        q2_idx = header.index("q2_Resposta")
+        self.assertEqual(user1_row[q2_idx], "B")
+
+        # user2 row
+        user2_row = result[2]
+        self.assertEqual(user2_row[0], "user2")
+        self.assertEqual(user2_row[q1_idx], "C")
+        self.assertEqual(user2_row[q2_idx], "D")
+
+    def test_pivot_with_missing_answers(self):
+        """Test pivot when a user is missing some answers."""
+        from nau_openedx_extensions.certificate_export.tasks import pivot_student_state_csv
+
+        rows = [
+            {"username": "user1", "title": "T", "location": "L", "ID da Resposta": "q1",
+             "Pergunta": "Q1", "Resposta": "A", "Resposta Correta": "A", "block_key": "bk1", "state": "{}"},
+            {"username": "user1", "title": "T", "location": "L", "ID da Resposta": "q2",
+             "Pergunta": "Q2", "Resposta": "B", "Resposta Correta": "B", "block_key": "bk1", "state": "{}"},
+            {"username": "user2", "title": "T", "location": "L", "ID da Resposta": "q1",
+             "Pergunta": "Q1", "Resposta": "C", "Resposta Correta": "A", "block_key": "bk1", "state": "{}"},
+            # user2 does NOT have q2
+        ]
+        csv_content = self._make_tsv(rows)
+        result = pivot_student_state_csv(csv_content)
+
+        self.assertEqual(len(result), 3)
+        header = result[0]
+        q2_idx = header.index("q2_Resposta")
+
+        # user2 should have empty string for missing q2
+        user2_row = result[2]
+        self.assertEqual(user2_row[q2_idx], "")
+
+    def test_pivot_empty_csv(self):
+        """Test pivot with empty CSV (only header)."""
+        from nau_openedx_extensions.certificate_export.tasks import pivot_student_state_csv
+
+        csv_content = "username\ttitle\tlocation\tID da Resposta\tPergunta\tResposta\tResposta Correta\tblock_key\tstate\n"
+        result = pivot_student_state_csv(csv_content)
+
+        # Only header row, no data
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], ["username", "title", "location", "block_key", "state"])
+
+    def test_pivot_preserves_fixed_columns(self):
+        """Test that fixed columns are preserved correctly."""
+        from nau_openedx_extensions.certificate_export.tasks import pivot_student_state_csv
+
+        rows = [
+            {"username": "user1", "title": "My Title", "location": "My Location", "ID da Resposta": "q1",
+             "Pergunta": "Q1", "Resposta": "A", "Resposta Correta": "A", "block_key": "block-v1:test",
+             "state": '{"done": true}'},
+        ]
+        csv_content = self._make_tsv(rows)
+        result = pivot_student_state_csv(csv_content)
+
+        self.assertEqual(len(result), 2)
+        user_row = result[1]
+        self.assertEqual(user_row[0], "user1")
+        self.assertEqual(user_row[1], "My Title")
+        self.assertEqual(user_row[2], "My Location")
+        self.assertEqual(user_row[3], "block-v1:test")
+        self.assertEqual(user_row[4], '{"done": true}')
+
+
+class StudentAnswersValuesReportTaskTest(TestCase):
+    """Tests for the student_answers_values_report_task function."""
+
+    def setUp(self):
+        self.course_id = "course-v1:NAU+Demo+Demo"
+        self.block_id = "block-v1:NAU+Demo+Demo+type@problem+block@problem1"
+
+        self.get_report_store_patcher = patch(f"{TASKS_MODULE_PATH}.student_answers_values_report_task.__wrapped__")
+        self.report_store_patcher = patch(
+            f"{TASKS_MODULE_PATH}.get_report_store"
+        )
+        self.upload_patcher = patch(
+            f"{TASKS_MODULE_PATH}.upload_csv_to_report_store"
+        )
+        # We need to patch the imports inside the task function
+        self.inner_report_store_patcher = patch(
+            "nau_openedx_extensions.edxapp_wrapper.instructor_task.get_report_store"
+        )
+        self.inner_upload_patcher = patch(
+            "nau_openedx_extensions.edxapp_wrapper.instructor_task.upload_csv_to_report_store"
+        )
+
+    def tearDown(self):
+        pass
+
+    @patch(f"{TASKS_MODULE_PATH}.requests.get")
+    @patch("nau_openedx_extensions.edxapp_wrapper.instructor_task.get_report_store")
+    @patch("nau_openedx_extensions.edxapp_wrapper.instructor_task.upload_csv_to_report_store")
+    def test_successful_report_generation(self, mock_upload, mock_get_store, mock_requests_get):
+        """Test successful report generation with valid data."""
+        from nau_openedx_extensions.certificate_export.tasks import student_answers_values_report_task
+
+        # Mock report store
+        mock_store = MagicMock()
+        mock_store.links_for.return_value = [
+            ("NAU_Demo_Demo_student_state_from_block_2025-01-01-0000.csv", "https://example.com/report.csv"),
+        ]
+        mock_get_store.return_value = mock_store
+
+        # Mock CSV download
+        csv_content = (
+            "username\ttitle\tlocation\tID da Resposta\tPergunta\tResposta\tResposta Correta\tblock_key\tstate\n"
+            "user1\tT\tL\tq1\tQ1\tA\tA,B\tbk1\t{}\n"
+            "user1\tT\tL\tq2\tQ2\tB\tB,C\tbk1\t{}\n"
+        )
+        mock_response = Mock()
+        mock_response.text = csv_content
+        mock_response.raise_for_status = Mock()
+        mock_requests_get.return_value = mock_response
+
+        # Execute task
+        student_answers_values_report_task(self.course_id, self.block_id)
+
+        # Verify upload was called
+        mock_upload.assert_called_once()
+        call_args = mock_upload.call_args
+        rows = call_args[0][0]
+        # Header + 1 user
+        self.assertEqual(len(rows), 2)
+        self.assertIn("q1_Resposta", rows[0])
+
+    @patch("nau_openedx_extensions.edxapp_wrapper.instructor_task.get_report_store")
+    def test_no_report_found(self, mock_get_store):
+        """Test when no student_state_from report exists."""
+        from nau_openedx_extensions.certificate_export.tasks import student_answers_values_report_task
+
+        mock_store = MagicMock()
+        mock_store.links_for.return_value = []
+        mock_get_store.return_value = mock_store
+
+        # Should not raise, just log error and return
+        student_answers_values_report_task(self.course_id, self.block_id)
+
+        # No upload should happen
+        # (can't easily assert upload wasn't called since it's imported inside the function)

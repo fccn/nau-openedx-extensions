@@ -15,8 +15,12 @@ function getCookie(name) {
  * The success and failure messages are read from the button's dataset attributes.
  *
  * @param {string} buttonSelector - The CSS selector of the button (e.g., '#export-button').
+ * @param {Object} [options] - Optional configuration.
+ * @param {string} [options.inputSelector] - CSS selector for an input field whose value
+ *   should be included in the POST body as a specific key.
+ * @param {string} [options.inputKey] - The key name to use in the POST body for the input value.
  */
-function setupExportButton(buttonSelector) {
+function setupExportButton(buttonSelector, options) {
     const button = document.querySelector(buttonSelector);
     if (!button) return;
 
@@ -30,6 +34,20 @@ function setupExportButton(buttonSelector) {
             return;
         }
 
+        // Build request body if an input selector is configured
+        let body = undefined;
+        if (options && options.inputSelector && options.inputKey) {
+            const input = document.querySelector(options.inputSelector);
+            if (input) {
+                const value = input.value.trim();
+                if (!value) {
+                    alert("Please enter a value in the input field.");
+                    return;
+                }
+                body = JSON.stringify({ [options.inputKey]: value });
+            }
+        }
+
         const csrftoken = getCookie("csrftoken");
 
         try {
@@ -39,6 +57,7 @@ function setupExportButton(buttonSelector) {
                     "Content-Type": "application/json",
                     "X-CSRFToken": csrftoken,
                 },
+                body: body,
             });
 
             const data = await response.json();
@@ -56,10 +75,12 @@ function setupExportButton(buttonSelector) {
     });
 }
 
-const exportButtons = [
-    "#export-csv-certificates",
-    "#export-zip-certificates"
-];
+// Certificate export buttons (no input needed)
+setupExportButton("#export-csv-certificates");
+setupExportButton("#export-zip-certificates");
 
-// Initialize export buttons
-exportButtons.forEach(selector => setupExportButton(selector));
+// Student answers values report button (requires block_id from input)
+setupExportButton("#generate-student-answers-report", {
+    inputSelector: "#problem-location",
+    inputKey: "block_id",
+});

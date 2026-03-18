@@ -1,42 +1,66 @@
 ## mako
-<%page expression_filter="h"/>
+<%page expression_filter="h" />
 <%! from django.utils.translation import gettext as _ %>
 
-<div class="certificate-export-section" data-error-msg="${error_msg}">
-  <p>${_("In this section you can export the course certificates in different formats.")}</p>
+  <div class="certificate-export-section" data-error-msg="${error_msg}">
+    <p>${_("In this section you can export course certificates and generate custom NAU reports.")}</p>
 
-  <div class="certificate-export-controls">
-    <h3>${_("Export options")}</h3>
+    <div class="certificate-export-controls">
+      <h3>${_("Certificate Export")}</h3>
 
-    <div class="action-item">
-      <div class="action-item-content">
-        <p>${_("Download a CSV file with the details of all certificates generated for this course.")}</p>
-        <button class="btn btn-primary" id="export-csv-certificates"
-                data-endpoint="${certificate_export_url}"
-                data-success="${csv_success}"
-                data-failure="${csv_failure}">
+      <div class="action-item">
+        <div class="action-item-content">
+          <p>${_("Download a CSV file with the details of all certificates generated for this course.")}</p>
+          <button class="btn btn-primary" id="export-csv-certificates" data-endpoint="${certificate_export_url}"
+            data-success="${csv_success}" data-failure="${csv_failure}">
             ${_("Export certificates CSVs")}
-        </button>
+          </button>
+        </div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-item-content">
+          <p>${_("Download a ZIP file containing all certificates in PDF format for this course.")}</p>
+          <button class="btn btn-primary" id="export-zip-certificates" data-endpoint="${certificate_export_pdf_url}"
+            data-success="${zip_success}" data-failure="${zip_failure}">
+            ${_("Export certificates PDF as ZIP")}
+          </button>
+        </div>
       </div>
     </div>
 
-    <div class="action-item">
-      <div class="action-item-content">
-        <p>${_("Download a ZIP file containing all certificates in PDF format for this course.")}</p>
-        <button class="btn btn-primary" id="export-zip-certificates"
-                data-endpoint="${certificate_export_pdf_url}"
-                data-success="${zip_success}"
-                data-failure="${zip_failure}">
-          ${_("Export certificates PDF as ZIP")}
-        </button>
+    <div class="certificate-export-controls">
+      <h3>${_("Student Answers Values Report")}</h3>
+
+      <div class="action-item">
+        <div class="action-item-content">
+          <p>${report_description}</p>
+          <div class="block-picker">
+            <label for="problem-location">${_("Problem location (block key):")}</label>
+            <input type="text" id="problem-location" name="problem_location"
+              placeholder="block-v1:ORG+COURSE+RUN+type@problem+block@BLOCK_ID"
+              style="width: 100%; margin-bottom: 10px; padding: 6px;" />
+          </div>
+          <button class="btn btn-primary" id="generate-student-answers-report"
+            data-endpoint="${student_answers_values_report_url}" data-success="${student_answers_success}"
+            data-failure="${student_answers_failure}">
+            ${_("Generate Student Answers Values Report")}
+          </button>
+        </div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-item-content">
+          <p>${_("Generated report files are available on the")} <a
+              href="${data_download_url}">${data_download_text}</a> ${_("tab.")}</p>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="certificate-export-status" style="display:none;">
-    <div class="message-status error" style="display:none;">${_("Error")}</div>
-    <div class="message-status success" style="display:none;">${_("Success")}</div>
-    <div class="message-status info" style="display:none;">${_("Info")}</div>
-    <div class="message-status warning" style="display:none;">${_("Warning")}</div>
+    <div class="certificate-export-status" style="display:none;">
+      <div class="message-status error" style="display:none;">${_("Error")}</div>
+      <div class="message-status success" style="display:none;">${_("Success")}</div>
+      <div class="message-status info" style="display:none;">${_("Info")}</div>
+      <div class="message-status warning" style="display:none;">${_("Warning")}</div>
+    </div>
   </div>
-</div>

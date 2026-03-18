@@ -1,0 +1,7 @@
+<%page args="section_data" expression_filter="h"/>
+<%! from openedx.core.djangolib.markup import HTML %>
+<%namespace name='static' file='/static_content.html'/>
+
+<section class="certificate-export-section">
+    ${HTML(section_data['fragment'].body_html())}
+</section>

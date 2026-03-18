@@ -82,6 +82,7 @@ REPORT_TO_DOCUMENT = {
     # NAU custom reports
     "export_course_certificates": "export_course_certificates",
     "export_course_certificates_pdfs": "export_course_certificates_pdfs",
+    "student_answers_values": "student_answers_values",
 }
 
 

@@ -16,13 +16,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from nau_openedx_extensions.certificate_export.management.commands import PDFCommand
-from nau_openedx_extensions.certificate_export.tasks import export_course_certificates_task
+from nau_openedx_extensions.certificate_export.tasks import (
+    export_course_certificates_task,
+    student_answers_values_report_task,
+)
 from nau_openedx_extensions.edxapp_wrapper.student import CourseDataResearcherRole, CourseStaffRole
 
 # Constants for response messages
 SUCCESS_MESSAGE = _("Export task started successfully.")
 INVALID_COURSE_MESSAGE = _("The supplied course_id key is not valid.")
 NO_PERMISSION_MESSAGE = _("You do not have permission to export certificates for this course.")
+MISSING_BLOCK_ID_MESSAGE = _("The block_id field is required.")
 
 
 def validate_course_access(request: Request, course_id: str) -> Tuple[bool, Response | CourseKey]:
@@ -116,4 +120,44 @@ class CertificateExportPdfAPIView(APIView):
             return result  # type: ignore
 
         PDFCommand().handle(course_ids=[course_id])
+        return Response({"success": True, "message": SUCCESS_MESSAGE})
+
+
+class StudentAnswersValuesReportAPIView(APIView):
+    """
+    API view to generate the Student Answers Values Report for a given course.
+
+    This view accepts a POST request with a block_id in the request body,
+    and triggers a Celery task that will:
+    1. Find the latest student_state_from_block report in the report store.
+    2. Pivot the CSV (one row per answer -> one row per enrollment).
+    3. Upload the pivoted CSV to the report store.
+    """
+
+    authentication_classes = (SessionAuthentication,)
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request: Request, course_id: str) -> Response:
+        """
+        Start a Student Answers Values Report task for a course.
+
+        Args:
+            request (Request): The HTTP request object
+            course_id (str): The ID of the course
+
+        Returns:
+            Response: A response indicating the task has started
+        """
+        is_valid, result = validate_course_access(request, course_id)
+        if not is_valid:
+            return result  # type: ignore
+
+        block_id = request.data.get("block_id")
+        if not block_id:
+            return Response(
+                {"success": False, "message": MISSING_BLOCK_ID_MESSAGE},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        student_answers_values_report_task.delay(course_id, block_id)
         return Response({"success": True, "message": SUCCESS_MESSAGE})
