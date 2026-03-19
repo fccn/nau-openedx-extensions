@@ -91,7 +91,7 @@ class PartnerClientTokenView(APIView):
 
         try:
             client = PartnerAPIClient.objects.get(client_id=client_id, is_active=True)
-        except BaseException as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error(f"PartnerClientTokenView: Client with ID {client_id} not found or inactive.", exc_info=e)
             return Response({"detail": "Invalid client"}, status=status.HTTP_403_FORBIDDEN)
 
@@ -182,36 +182,24 @@ class CertificateRestExportView(APIView):
             response = paginator.get_paginated_response(serializer.data)
 
             return response
+        except PartnerIntegrationInactiveClientException as e:
+            logger.error("CertificateRestExportView: Inactive client.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_403_FORBIDDEN)
+        except PartnerIntegrationCourseOwnerException as e:
+            logger.error("CertificateRestExportView: Course ownership violation.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_403_FORBIDDEN)
         except PartnerIntegrationInvalidDataProvidedException as e:
-            logger.exception(
-                "Invalid data provided for certificate export", exc_info=e
-            )
-            return Response(
-                {"error": e.message}, status=status.HTTP_400_BAD_REQUEST
-            )
+            logger.error("CertificateRestExportView: Invalid data provided.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
         except PartnerIntegrationNoDataProvidedException as e:
-            logger.exception(
-                "No data provided for certificate export", exc_info=e
-            )
-            return Response(
-                {"error": e.message}, status=status.HTTP_400_BAD_REQUEST
-            )
+            logger.error("CertificateRestExportView: No data provided.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
         except PartnerIntegrationInternalErrorException as e:
-            logger.exception(
-                "Internal error occurred during certificate export", exc_info=e
-            )
-            return Response(
-                {"error": e.message},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            logger.error("CertificateRestExportView: Internal error.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception(
-                "Unexpected error occurred during certificate export", exc_info=e
-            )
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            logger.error("CertificateRestExportView: Unexpected error.", exc_info=e)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class EnrollmentRestExportView(APIView):
@@ -286,36 +274,24 @@ class EnrollmentRestExportView(APIView):
             response = paginator.get_paginated_response(serializer.data)
 
             return response
+        except PartnerIntegrationInactiveClientException as e:
+            logger.error("EnrollmentRestExportView: Inactive client.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_403_FORBIDDEN)
+        except PartnerIntegrationCourseOwnerException as e:
+            logger.error("EnrollmentRestExportView: Course ownership violation.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_403_FORBIDDEN)
         except PartnerIntegrationInvalidDataProvidedException as e:
-            logger.exception(
-                "Invalid data provided for enrollment export", exc_info=e
-            )
-            return Response(
-                {"error": e.message}, status=status.HTTP_400_BAD_REQUEST
-            )
+            logger.error("EnrollmentRestExportView: Invalid data provided.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
         except PartnerIntegrationNoDataProvidedException as e:
-            logger.exception(
-                "No data provided for enrollment export", exc_info=e
-            )
-            return Response(
-                {"error": e.message}, status=status.HTTP_400_BAD_REQUEST
-            )
+            logger.error("EnrollmentRestExportView: No data provided.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
         except PartnerIntegrationInternalErrorException as e:
-            logger.exception(
-                "Internal error occurred during enrollment export", exc_info=e
-            )
-            return Response(
-                {"error": e.message},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            logger.error("EnrollmentRestExportView: Internal error.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception(
-                "Unexpected error occurred during enrollment export", exc_info=e
-            )
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            logger.error("EnrollmentRestExportView: Unexpected error.", exc_info=e)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class StudentProgressRestExportView(APIView):
@@ -387,21 +363,23 @@ class StudentProgressRestExportView(APIView):
             data = CourseProgressSerializer(student_progress).data
 
             return Response(data)
-        except PartnerIntegrationCourseOwnerException as e:
-            logger.error(
-                "StudentProgressRestExportView: Client does not have permisson to access this course.", exc_info=e)
+        except PartnerIntegrationInactiveClientException as e:
+            logger.error("StudentProgressRestExportView: Inactive client.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_403_FORBIDDEN)
+        except PartnerIntegrationCourseOwnerException as e:
+            logger.error("StudentProgressRestExportView: Course ownership violation.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_403_FORBIDDEN)
+        except PartnerIntegrationInvalidDataProvidedException as e:
+            logger.error("StudentProgressRestExportView: Invalid data provided.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
         except PartnerIntegrationNoDataProvidedException as e:
-            logger.error(
-                "StudentProgressRestExportView: No data provided for student progress export.", exc_info=e)
+            logger.error("StudentProgressRestExportView: No data provided.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
         except PartnerIntegrationInternalErrorException as e:
-            logger.error(
-                "StudentProgressRestExportView: Internal error occurred during student progress export.", exc_info=e)
+            logger.error("StudentProgressRestExportView: Internal error.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:  # pylint: disable=broad-except
-            logger.error(
-                "StudentProgressRestExportView: Unexpected error occurred during student progress export.", exc_info=e)
+            logger.error("StudentProgressRestExportView: Unexpected error.", exc_info=e)
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -456,24 +434,29 @@ class PartnerRestIntegrationEnrollUserView(APIView):
             serializer = CompleteEnrollmentDataSerializer(enrollment)
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except PartnerIntegrationInactiveClientException as e:
+            logger.error("PartnerRestIntegrationEnrollmentView: Inactive client.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_403_FORBIDDEN)
+        except PartnerIntegrationCourseOwnerException as e:
+            logger.error("PartnerRestIntegrationEnrollmentView: Course ownership violation.", exc_info=e)
+            return Response({"error": e.message}, status=status.HTTP_403_FORBIDDEN)
         except PartnerIntegrationDataConflictException as e:
-            logger.error("PartnerRestIntegrationEnrollmentView: Data conflict occurred during enrollment.", exc_info=e)
+            logger.error("PartnerRestIntegrationEnrollmentView: Data conflict.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_409_CONFLICT)
         except PartnerIntegrationInvalidDataProvidedException as e:
-            logger.error("PartnerRestIntegrationEnrollmentView: Invalid data provided for enrollment.", exc_info=e)
+            logger.error("PartnerRestIntegrationEnrollmentView: Invalid data provided.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
         except PartnerIntegrationNoDataProvidedException as e:
-            logger.error("PartnerRestIntegrationEnrollmentView: No data provided for enrollment.", exc_info=e)
+            logger.error("PartnerRestIntegrationEnrollmentView: No data provided.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_400_BAD_REQUEST)
         except PartnerIntegrationEnrollmentPreventedException as e:
             logger.warning("PartnerRestIntegrationEnrollmentView: Enrollment prevented by filter.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_403_FORBIDDEN)
         except PartnerIntegrationInternalErrorException as e:
-            logger.error("PartnerRestIntegrationEnrollmentView: Internal error occurred during enrollment.", exc_info=e)
+            logger.error("PartnerRestIntegrationEnrollmentView: Internal error.", exc_info=e)
             return Response({"error": e.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:  # pylint: disable=broad-except
-            logger.error(
-                "PartnerRestIntegrationEnrollmentView: Unexpected error occurred during enrollment.", exc_info=e)
+            logger.error("PartnerRestIntegrationEnrollmentView: Unexpected error.", exc_info=e)
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

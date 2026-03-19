@@ -96,6 +96,10 @@ class CertificateExportFacade(DataExtractorFacade):
                 certificates_base_query, start_dt, end_dt, courses, nifs, emails, usernames)
 
             return certificates
+        except (PartnerIntegrationInvalidDataProvidedException,
+                PartnerIntegrationCourseOwnerException,
+                PartnerIntegrationInternalErrorException):
+            raise
         except Exception as e:
             logger.error("Error fetching certificates.", exc_info=e)
             raise PartnerIntegrationInternalErrorException() from e
@@ -240,6 +244,10 @@ class EnrollmentFacade(DataExtractorFacade):
                 enrollments_base_query, start_dt, end_dt, courses, nifs, emails, usernames)
 
             return enrollments
+        except (PartnerIntegrationInvalidDataProvidedException,
+                PartnerIntegrationCourseOwnerException,
+                PartnerIntegrationInternalErrorException):
+            raise
         except Exception as e:
             logger.error("Error fetching enrollments.", exc_info=e)
             raise PartnerIntegrationInternalErrorException() from e
@@ -330,7 +338,7 @@ class EnrollmentFacade(DataExtractorFacade):
             logger.error("EnrollmentFacade: Attempt to enroll a non-existing user.", exc_info=e)
             raise PartnerIntegrationInvalidDataProvidedException("The specified user does not exist.") from e
         except PartnerIntegrationCourseOwnerException as e:
-            logger.error("EnrollmentFacade: Attempt to enroll in a course not owned by the partner.", exec_info=e)
+            logger.error("EnrollmentFacade: Attempt to enroll in a course not owned by the partner.", exc_info=e)
             raise e
         except PartnerIntegrationInternalErrorException as e:
             raise e
@@ -512,6 +520,12 @@ class StudentProgressExportFacade(DataExtractorFacade):
             }
 
             return student_progress
+        except (PartnerIntegrationCourseOwnerException,
+                PartnerIntegrationInvalidDataProvidedException,
+                PartnerIntegrationInternalErrorException):
+            raise
+        except CourseOverview.DoesNotExist as exc:
+            raise PartnerIntegrationCourseOwnerException() from exc
         except Exception as e:
             logger.error("Error fetching student progress.", exc_info=e)
             raise PartnerIntegrationInternalErrorException() from e
