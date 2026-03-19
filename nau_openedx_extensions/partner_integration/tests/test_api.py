@@ -1746,3 +1746,583 @@ class TestStudentProgressRestExportView(TransactionTestCase, BaseStructure):
         self.assertEqual(response_data["course_grade"]["percent"], 0.84)
         self.assertEqual(response_data["course_grade"]["passed"], True)
         self.assertEqual(response_data["course_grade"]["letter_grade"], "Approved")
+
+
+class TestCertificateRestExportViewErrors(TransactionTestCase, BaseStructure):
+    """Tests for error handling in CertificateRestExportView."""
+
+    def setUp(self):
+        self.http_client = APIClient()
+        self.endpoint = "/nau-openedx-extensions/partner-integration/data-extractor/certificates/"
+        self.base_data = self.create_bases()
+
+    def authenticate_partner_client(self, partner_client):
+        self.http_client.credentials(
+            HTTP_AUTHORIZATION="Token correct_password",
+            HTTP_X_CLIENT_ID=partner_client.client_id,
+        )
+        response = self.http_client.post(
+            "/nau-openedx-extensions/partner-integration/auth-token/",
+            format="json"
+        )
+        assert response.status_code == 200, f"Auth failed: {response.data}"
+        return response.data["access_token"]
+
+    @patch(
+        "nau_openedx_extensions.partner_integration.oauth_authentication"
+        ".ClientJWTAuthentication.validate_token_data_and_return_client"
+    )
+    def test_inactive_client_returns_403(self, mock_validate):
+        """Test that an inactive client gets a 403 Forbidden response."""
+        partner_client = self.base_data["partner_clients"][0]
+        partner_client.is_active = False
+        mock_validate.return_value = partner_client
+
+        access_token = self.authenticate_partner_client(self.base_data["partner_clients"][1])
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(self.endpoint, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("inactive", response.data["error"].lower())
+
+    @patch("nau_openedx_extensions.partner_integration.facade.CertificateExportFacade.get_certificates")
+    def test_internal_error_returns_500(self, mock_get_certificates):
+        """Test that PartnerIntegrationInternalErrorException returns 500."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationInternalErrorException
+        mock_get_certificates.side_effect = PartnerIntegrationInternalErrorException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(self.endpoint, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @patch("nau_openedx_extensions.partner_integration.facade.CertificateExportFacade.get_certificates")
+    def test_unexpected_error_returns_500(self, mock_get_certificates):
+        """Test that an unexpected exception returns 500."""
+        mock_get_certificates.side_effect = RuntimeError("unexpected failure")
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(self.endpoint, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("unexpected failure", response.data["error"])
+
+    @patch("nau_openedx_extensions.partner_integration.facade.CertificateExportFacade.get_certificates")
+    def test_course_owner_exception_returns_403(self, mock_get_certificates):
+        """Test that PartnerIntegrationCourseOwnerException returns 403."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationCourseOwnerException
+        mock_get_certificates.side_effect = PartnerIntegrationCourseOwnerException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(self.endpoint, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @patch("nau_openedx_extensions.partner_integration.facade.CertificateExportFacade.get_certificates")
+    def test_invalid_data_returns_400(self, mock_get_certificates):
+        """Test that PartnerIntegrationInvalidDataProvidedException returns 400."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationInvalidDataProvidedException
+        mock_get_certificates.side_effect = PartnerIntegrationInvalidDataProvidedException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(self.endpoint, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("nau_openedx_extensions.partner_integration.facade.CertificateExportFacade.get_certificates")
+    def test_no_data_returns_400(self, mock_get_certificates):
+        """Test that PartnerIntegrationNoDataProvidedException returns 400."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationNoDataProvidedException
+        mock_get_certificates.side_effect = PartnerIntegrationNoDataProvidedException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(self.endpoint, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class TestEnrollmentRestExportViewErrors(TransactionTestCase, BaseStructure):
+    """Tests for error handling in EnrollmentRestExportView."""
+
+    def setUp(self):
+        self.http_client = APIClient()
+        self.endpoint = "/nau-openedx-extensions/partner-integration/data-extractor/enrollments/"
+        self.base_data = self.create_bases()
+
+    def authenticate_partner_client(self, partner_client):
+        self.http_client.credentials(
+            HTTP_AUTHORIZATION="Token correct_password",
+            HTTP_X_CLIENT_ID=partner_client.client_id,
+        )
+        response = self.http_client.post(
+            "/nau-openedx-extensions/partner-integration/auth-token/",
+            format="json"
+        )
+        assert response.status_code == 200, f"Auth failed: {response.data}"
+        return response.data["access_token"]
+
+    @patch(
+        "nau_openedx_extensions.partner_integration.oauth_authentication"
+        ".ClientJWTAuthentication.validate_token_data_and_return_client"
+    )
+    def test_inactive_client_returns_403(self, mock_validate):
+        """Test that an inactive client gets a 403 Forbidden response."""
+        partner_client = self.base_data["partner_clients"][0]
+        partner_client.is_active = False
+        mock_validate.return_value = partner_client
+
+        access_token = self.authenticate_partner_client(self.base_data["partner_clients"][1])
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(self.endpoint, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("inactive", response.data["error"].lower())
+
+    @patch("nau_openedx_extensions.partner_integration.facade.EnrollmentFacade.get_enrollments")
+    def test_internal_error_returns_500(self, mock_get_enrollments):
+        """Test that PartnerIntegrationInternalErrorException returns 500."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationInternalErrorException
+        mock_get_enrollments.side_effect = PartnerIntegrationInternalErrorException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(self.endpoint, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @patch("nau_openedx_extensions.partner_integration.facade.EnrollmentFacade.get_enrollments")
+    def test_unexpected_error_returns_500(self, mock_get_enrollments):
+        """Test that an unexpected exception returns 500."""
+        mock_get_enrollments.side_effect = RuntimeError("unexpected enrollment failure")
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(self.endpoint, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("unexpected enrollment failure", response.data["error"])
+
+    @patch("nau_openedx_extensions.partner_integration.facade.EnrollmentFacade.get_enrollments")
+    def test_course_owner_exception_returns_403(self, mock_get_enrollments):
+        """Test that PartnerIntegrationCourseOwnerException returns 403."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationCourseOwnerException
+        mock_get_enrollments.side_effect = PartnerIntegrationCourseOwnerException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(self.endpoint, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @patch("nau_openedx_extensions.partner_integration.facade.EnrollmentFacade.get_enrollments")
+    def test_invalid_data_returns_400(self, mock_get_enrollments):
+        """Test that PartnerIntegrationInvalidDataProvidedException returns 400."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationInvalidDataProvidedException
+        mock_get_enrollments.side_effect = PartnerIntegrationInvalidDataProvidedException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(self.endpoint, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("nau_openedx_extensions.partner_integration.facade.EnrollmentFacade.get_enrollments")
+    def test_no_data_returns_400(self, mock_get_enrollments):
+        """Test that PartnerIntegrationNoDataProvidedException returns 400."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationNoDataProvidedException
+        mock_get_enrollments.side_effect = PartnerIntegrationNoDataProvidedException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(self.endpoint, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class TestStudentProgressRestExportViewErrors(TransactionTestCase, BaseStructure):
+    """Tests for error handling in StudentProgressRestExportView."""
+
+    def setUp(self):
+        self.http_client = APIClient()
+        self.endpoint = "/nau-openedx-extensions/partner-integration/data-extractor/student-progress/"
+        self.base_data = self.create_bases()
+
+    def authenticate_partner_client(self, partner_client):
+        self.http_client.credentials(
+            HTTP_AUTHORIZATION="Token correct_password",
+            HTTP_X_CLIENT_ID=partner_client.client_id,
+        )
+        response = self.http_client.post(
+            "/nau-openedx-extensions/partner-integration/auth-token/",
+            format="json"
+        )
+        assert response.status_code == 200, f"Auth failed: {response.data}"
+        return response.data["access_token"]
+
+    @patch(
+        "nau_openedx_extensions.partner_integration.oauth_authentication"
+        ".ClientJWTAuthentication.validate_token_data_and_return_client"
+    )
+    def test_inactive_client_returns_403(self, mock_validate):
+        """Test that an inactive client gets a 403 Forbidden response."""
+        partner_client = self.base_data["partner_clients"][0]
+        partner_client.is_active = False
+        mock_validate.return_value = partner_client
+
+        access_token = self.authenticate_partner_client(self.base_data["partner_clients"][1])
+        course_id = self.base_data["courses"][0].id
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id), "email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("inactive", response.data["error"].lower())
+
+    @patch("nau_openedx_extensions.partner_integration.facade.StudentProgressExportFacade.get_student_progress")
+    def test_course_owner_exception_returns_403(self, mock_get_progress):
+        """Test that PartnerIntegrationCourseOwnerException returns 403."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationCourseOwnerException
+        mock_get_progress.side_effect = PartnerIntegrationCourseOwnerException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+        course_id = self.base_data["courses"][0].id
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id), "email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @patch("nau_openedx_extensions.partner_integration.facade.StudentProgressExportFacade.get_student_progress")
+    def test_invalid_data_returns_400(self, mock_get_progress):
+        """Test that PartnerIntegrationInvalidDataProvidedException returns 400."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationInvalidDataProvidedException
+        mock_get_progress.side_effect = PartnerIntegrationInvalidDataProvidedException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+        course_id = self.base_data["courses"][0].id
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id), "email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("nau_openedx_extensions.partner_integration.facade.StudentProgressExportFacade.get_student_progress")
+    def test_no_data_returns_400(self, mock_get_progress):
+        """Test that PartnerIntegrationNoDataProvidedException returns 400."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationNoDataProvidedException
+        mock_get_progress.side_effect = PartnerIntegrationNoDataProvidedException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+        course_id = self.base_data["courses"][0].id
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id), "email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("nau_openedx_extensions.partner_integration.facade.StudentProgressExportFacade.get_student_progress")
+    def test_internal_error_returns_500(self, mock_get_progress):
+        """Test that PartnerIntegrationInternalErrorException returns 500."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationInternalErrorException
+        mock_get_progress.side_effect = PartnerIntegrationInternalErrorException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+        course_id = self.base_data["courses"][0].id
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id), "email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @patch("nau_openedx_extensions.partner_integration.facade.StudentProgressExportFacade.get_student_progress")
+    def test_unexpected_error_returns_500(self, mock_get_progress):
+        """Test that an unexpected exception returns 500."""
+        mock_get_progress.side_effect = RuntimeError("unexpected progress failure")
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+        course_id = self.base_data["courses"][0].id
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id), "email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("unexpected progress failure", response.data["error"])
+
+    def test_missing_course_returns_400(self):
+        """Test that missing course parameter returns 400."""
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_missing_user_identifier_returns_400(self):
+        """Test that missing user identifier (neither email, nif, nor username) returns 400."""
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+        course_id = self.base_data["courses"][0].id
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id)},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class TestPartnerRestIntegrationEnrollUserViewErrors(TransactionTestCase, BaseStructure):
+    """Tests for error handling in PartnerRestIntegrationEnrollUserView."""
+
+    def setUp(self):
+        self.http_client = APIClient()
+        self.endpoint = "/nau-openedx-extensions/partner-integration/enroll-user/"
+        self.base_data = self.create_bases()
+
+    def authenticate_partner_client(self, partner_client):
+        self.http_client.credentials(
+            HTTP_AUTHORIZATION="Token correct_password",
+            HTTP_X_CLIENT_ID=partner_client.client_id,
+        )
+        response = self.http_client.post(
+            "/nau-openedx-extensions/partner-integration/auth-token/",
+            format="json"
+        )
+        assert response.status_code == 200, f"Auth failed: {response.data}"
+        return response.data["access_token"]
+
+    @patch(
+        "nau_openedx_extensions.partner_integration.oauth_authentication"
+        ".ClientJWTAuthentication.validate_token_data_and_return_client"
+    )
+    def test_inactive_client_returns_403(self, mock_validate):
+        """Test that an inactive client gets a 403 Forbidden response."""
+        partner_client = self.base_data["partner_clients"][0]
+        partner_client.is_active = False
+        mock_validate.return_value = partner_client
+
+        access_token = self.authenticate_partner_client(self.base_data["partner_clients"][1])
+        course_id = self.base_data["courses"][0].id
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id), "email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("inactive", response.data["error"].lower())
+
+    @patch("nau_openedx_extensions.partner_integration.facade.EnrollmentFacade.enroll_user")
+    def test_enrollment_prevented_returns_403(self, mock_enroll):
+        """Test that PartnerIntegrationEnrollmentPreventedException returns 403."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationEnrollmentPreventedException
+        mock_enroll.side_effect = PartnerIntegrationEnrollmentPreventedException(
+            "Enrollment blocked by SSO filter")
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+        course_id = self.base_data["courses"][0].id
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id), "email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("Enrollment blocked by SSO filter", response.data["error"])
+
+    @patch("nau_openedx_extensions.partner_integration.facade.EnrollmentFacade.enroll_user")
+    def test_course_owner_exception_returns_403(self, mock_enroll):
+        """Test that PartnerIntegrationCourseOwnerException returns 403."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationCourseOwnerException
+        mock_enroll.side_effect = PartnerIntegrationCourseOwnerException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+        course_id = self.base_data["courses"][0].id
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id), "email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @patch("nau_openedx_extensions.partner_integration.facade.EnrollmentFacade.enroll_user")
+    def test_internal_error_returns_500(self, mock_enroll):
+        """Test that PartnerIntegrationInternalErrorException returns 500."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationInternalErrorException
+        mock_enroll.side_effect = PartnerIntegrationInternalErrorException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+        course_id = self.base_data["courses"][0].id
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id), "email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @patch("nau_openedx_extensions.partner_integration.facade.EnrollmentFacade.enroll_user")
+    def test_unexpected_error_returns_500(self, mock_enroll):
+        """Test that an unexpected exception returns 500."""
+        mock_enroll.side_effect = RuntimeError("unexpected enroll failure")
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+        course_id = self.base_data["courses"][0].id
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id), "email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("unexpected enroll failure", response.data["error"])
+
+    @patch("nau_openedx_extensions.partner_integration.facade.EnrollmentFacade.enroll_user")
+    def test_data_conflict_returns_409(self, mock_enroll):
+        """Test that PartnerIntegrationDataConflictException returns 409."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationDataConflictException
+        mock_enroll.side_effect = PartnerIntegrationDataConflictException(
+            "The user is already enrolled in this course.")
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+        course_id = self.base_data["courses"][0].id
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id), "email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertIn("already enrolled", response.data["error"])
+
+    @patch("nau_openedx_extensions.partner_integration.facade.EnrollmentFacade.enroll_user")
+    def test_invalid_data_returns_400(self, mock_enroll):
+        """Test that PartnerIntegrationInvalidDataProvidedException returns 400."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationInvalidDataProvidedException
+        mock_enroll.side_effect = PartnerIntegrationInvalidDataProvidedException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+        course_id = self.base_data["courses"][0].id
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id), "email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch("nau_openedx_extensions.partner_integration.facade.EnrollmentFacade.enroll_user")
+    def test_no_data_returns_400(self, mock_enroll):
+        """Test that PartnerIntegrationNoDataProvidedException returns 400."""
+        from nau_openedx_extensions.partner_integration.exception import PartnerIntegrationNoDataProvidedException
+        mock_enroll.side_effect = PartnerIntegrationNoDataProvidedException()
+
+        partner_client = self.base_data["partner_clients"][0]
+        access_token = self.authenticate_partner_client(partner_client)
+        course_id = self.base_data["courses"][0].id
+        user = self.base_data["users"][0].user
+
+        self.http_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access_token}")
+        response = self.http_client.post(
+            self.endpoint,
+            data={"course": str(course_id), "email": user.email},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
