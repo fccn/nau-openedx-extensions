@@ -19,3 +19,14 @@ class NauOpenCmsConfig(AppConfig):
             },
         },
     }
+
+    def ready(self):
+        """
+        Connect CMS signal handlers once the app registry is ready.
+        """
+        from nau_openedx_extensions.course_filters.handlers import (  # pylint: disable=import-outside-toplevel
+            course_published_handler,
+        )
+        from xmodule.modulestore.django import SignalHandler  # pylint: disable=import-error,import-outside-toplevel
+
+        SignalHandler.course_published.connect(course_published_handler)
