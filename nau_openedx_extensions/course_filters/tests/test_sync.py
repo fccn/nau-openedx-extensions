@@ -8,10 +8,7 @@ from django.test import TestCase, override_settings
 from opaque_keys.edx.keys import CourseKey
 
 from nau_openedx_extensions.course_filters.models import NauCourseFilter
-from nau_openedx_extensions.course_filters.sync import (
-    get_known_filter_keys,
-    sync_course_filters_for_course,
-)
+from nau_openedx_extensions.course_filters.sync import get_known_filter_keys, sync_course_filters_for_course
 
 SYNC_PATH = "nau_openedx_extensions.course_filters.sync"
 
