@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2026-05-12 17:15+0100\n"
+"POT-Creation-Date: 2026-05-25 11:50+0100\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -38,6 +38,39 @@ msgstr ""
 
 #: nau_openedx_extensions/certificate_export/views.py:25
 msgid "You do not have permission to export certificates for this course."
+msgstr ""
+
+#: nau_openedx_extensions/course_filters/admin.py:25
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:57
+#: nau_openedx_extensions/enrollment_by_domain/admin.py:134
+msgid "Timestamps"
+msgstr ""
+
+#: nau_openedx_extensions/course_filters/models.py:21
+msgid "Course key string (e.g. course-v1:ORG+ID+Run)"
+msgstr ""
+
+#: nau_openedx_extensions/course_filters/models.py:22
+msgid "Course ID"
+msgstr ""
+
+#: nau_openedx_extensions/course_filters/models.py:28
+msgid ""
+"Filter key name as stored in other_course_settings (e.g. "
+"filter_enrollment_by_domain_list, filter_enrollment_require_nif, "
+"certificate_require_portuguese_citizen_card)"
+msgstr ""
+
+#: nau_openedx_extensions/course_filters/models.py:32
+msgid "Filter Type"
+msgstr ""
+
+#: nau_openedx_extensions/course_filters/models.py:39
+msgid "NAU Course Filter"
+msgstr ""
+
+#: nau_openedx_extensions/course_filters/models.py:40
+msgid "NAU Course Filters"
 msgstr ""
 
 #: nau_openedx_extensions/custom_registration_form/forms.py:39
@@ -158,11 +191,6 @@ msgstr ""
 
 #: nau_openedx_extensions/enrollment_by_domain/admin.py:53
 msgid "Statistics"
-msgstr ""
-
-#: nau_openedx_extensions/enrollment_by_domain/admin.py:57
-#: nau_openedx_extensions/enrollment_by_domain/admin.py:134
-msgid "Timestamps"
 msgstr ""
 
 #: nau_openedx_extensions/enrollment_by_domain/admin.py:72
