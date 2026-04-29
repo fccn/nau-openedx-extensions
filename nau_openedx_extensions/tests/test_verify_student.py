@@ -5,7 +5,6 @@ Tests for Id Verification of studentes.
 from datetime import datetime
 from unittest.mock import Mock, patch
 
-from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from openedx_events.learning.data import CourseEnrollmentData, UserData
 from openedx_events.learning.signals import COURSE_ENROLLMENT_CHANGED
