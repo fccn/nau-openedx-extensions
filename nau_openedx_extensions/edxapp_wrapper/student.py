@@ -75,6 +75,18 @@ def get_course_enrollment_model():
     return backend.CourseEnrollment
 
 
+def get_course_enrollment_allowed_model():
+    """
+    Wrapper for `common.djangoapps.student.models.CourseEnrollmentAllowed` in edx-platform.
+
+    Returns:
+        Model class or None when the active student backend does not expose it (e.g. unit-test stub).
+    """
+    backend_function = settings.NAU_STUDENT_MODULE
+    backend = import_module(backend_function)
+    return getattr(backend, "CourseEnrollmentAllowed", None)
+
+
 CourseInstructorRole = get_course_instructor_role()
 CourseStaffRole = get_course_staff_role()
 CourseDataResearcherRole = get_course_data_researcher_role()

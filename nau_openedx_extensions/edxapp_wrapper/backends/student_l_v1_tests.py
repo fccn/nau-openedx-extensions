@@ -6,6 +6,7 @@ CourseInstructorRole = None
 CourseStaffRole = None
 CourseDataResearcherRole = None
 CourseEnrollment = None
+CourseEnrollmentAllowed = None
 
 
 def get_student_course_enrollment_allowed(user, course_id, *args, **kwargs):  # pylint: disable=unused-argument
