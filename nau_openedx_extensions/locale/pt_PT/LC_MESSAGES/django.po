@@ -271,6 +271,18 @@ msgstr ""
 "É necessário associar a Autenticação Gov à sua conta ou adicionar o NIF à"
 " sua conta."
 
+#: nau_openedx_extensions/course_enrollment_allowed_guard.py:30
+msgid ""
+"This course requires a NIF (or Autenticação Gov) on learner accounts. You "
+"cannot add an email to Course enrollment allowed for this course. Disable "
+"the NIF requirement in the course other settings or ask learners to self-"
+"enroll after they complete NIF verification."
+msgstr ""
+"Este curso exige NIF (ou Autenticação Gov) nas contas dos estudantes. Não "
+"pode adicionar um e-mail em «Course enrollment allowed» neste curso. "
+"Desative o requisito de NIF nas definições do curso ou peça aos estudantes "
+"para se inscreverem após concluírem a verificação do NIF."
+
 #: nau_openedx_extensions/filters/pipeline.py:204
 msgid "CSV export task started successfully!"
 msgstr "Tarefa de exportação do CSV iniciada com sucesso!"
