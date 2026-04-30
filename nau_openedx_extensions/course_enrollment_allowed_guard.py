@@ -44,7 +44,9 @@ def _course_enrollment_allowed_pre_save(sender, instance, raw, **kwargs):  # pyl
 
 def connect_course_enrollment_allowed_nif_guard():
     """Attach pre_save guard to edx-platform CourseEnrollmentAllowed (no-op in test stubs)."""
-    from nau_openedx_extensions.edxapp_wrapper.student import get_course_enrollment_allowed_model  # pylint: disable=import-outside-toplevel
+    from nau_openedx_extensions.edxapp_wrapper.student import (  # pylint: disable=import-outside-toplevel
+        get_course_enrollment_allowed_model,
+    )
 
     cea_model = get_course_enrollment_allowed_model()
     if cea_model is None:
