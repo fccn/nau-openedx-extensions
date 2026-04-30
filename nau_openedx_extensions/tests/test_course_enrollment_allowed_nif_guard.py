@@ -7,14 +7,14 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-
-if not settings.configured:
-    settings.configure(USE_I18N=False, SECRET_KEY="test-course-enrollment-allowed-nif-guard")
 from opaque_keys.edx.keys import CourseKey
 
 from nau_openedx_extensions.course_enrollment_allowed_guard import (
     enforce_no_course_enrollment_allowed_when_nif_required,
 )
+
+if not settings.configured:
+    settings.configure(USE_I18N=False, SECRET_KEY="test-course-enrollment-allowed-nif-guard")
 
 
 class EnforceNoCeaWhenNifRequiredTest(TestCase):
