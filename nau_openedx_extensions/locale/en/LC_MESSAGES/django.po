@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2026-03-16 22:05+0000\n"
+"POT-Creation-Date: 2026-04-30 00:49-0500\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -17,6 +17,14 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
+
+#: nau_openedx_extensions/course_enrollment_allowed_guard.py:31
+msgid ""
+"This course requires a NIF (or Autenticação Gov) on learner accounts. You"
+" cannot add an email to Course enrollment allowed for this course. "
+"Disable the NIF requirement in the course other settings or ask learners "
+"to self-enroll after they complete NIF verification."
+msgstr ""
 
 #: nau_openedx_extensions/certificate_export/views.py:23
 msgid "Export task started successfully."
@@ -253,14 +261,6 @@ msgstr ""
 msgid ""
 "You need to associate Autenticação Gov to your account or add NIF to your"
 " account."
-msgstr ""
-
-#: nau_openedx_extensions/course_enrollment_allowed_guard.py:30
-msgid ""
-"This course requires a NIF (or Autenticação Gov) on learner accounts. You "
-"cannot add an email to Course enrollment allowed for this course. Disable "
-"the NIF requirement in the course other settings or ask learners to self-"
-"enroll after they complete NIF verification."
 msgstr ""
 
 #: nau_openedx_extensions/filters/pipeline.py:204
