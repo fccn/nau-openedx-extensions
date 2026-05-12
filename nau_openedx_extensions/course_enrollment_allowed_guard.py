@@ -29,9 +29,10 @@ def enforce_no_course_enrollment_allowed_when_nif_required(course_id):
         raise ValidationError(
             _(
                 "This course requires a NIF (or Autenticação Gov) on learner accounts. "
-                "You cannot add an email to Course enrollment allowed for this course. "
-                "Disable the NIF requirement in the course other settings or ask learners "
-                "to self-enroll after they complete NIF verification."
+                "You cannot add an email to «Course enrollment allowed» for this course. "
+                "Disable the NIF requirement at:\n"
+                "Studio course page -> Settings -> Advanced Settings -> Other course settings\n"
+                "Or ask learners to self-enroll after they complete NIF verification."
             )
         )
 
