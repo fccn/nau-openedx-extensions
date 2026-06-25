@@ -14,7 +14,6 @@ from nau_openedx_extensions.partner_integration.exception import (
     PartnerIntegrationEnrollmentPreventedException,
     PartnerIntegrationInternalErrorException,
     PartnerIntegrationInvalidDataProvidedException,
-    PartnerIntegrationNoDataProvidedException,
 )
 from nau_openedx_extensions.partner_integration.facade import (
     CertificateExportFacade,
@@ -79,6 +78,30 @@ class TestCertificateExportFacade(TransactionTestCase):
 
         result = self.facade._apply_base_certificates_scope({"mode": "honor"}, courses_query)
         self.assertTrue(result.filter(id=cert.id).exists())
+
+    def test_apply_base_certificates_scope_with_scope_and_course_filtering(self):
+        """When base_certificates_scope is provided, filter by both scope and courses_query."""
+        from lms.djangoapps.certificates.tests.factories import GeneratedCertificateFactory
+
+        course1 = CourseOverviewFactory.create(org="COURSE_ORG")
+        course2 = CourseOverviewFactory.create(org="COURSE_ORG")
+        course3 = CourseOverviewFactory.create(org="COURSE_ORG")
+
+        cert_1 = GeneratedCertificateFactory.create(
+            user=self.user, course_id=course1.id, mode="honor")
+        cert_2 = GeneratedCertificateFactory.create(
+            user=self.user, course_id=course2.id, mode="honor")
+        cert_3 = GeneratedCertificateFactory.create(
+            user=self.user, course_id=course3.id, mode="audit")
+
+        base_certificates_scope = {"mode": "honor"}
+        result = self.facade._apply_base_certificates_scope(
+            base_certificates_scope, CourseOverview.objects.filter(org="COURSE_ORG"))
+
+        self.assertTrue(len(result) == 2)
+        self.assertIn(cert_1.id, [c.id for c in result])
+        self.assertIn(cert_2.id, [c.id for c in result])
+        self.assertNotIn(cert_3.id, [c.id for c in result])
 
     @patch("nau_openedx_extensions.partner_integration.facade.use_read_replica_if_available")
     def test_apply_base_certificates_scope_exception(self, mock_replica):

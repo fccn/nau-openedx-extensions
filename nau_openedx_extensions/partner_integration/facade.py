@@ -131,7 +131,7 @@ class CertificateExportFacade(DataExtractorFacade):
 
             if base_certificates_scope:
                 certificates_query = use_read_replica_if_available(
-                    GeneratedCertificate.objects.filter(**base_certificates_scope)
+                    certificates_query.filter(**base_certificates_scope)
                 )
 
             logger.info("Assembled certificates base query by security scope.")
