@@ -378,7 +378,7 @@ class EnrollmentFacade(DataExtractorFacade):
 
             if base_enrollments_scope:
                 enrollments_query = use_read_replica_if_available(
-                    CourseEnrollment.objects.filter(**base_enrollments_scope)
+                    enrollments_query.filter(**base_enrollments_scope)
                 )
 
             logger.info("Assembled enrollments base query by security scope.")

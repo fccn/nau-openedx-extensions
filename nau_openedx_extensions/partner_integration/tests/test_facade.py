@@ -258,6 +258,13 @@ class TestEnrollmentFacade(TransactionTestCase):
         result = self.facade._apply_base_enrollments_scope({"is_active": True}, courses_query)
         self.assertTrue(result.filter(id=enrollment.id).exists())
 
+    def test_apply_base_enrollments_scope_with_scope_and_filtering(self):
+        """With base_enrollments_scope provided, uses it for filtering."""
+        CourseEnrollmentFactory.create(user=self.user, course_id=self.course.id, is_active=False)
+        courses_query = CourseOverview.objects.filter(org="ENROLL_ORG")
+        result = self.facade._apply_base_enrollments_scope({"is_active": True}, courses_query)
+        self.assertTrue(len(result) == 0)
+
     @patch("nau_openedx_extensions.partner_integration.facade.use_read_replica_if_available")
     def test_apply_base_enrollments_scope_exception(self, mock_replica):
         """Exception raises PartnerIntegrationInternalErrorException."""
