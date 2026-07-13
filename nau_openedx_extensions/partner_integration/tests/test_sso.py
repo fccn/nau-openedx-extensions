@@ -190,3 +190,173 @@ class TestCustomAuthorizationView(TransactionTestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, "https://www.nau.edu.pt")
+
+
+class TestPartnerSSOManagementView(TransactionTestCase):
+
+    def setUp(self):
+        self.http_client = APIClient()
+        self.endpoint = "/nau-openedx-extensions/partner-integration/sso/manage/"
+
+        self.partner_client = PartnerAPIClientFactory.create(
+            is_active=True,
+            query_security_scope={"base_security_scope": {"org": f"TEST_ORG"}}
+        )
+        self.partner_client.password = "correct_password"
+        self.partner_client.save()
+
+        self.jwt_token = self.authenticate_partner_client(self.partner_client)
+
+    def authenticate_partner_client(self, partner_client):
+        """
+        Issues a real access token by calling the partner-client auth endpoint.
+
+        The password used is "correct_password", as set in the create_bases method.
+        It is not a fake password, it is the real authentication flow working here.
+        """
+        self.http_client.credentials(
+            HTTP_AUTHORIZATION="Token correct_password",
+            HTTP_X_CLIENT_ID=partner_client.client_id,
+        )
+        response = self.http_client.post(
+            "/nau-openedx-extensions/partner-integration/auth-token/",
+            format="json"
+        )
+
+        assert response.status_code == 200, f"Auth failed: {response.data}"
+        return response.data["access_token"]
+
+    def test_delete_sso_register_success(self):
+        """
+        Validates the SSO register deletion process.
+        """
+        sso_register = SSOPartnerIntegrationFactory.create(
+            partner_client=self.partner_client, external_user_id="123456789")
+
+        self.assertTrue(SSOPartnerIntegration.objects.filter(external_user_id="123456789").exists())
+
+        self.http_client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {self.jwt_token}",
+            HTTP_X_CLIENT_ID=self.partner_client.client_id,
+        )
+
+        response = self.http_client.delete(
+            self.endpoint,
+            data={"external_user_id": "123456789"},
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            SSOPartnerIntegration.objects.filter(external_user_id="123456789").exists())
+
+    def test_delete_sso_register_missing_external_user_id(self):
+        """
+        Validates the SSO register deletion process when the external_user_id is missing.
+        """
+        self.http_client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {self.jwt_token}",
+            HTTP_X_CLIENT_ID=self.partner_client.client_id,
+        )
+
+        response = self.http_client.delete(
+            self.endpoint,
+            data={},
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data["error"], "External user ID must be provided to manage SSO.")
+
+    def test_delete_sso_register_invalid_external_user_id(self):
+        """
+        Validates the SSO register deletion process when the external_user_id is invalid.
+        """
+        self.http_client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {self.jwt_token}",
+            HTTP_X_CLIENT_ID=self.partner_client.client_id,
+        )
+
+        response = self.http_client.delete(
+            self.endpoint,
+            data={"external_user_id": ""},
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data["error"], "External user ID must be provided to manage SSO.")
+
+    def test_delete_sso_register_not_found(self):
+        """
+        Validates the SSO register deletion process when the register does not exist.
+        """
+        self.http_client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {self.jwt_token}",
+            HTTP_X_CLIENT_ID=self.partner_client.client_id,
+        )
+
+        external_user_id = "non_existent_id"
+        response = self.http_client.delete(
+            self.endpoint,
+            data={"external_user_id": external_user_id},
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            response.data["error"], f"SSO register with external_user_id '{external_user_id}' not found.")
+
+    def test_get_sso_registers(self):
+        """
+        Validates the SSO register retrieval process.
+        """
+        sso_register1 = SSOPartnerIntegrationFactory.create(
+            partner_client=self.partner_client, external_user_id="123456789")
+        sso_register2 = SSOPartnerIntegrationFactory.create(
+            partner_client=self.partner_client, external_user_id="987654321")
+
+        self.http_client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {self.jwt_token}",
+            HTTP_X_CLIENT_ID=self.partner_client.client_id,
+        )
+
+        url = f"{self.endpoint}?external_user_id={sso_register1.external_user_id}"
+        response = self.http_client.get(url, format="json")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(isinstance(response.data, dict))
+        self.assertEqual(response.data["external_user_id"], "123456789")
+
+    def test_get_sso_registers_not_found(self):
+        """
+        Validates the SSO register retrieval process when no register is found.
+        """
+        self.http_client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {self.jwt_token}",
+            HTTP_X_CLIENT_ID=self.partner_client.client_id,
+        )
+
+        url = f"{self.endpoint}?external_user_id=non_existent_id"
+        response = self.http_client.get(url, format="json")
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            response.data["error"], "SSO register with external_user_id 'non_existent_id' not found.")
+
+    def test_get_sso_registers_missing_external_user_id(self):
+        """
+        Validates the SSO register retrieval process when the external_user_id is missing.
+        """
+        self.http_client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {self.jwt_token}",
+            HTTP_X_CLIENT_ID=self.partner_client.client_id,
+        )
+
+        url = f"{self.endpoint}"
+        response = self.http_client.get(url, format="json")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data["error"], "External user ID must be provided to retrieve SSO registers.")
