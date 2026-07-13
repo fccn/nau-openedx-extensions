@@ -37,6 +37,7 @@ from nau_openedx_extensions.partner_integration.serializers import (
     CourseProgressSerializer,
     DataExtractorRequestSerializer,
     EnrollUserRequestSerializer,
+    SSOUserSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -559,3 +560,95 @@ class CustomAuthorizationView(AuthorizationView):
             return redirect(uri)
         except Exception as e:
             raise e
+
+
+class PartnerSSOManagementView(APIView):
+    """
+    Endpoint to manage SSO related operations.
+    """
+    authentication_classes = [ClientJWTAuthentication]
+    permission_classes = [IsAuthenticatedPartnerAPIClient]
+
+    def delete(self, request):
+        """
+        HTTP DELETE handler to manage SSO operations.
+        It accepts an external user ID to remove the SSO register.
+
+        Returns:
+            bool: True if the SSO register was successfully removed, False otherwise.
+
+        Example of payload:
+        {
+            "external_user_id": "external_user_123",
+        }
+        """
+        try:
+            logger.info("PartnerSSOManagementView: DELETE request received.")
+
+            client: PartnerAPIClient = request.partner_client
+            if not client.is_active:
+                logger.error("PartnerSSOManagementView: Inactive client attempted to access endpoint.")
+                raise PartnerIntegrationInactiveClientException()
+
+            external_user_id = request.data.get("external_user_id")
+            if not external_user_id:
+                error_message = "External user ID must be provided to manage SSO."
+                logger.error(f"PartnerSSOManagementView: {error_message}")
+
+                return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+
+            sso_register = SSOPartnerIntegration.objects.get(partner_client=client, external_user_id=external_user_id)
+            sso_register.delete()
+
+            return Response({"success": True}, status=status.HTTP_200_OK)
+        except SSOPartnerIntegration.DoesNotExist:
+            error_message = f"SSO register with external_user_id '{external_user_id}' not found."
+            logger.error(f"PartnerSSOManagementView: {error_message}")
+
+            return Response({"error": error_message}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error("PartnerSSOManagementView: Unexpected error.", exc_info=e)
+            return Response(
+                {"error": "An unexpected error occurred, please contact support."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def get(self, request):
+        """
+        HTTP GET handler to retrieve SSO registers for the authenticated partner client.
+        """
+        try:
+            logger.info("PartnerSSOManagementView: GET request received.")
+
+            client: PartnerAPIClient = request.partner_client
+            if not client.is_active:
+                logger.error("PartnerSSOManagementView: Inactive client attempted to access endpoint.")
+                raise PartnerIntegrationInactiveClientException()
+
+            external_user_id = self.request.query_params.get("external_user_id")
+            # By the current implementation, we require the `external_user_id` to retrieve SSO registers,
+            # but it's clearly possible to exist scenarious where we want to retrieve all registers for
+            # a given client. For this to work, oriented by necessity, we need to change this implementation
+            # making this to consider more information beyond of only `external_user_id`.
+
+            if not external_user_id:
+                error_message = "External user ID must be provided to retrieve SSO registers."
+                logger.error(f"PartnerSSOManagementView: {error_message}")
+                return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+
+            logger.info(f"PartnerSSOManagementView: Retrieving SSO register for external_user_id '{external_user_id}'.")
+            sso_register = SSOPartnerIntegration.objects.get(partner_client=client, external_user_id=external_user_id)
+            serializer = SSOUserSerializer(sso_register)
+            data = serializer.data
+
+            return Response(data, status=status.HTTP_200_OK)
+        except SSOPartnerIntegration.DoesNotExist:
+            error_message = f"SSO register with external_user_id '{external_user_id}' not found."
+            logger.error(f"PartnerSSOManagementView: {error_message}")
+            return Response({"error": error_message}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error("PartnerSSOManagementView: Unexpected error.", exc_info=e)
+            return Response(
+                {"error": "An unexpected error occurred, please contact support."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

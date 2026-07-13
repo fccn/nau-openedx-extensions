@@ -240,3 +240,10 @@ class CourseProgressSerializer(serializers.Serializer):
     completion_summary = CompletionSummarySerializer()
     course_grade = CourseGradeSerializer()
     grading_policy = GradingPolicySerializer()
+
+
+class SSOUserSerializer(serializers.Serializer):
+    """Serializer for SSO user data in data extractor responses."""
+    external_user_id = serializers.CharField()
+    username = serializers.CharField(source='user.username')
+    email = serializers.EmailField(source='user.email')
