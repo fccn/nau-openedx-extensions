@@ -198,6 +198,8 @@ class SSOPartnerIntegration(models.Model):
     partner_client = models.ForeignKey(PartnerAPIClient, on_delete=models.CASCADE, null=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=False)
     external_user_id = models.CharField(max_length=128, null=False, blank=False)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         app_label = "nau_openedx_extensions"
