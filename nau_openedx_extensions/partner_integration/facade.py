@@ -452,9 +452,9 @@ class StudentProgressExportFacade(DataExtractorFacade):
             if student_id:
                 return User.objects.get(id=student_id)
             elif nif:
-                return User.objects.get(nauuserextendedmodel__nif=student_id)
+                return User.objects.get(nauuserextendedmodel__nif=nif)
             elif username:
-                return User.objects.get(nauuserextendedmodel__username=username)
+                return User.objects.get(username=username)
 
             return User.objects.get(email=email)
         except Exception as e:
