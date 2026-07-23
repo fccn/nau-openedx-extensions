@@ -65,3 +65,25 @@ class NauOpenEdxConfig(AppConfig):
             get_course_email_context_factory  # pylint: disable=import-outside-toplevel # noqa
         bulk_email_tasks._get_course_email_context = \
             get_course_email_context_factory(prev_email_context_func)  # pylint: disable=protected-access
+
+        # Fix the "Problem Responses" report showing "Answer Text Missing" / an empty
+        # correct answer for multiple-choice/checkbox problems whose choices were authored
+        # with Studio's rich-text / per-choice feedback editor (see nau-technical#948).
+        # TODO(nau-technical#948): remove once fixed upstream in edx-platform/xblocks-contrib.
+        from xmodule.capa.capa_problem import \
+            LoncapaProblem  # pylint: disable=import-error,import-outside-toplevel # noqa
+        from xmodule.capa.inputtypes import \
+            ChoiceGroup  # pylint: disable=import-error,import-outside-toplevel # noqa
+        from nau_openedx_extensions.xblocks.capa_problem_responses import (  # pylint: disable=import-outside-toplevel # noqa
+            get_extract_choices_factory,
+            get_find_correct_answer_text_factory,
+        )
+
+        prev_extract_choices_func = ChoiceGroup.extract_choices  # pylint: disable=protected-access
+        ChoiceGroup.extract_choices = staticmethod(
+            get_extract_choices_factory(prev_extract_choices_func)  # pylint: disable=protected-access
+        )
+
+        prev_find_correct_answer_text_func = LoncapaProblem.find_correct_answer_text  # pylint: disable=protected-access
+        LoncapaProblem.find_correct_answer_text = \
+            get_find_correct_answer_text_factory(prev_find_correct_answer_text_func)  # pylint: disable=protected-access
