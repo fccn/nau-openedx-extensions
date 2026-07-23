@@ -72,8 +72,8 @@ class NauOpenEdxConfig(AppConfig):
         # TODO(nau-technical#948): remove once fixed upstream in edx-platform/xblocks-contrib.
         from xmodule.capa.capa_problem import \
             LoncapaProblem  # pylint: disable=import-error,import-outside-toplevel # noqa
-        from xmodule.capa.inputtypes import \
-            ChoiceGroup  # pylint: disable=import-error,import-outside-toplevel # noqa
+        from xmodule.capa.inputtypes import ChoiceGroup  # pylint: disable=import-error,import-outside-toplevel # noqa
+
         from nau_openedx_extensions.xblocks.capa_problem_responses import (  # pylint: disable=import-outside-toplevel # noqa
             get_extract_choices_factory,
             get_find_correct_answer_text_factory,
