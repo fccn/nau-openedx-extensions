@@ -40,6 +40,10 @@ Once an upstream fix lands in edx-platform/xblocks-contrib, remove these
 monkeypatches.
 """
 
+import logging
+
+log = logging.getLogger(__name__)
+
 
 def _extract_choice_nested_text(choice_element):
     """
@@ -78,6 +82,17 @@ def get_extract_choices_factory(prev_extract_choices_func):
             return choices
 
         choice_elements = [choice for choice in element if choice.tag == 'choice']
+        if len(choices) != len(choice_elements):
+            # Upstream's extract_choices should always return one (name, text)
+            # tuple per <choice> child; if that shape ever changes, log loudly
+            # instead of silently misaligning choice text via zip().
+            log.warning(
+                'ChoiceGroup.extract_choices returned %d choices but found %d '
+                '<choice> elements; skipping div-wrapped text recovery.',
+                len(choices), len(choice_elements),
+            )
+            return choices
+
         fixed_choices = []
         for (name, text), choice_element in zip(choices, choice_elements):
             if not text or not text.strip():
@@ -109,7 +124,7 @@ def get_find_correct_answer_text_factory(prev_find_correct_answer_text_func):
         if result:
             return result
 
-        xml_elements = self.tree.xpath('//*[@id="' + answer_id + '"]')
+        xml_elements = self.tree.xpath('//*[@id=$answer_id]', answer_id=answer_id)
         if not xml_elements:
             return result
 
