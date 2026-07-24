@@ -93,6 +93,27 @@ class TestExtractChoicesFactory(unittest.TestCase):
 
         self.assertEqual(result, [('choice_0', '')])
 
+    def test_returns_original_result_on_choice_count_mismatch(self):
+        """
+        If the number of (name, text) tuples returned by the original implementation
+        doesn't match the number of <choice> children found (e.g. a future upstream
+        change to extract_choices's return shape), don't attempt recovery via zip()
+        (which would silently misalign choice text) -- just return the original result.
+        """
+        element = _parse(
+            '<choicegroup>'
+            '<choice name="choice_0" correct="false"><div>A</div></choice>'
+            '<choice name="choice_1" correct="true"><div>B</div></choice>'
+            '</choicegroup>'
+        )
+        original_result = [('choice_0', None)]  # only one tuple for two <choice> elements
+        original_func = Mock(return_value=original_result)
+        wrapper = get_extract_choices_factory(original_func)
+
+        result = wrapper(element, i18n=Mock(), text_only=True)
+
+        self.assertEqual(result, original_result)
+
 
 class TestFindCorrectAnswerTextFactory(unittest.TestCase):
     """
