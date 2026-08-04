@@ -192,3 +192,41 @@ class TestFindCorrectAnswerTextFactory(unittest.TestCase):
         result = wrapper(lcp, 'p_2_1')
 
         self.assertEqual(result, '')
+
+    def test_recovers_correct_text_when_original_result_is_blank_separators_only(self):
+        """
+        Reproduces a variant of nau-technical#948 seen on pretty-printed/indented OLX
+        (e.g. after a Studio export/import round-trip): each `<choice>`'s text is
+        nested in a `<div>`, so the original implementation's `text()` xpath only
+        picks up whitespace text nodes between/around child elements. Joining those
+        blank fragments with ", " produces a *non-empty* string made up solely of
+        whitespace and comma separators (e.g. "\n  , \n  "), which must still be
+        treated as "no real answer" so the wrapper falls through to recovery instead
+        of returning that garbage string.
+        """
+        tree = _parse(
+            '<problem>'
+            '<multiplechoiceresponse id="p_1">'
+            '<choicegroup id="p_2_1">'
+            '<choice name="choice_0" correct="false">'
+            '<div>Wrong answer.</div>'
+            '<choicehint><div>Wrong hint.</div></choicehint>'
+            '</choice>'
+            '<choice name="choice_1" correct="true">'
+            '<div>Right answer.</div>'
+            '<choicehint><div>Right hint.</div></choicehint>'
+            '</choice>'
+            '</choicegroup>'
+            '</multiplechoiceresponse>'
+            '</problem>'
+        )
+        # Simulates joining whitespace-only text() fragments from a single matched
+        # <choice correct="true"> element that has multiple indented child elements.
+        original_func = Mock(return_value='\n        , \n        , \n      ')
+        wrapper = get_find_correct_answer_text_factory(original_func)
+
+        lcp = Mock()
+        lcp.tree = tree
+        result = wrapper(lcp, 'p_2_1')
+
+        self.assertEqual(result, 'Right answer.')

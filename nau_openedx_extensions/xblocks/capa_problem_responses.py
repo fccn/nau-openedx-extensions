@@ -41,8 +41,15 @@ monkeypatches.
 """
 
 import logging
+import re
 
 log = logging.getLogger(__name__)
+
+# Matches a string containing only whitespace and/or comma separators (i.e. no
+# actual answer text), which `find_correct_answer_text`'s original `', '.join(...)`
+# can produce when every joined `text()` fragment is itself blank (e.g. when choice
+# text is authored across multiple pretty-printed/indented whitespace text nodes).
+_BLANK_JOINED_TEXT_RE = re.compile(r'^[\s,]*$')
 
 
 def _extract_choice_nested_text(choice_element):
@@ -121,7 +128,7 @@ def get_find_correct_answer_text_factory(prev_find_correct_answer_text_func):
         of `<choice>`.
         """
         result = prev_find_correct_answer_text_func(self, answer_id)
-        if result:
+        if result and not _BLANK_JOINED_TEXT_RE.match(result):
             return result
 
         xml_elements = self.tree.xpath('//*[@id=$answer_id]', answer_id=answer_id)
