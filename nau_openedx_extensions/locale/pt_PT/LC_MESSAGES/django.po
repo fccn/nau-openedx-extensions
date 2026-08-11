@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2026-04-14 18:04-0500\n"
+"POT-Creation-Date: 2026-08-25 14:02-0300\n"
 "PO-Revision-Date: 2025-07-17 15:32+0100\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -352,7 +352,7 @@ msgstr ""
 "Este curso encontra-se arquivado e já não permite a realização de "
 "atividades para obtenção de certificado."
 
-#: nau_openedx_extensions/partner_integration/course_filters.py:95
+#: nau_openedx_extensions/partner_integration/course_filters.py:101
 msgid ""
 "The SSO partner integration has not been completed. Please complete the "
 "SSO partner integration before enrolling."
@@ -360,7 +360,7 @@ msgstr ""
 "O processo de ligação de contas é obrigatório para se inscrever neste "
 "curso. Por favor, conclua este processo e tente novamente."
 
-#: nau_openedx_extensions/partner_integration/course_filters.py:108
+#: nau_openedx_extensions/partner_integration/course_filters.py:133
 msgid ""
 "The partner integration has no access configured for any course. Please "
 "contact support."
@@ -368,7 +368,7 @@ msgstr ""
 "A integração com o parceiro não tem acesso configurado para nenhum curso."
 " Por favor, contacte o suporte."
 
-#: nau_openedx_extensions/partner_integration/course_filters.py:118
+#: nau_openedx_extensions/partner_integration/course_filters.py:139
 msgid ""
 "The partner integration does not have permission to enroll users in this "
 "course. Please contact support."

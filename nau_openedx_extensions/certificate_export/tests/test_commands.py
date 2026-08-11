@@ -58,7 +58,7 @@ class ExportCourseCertificatesPdfsCommandTest(TestCase):
 
     def setUp(self):
         """Set up test data."""
-        super().setUpClass()
+        super().setUp()
         self.valid_course_id = "course-v1:NAU+Demo+DemoCourse"
         self.valid_course_key = CourseKey.from_string(self.valid_course_id)
         self.valid_download_url = "https://example.com/certificates"

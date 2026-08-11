@@ -313,9 +313,9 @@ This module lays the foundation for future partner integrations and ensures comp
 
 It classifies mainly in three states, in quick words:
 
-- A user that comes from the partner platform and has no SSO register. It redirects to login page.
+- A user that comes from the partner platform and has no SSO register. It redirects to login page, and the register is created for the user that authenticates.
 - A user that comes from the partner platform and has SSO register. It redicts to the `redirect_uri` in the url.
-- A user that comes from the partner platform and has SSO register, but with a different `external_user_id`. It redirects to login page and after authenticating it updates the `external_user_id` on the SSO register.
+- A user that comes from the partner platform and has SSO register, but with a different `external_user_id`. The flow is refused with the `sso_link_conflict` error, and the existing register is left untouched. Changing the `external_user_id` of a register is done through the SSO management endpoint.
 
 ### Important
 - All the flow respects our instance as the SSO authentication server.
@@ -382,7 +382,8 @@ This view overrides the OAuth2 authorization process.
 ### Methods descriptions:
 `dispatch()`: decides who the user is and what to do
 `get()`: decides where to send the user
-`handle_sso_registration()`: creates or updates the user SSO register.
+`handle_sso_registration()`: creates the user SSO register, and refuses to reassign an existing one.
+`handle_sso_link_conflict()`: redirects back to the partner with the `sso_link_conflict` error.
 
 
 ## Flow description
@@ -428,6 +429,7 @@ First-time SSO users get properly linked. From now on, future logins are seamles
 #### What we do:
 - Authenticate the request
 - If the user is not logged in, login programmatically
+- If a session of a **different** user is open in the browser, that session is dropped and the owner of the register is logged in instead
 - Continue the OAuth flow and redirect
 
 #### Outcome:
@@ -439,21 +441,60 @@ This is the success path.
 
 ### Scenario 3: User exists, but `external_user_id` has changed
 
-The user already has an SSO record, but the incoming `external_user_id` is different from the stored one.
+The user already has an SSO record for this partner client, but the incoming `external_user_id` is different from the stored one.
 
 #### This usually happens when:
 - Partner migrates users
 - Partner reissues accounts
 - External IDs change over time
+- **Or** a different person is driving the partner side while a previous user left their NAU session open on a shared computer
+
+The authorization flow cannot tell these apart, because both look exactly the same to it: an authenticated NAU session and an unknown `external_user_id`. So it refuses all of them.
 
 #### What we do:
-- Force the user to authenticate again
-- Update the existing SSO record with the new `external_user_id`
-- Redirect back to the partner callback
+- Leave the existing SSO record untouched
+- Redirect back to the partner callback with `?error=sso_link_conflict`
 
 #### Outcome:
-- The account link is repaired
-- No duplicate users are created
-- The system remains consistent
+- No account link is ever silently reassigned
+- The partner receives an identifiable error and can inform the user
 
-It corrects automatically a register that has changed its main information (`external_user_id`).
+An `external_user_id` that legitimately changed is updated through the SSO management endpoint below, which is a server to server operation and therefore does not depend on any browser session.
+
+## SSO management endpoint
+
+`/nau-openedx-extensions/partner-integration/sso/manage/`
+
+Authenticated with the partner JWT, and always scoped to the registers of the calling `PartnerAPIClient`. A register is addressed either by `external_user_id` or by the NAU `username`, so the operations remain possible when the partner no longer holds the identifier currently stored on the NAU side.
+
+### `GET`
+
+Retrieves a register.
+
+```bash
+?external_user_id=123456789
+?username=nau_user_123
+```
+
+### `PATCH`
+
+Updates the `external_user_id` of an existing register. This is the supported way of applying an identifier that intentionally changed on the partner side.
+
+```json
+{
+    "external_user_id": "123456789",
+    "new_external_user_id": "987654321"
+}
+```
+
+The register can also be addressed by `username`. The NAU user of the register is never changed. Sending the identifier the register already holds succeeds and changes nothing. If the new identifier is already linked to another NAU user, the request is refused with `409`.
+
+### `DELETE`
+
+Removes a register, which is how a link is undone. Linking again goes through the authorization flow, where the user authenticates.
+
+```json
+{
+    "external_user_id": "123456789"
+}
+```

@@ -194,15 +194,33 @@ User = get_user_model()
 
 
 class SSOPartnerIntegration(models.Model):
-    """This model registers the users with completed SSO process"""
+    """This model registers the users with completed SSO process
+
+    A user may hold one link per partner client, so the relation to `User` is a
+    plain foreign key. Both uniqueness rules are enforced by the database: a user
+    is linked at most once per partner client, and an `external_user_id` belongs
+    to a single NAU user within a partner client. The views rely on these
+    constraints rather than on a preceding read, because a read cannot rule out a
+    concurrent request claiming the same identifier.
+    """
     partner_client = models.ForeignKey(PartnerAPIClient, on_delete=models.CASCADE, null=False)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
     external_user_id = models.CharField(max_length=128, null=False, blank=False)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         app_label = "nau_openedx_extensions"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "partner_client"],
+                name="unique_sso_link_per_user_and_partner_client",
+            ),
+            models.UniqueConstraint(
+                fields=["partner_client", "external_user_id"],
+                name="unique_sso_link_per_partner_client_and_external_user",
+            ),
+        ]
 
     def __str__(self):
         """String representation of the SSOPartnerIntegration."""
