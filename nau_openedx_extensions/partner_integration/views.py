@@ -2,7 +2,8 @@
 import logging
 
 from django.conf import settings
-from django.contrib.auth import authenticate, get_user_model, login
+from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.db import IntegrityError
 from django.shortcuts import redirect
 from oauth2_provider.models import get_application_model
 from oauth2_provider.views import AuthorizationView
@@ -472,6 +473,12 @@ class CustomAuthorizationView(AuthorizationView):
         "https://www.nau.edu.pt"
     )
 
+    SSO_LINK_CONFLICT_ERROR = "sso_link_conflict"
+
+    # Marks a request that already restarted the SSO flow once, so the restart is
+    # provably a one shot instead of relying only on `logout` having succeeded.
+    SSO_SESSION_RESTART_PARAM = "sso_session_restarted"
+
     def get(self, request, *args, **kwargs):
         """Get method that starts the SSO process"""
         try:
@@ -518,6 +525,31 @@ class CustomAuthorizationView(AuthorizationView):
                 raise PartnerIntegrationInactiveClientException()
 
             authenticate(request=request)
+            if request.user.is_authenticated and request.user != sso_register.user:
+                # The browser holds a session for a different NAU user than the one this
+                # `external_user_id` is linked to. This happens on shared computers, where a
+                # previous user left their NAU session open. The link is the authority on who
+                # this request belongs to, so the stale session is dropped instead of being
+                # used to authorize the partner on the wrong account.
+                #
+                # The platform refuses to change the user within a single request, so the flow
+                # is restarted after the logout. The restarted request carries no session, and
+                # follows the regular path of logging in the owner of the register.
+                logger.warning(
+                    "CustomAuthorizationView: session user does not match the SSO register owner. "
+                    "Dropping the existing session and restarting the SSO flow."
+                )
+                logout(request)
+
+                if request.GET.get(self.SSO_SESSION_RESTART_PARAM):
+                    logger.error(
+                        "CustomAuthorizationView: the session still belongs to a different user after "
+                        "restarting the SSO flow. Aborting instead of restarting it again."
+                    )
+                    return redirect(self.DEFAULT_PARTNER_SSO_REDIRECT_URI)
+
+                return redirect(self._build_session_restart_url(request))
+
             if not request.user.is_authenticated:
                 login(request, sso_register.user, backend="django.contrib.auth.backends.ModelBackend")
         except Application.DoesNotExist:
@@ -532,8 +564,16 @@ class CustomAuthorizationView(AuthorizationView):
         return super().dispatch(request, *args, **kwargs)
 
     def handle_sso_registration(self, user, external_user_id, sso_client_id, jwt_token):
-        """This method handles the SSO register. It creates a new register
-        if it does not exists, otherwise it updates the external user identification.
+        """This method handles the SSO register. It only creates new registers.
+
+        An existing link is never reassigned here: the authenticated NAU session is not
+        proof that the person driving the partner side is the owner of that link. A user
+        already linked to this partner with a different `external_user_id`, or an
+        `external_user_id` already claimed by another user, is rejected with an
+        identifiable error so the partner can inform the user.
+
+        Changing the `external_user_id` of an existing link is an administrative
+        operation, served by `PartnerSSOManagementView.patch`.
         """
         try:
             User = get_user_model()
@@ -541,25 +581,67 @@ class CustomAuthorizationView(AuthorizationView):
                 return self.handle_no_permission()
 
             partner_client = ClientJWTAuthentication().validate_token_data_and_return_client(jwt_token)
-            sso_register = SSOPartnerIntegration.objects.filter(user=user, partner_client=partner_client)
-            if not sso_register.exists():
-                sso_register = SSOPartnerIntegration.objects.create(
-                    partner_client=partner_client,
-                    user=user,
-                    external_user_id=external_user_id,
-                )
-            else:
-                sso_register = sso_register.first()
-                sso_register.external_user_id = external_user_id
-                sso_register.save()
-
             application = Application.objects.get(client_id=sso_client_id)
+
+            sso_register = SSOPartnerIntegration.objects.filter(
+                user=user, partner_client=partner_client).first()
+
+            if sso_register and sso_register.external_user_id != external_user_id:
+                logger.warning(
+                    f"CustomAuthorizationView: user '{user.username}' is already linked to partner client "
+                    f"'{partner_client.name}' with a different external user ID. Refusing to reassign it."
+                )
+                return self.handle_sso_link_conflict(application)
+
+            if not sso_register:
+                try:
+                    SSOPartnerIntegration.objects.create(
+                        partner_client=partner_client,
+                        user=user,
+                        external_user_id=external_user_id,
+                    )
+                except IntegrityError:
+                    logger.warning(
+                        f"CustomAuthorizationView: external user ID is already linked to another NAU user "
+                        f"for partner client '{partner_client.name}'. Refusing to create a second link."
+                    )
+                    return self.handle_sso_link_conflict(application)
+
             uri = (
                 f"{application.redirect_uris}/?nau_user={user.username}"
                 f"&external_user_id={external_user_id}")
             return redirect(uri)
-        except Exception as e:
-            raise e
+        except Application.DoesNotExist:
+            logger.error(
+                f"CustomAuthorizationView: no OAuth application found for client ID '{sso_client_id}'. "
+                "Redirecting to the default NAU page."
+            )
+            return redirect(self.DEFAULT_PARTNER_SSO_REDIRECT_URI)
+
+    def _build_session_restart_url(self, request):
+        """Builds the URL of the current request carrying the restart marker."""
+        query = request.GET.copy()
+        query[self.SSO_SESSION_RESTART_PARAM] = "1"
+
+        return f"{request.path}?{query.urlencode()}"
+
+    def handle_sso_link_conflict(self, application):
+        """Redirects back to the partner with an identifiable error.
+
+        The error is sent to the application's registered redirect URI, so the partner
+        can tell the user what happened, instead of to the default NAU page where the
+        partner would never see it.
+        """
+        if application.redirect_uris:
+            return redirect(f"{application.redirect_uris}/?error={self.SSO_LINK_CONFLICT_ERROR}")
+
+        logger.warning(
+            f"CustomAuthorizationView: application '{application.client_id}' has no redirect URI "
+            "configured, so the SSO link conflict is reported on the default NAU page, where the "
+            "partner cannot read it. Configure a redirect URI for this application."
+        )
+
+        return redirect(f"{self.DEFAULT_PARTNER_SSO_REDIRECT_URI}/?error={self.SSO_LINK_CONFLICT_ERROR}")
 
 
 class PartnerSSOManagementView(APIView):
@@ -569,10 +651,38 @@ class PartnerSSOManagementView(APIView):
     authentication_classes = [ClientJWTAuthentication]
     permission_classes = [IsAuthenticatedPartnerAPIClient]
 
+    @staticmethod
+    def build_register_lookup(client, external_user_id=None, username=None):
+        """Builds the query used to find a single SSO register of the given client.
+
+        A register can be addressed either by the partner's own `external_user_id` or by
+        the NAU `username`. The username makes the operations solid when the partner no
+        longer holds the identifier currently stored on the NAU side.
+
+        Returns:
+            tuple: the lookup keyword arguments and a human readable description of it,
+                or `(None, None)` when no usable identifier was provided.
+        """
+        lookup = {"partner_client": client}
+        described_as = []
+
+        if external_user_id:
+            lookup["external_user_id"] = external_user_id
+            described_as.append(f"external_user_id '{external_user_id}'")
+
+        if username:
+            lookup["user__username"] = username
+            described_as.append(f"username '{username}'")
+
+        if not described_as:
+            return None, None
+
+        return lookup, " and ".join(described_as)
+
     def delete(self, request):
         """
         HTTP DELETE handler to manage SSO operations.
-        It accepts an external user ID to remove the SSO register.
+        It accepts an external user ID or a NAU username to remove the SSO register.
 
         Returns:
             bool: True if the SSO register was successfully removed, False otherwise.
@@ -581,7 +691,14 @@ class PartnerSSOManagementView(APIView):
         {
             "external_user_id": "external_user_123",
         }
+
+        Or, addressing the same register by its NAU user:
+        {
+            "username": "nau_user_123",
+        }
         """
+        described_as = None
+
         try:
             logger.info("PartnerSSOManagementView: DELETE request received.")
 
@@ -590,19 +707,113 @@ class PartnerSSOManagementView(APIView):
                 logger.error("PartnerSSOManagementView: Inactive client attempted to access endpoint.")
                 raise PartnerIntegrationInactiveClientException()
 
-            external_user_id = request.data.get("external_user_id")
-            if not external_user_id:
-                error_message = "External user ID must be provided to manage SSO."
+            lookup, described_as = self.build_register_lookup(
+                client,
+                external_user_id=request.data.get("external_user_id"),
+                username=request.data.get("username"),
+            )
+
+            if not lookup:
+                error_message = "An external user ID or a username must be provided to manage SSO."
                 logger.error(f"PartnerSSOManagementView: {error_message}")
 
                 return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
 
-            sso_register = SSOPartnerIntegration.objects.get(partner_client=client, external_user_id=external_user_id)
+            sso_register = SSOPartnerIntegration.objects.get(**lookup)
             sso_register.delete()
 
             return Response({"success": True}, status=status.HTTP_200_OK)
         except SSOPartnerIntegration.DoesNotExist:
-            error_message = f"SSO register with external_user_id '{external_user_id}' not found."
+            error_message = f"SSO register with {described_as} not found."
+            logger.error(f"PartnerSSOManagementView: {error_message}")
+
+            return Response({"error": error_message}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error("PartnerSSOManagementView: Unexpected error.", exc_info=e)
+            return Response(
+                {"error": "An unexpected error occurred, please contact support."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def patch(self, request):
+        """
+        HTTP PATCH handler to update the external user identification of an SSO register.
+
+        This is the supported way of changing an `external_user_id` that intentionally
+        changed on the partner side. It is a server to server operation, authenticated by
+        the partner client and addressed by an identifier the partner already holds, so it
+        never depends on which NAU session happens to be open in a browser.
+
+        The NAU user of a register is never changed here: a link is only ever established
+        through the authenticated SSO flow, where the user proves who they are. Moving a
+        link to a different NAU user means deleting it and linking again.
+
+        Returns:
+            dict: The updated SSO register.
+
+        Example of payload:
+        {
+            "external_user_id": "external_user_123",
+            "new_external_user_id": "external_user_456",
+        }
+
+        Or, addressing the register by its NAU user:
+        {
+            "username": "nau_user_123",
+            "new_external_user_id": "external_user_456",
+        }
+        """
+        described_as = None
+
+        try:
+            logger.info("PartnerSSOManagementView: PATCH request received.")
+
+            client: PartnerAPIClient = request.partner_client
+            if not client.is_active:
+                logger.error("PartnerSSOManagementView: Inactive client attempted to access endpoint.")
+                raise PartnerIntegrationInactiveClientException()
+
+            new_external_user_id = request.data.get("new_external_user_id")
+            lookup, described_as = self.build_register_lookup(
+                client,
+                external_user_id=request.data.get("external_user_id"),
+                username=request.data.get("username"),
+            )
+
+            if not lookup:
+                error_message = "An external user ID or a username must be provided to update an SSO register."
+                logger.error(f"PartnerSSOManagementView: {error_message}")
+
+                return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+
+            if not new_external_user_id:
+                error_message = "A new external user ID must be provided to update an SSO register."
+                logger.error(f"PartnerSSOManagementView: {error_message}")
+
+                return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+
+            sso_register = SSOPartnerIntegration.objects.get(**lookup)
+
+            if sso_register.external_user_id != new_external_user_id:
+                sso_register.external_user_id = new_external_user_id
+                try:
+                    sso_register.save()
+                except IntegrityError:
+                    # The unique constraint on `(partner_client, external_user_id)` decides
+                    # this, so a read beforehand would only repeat the same answer while
+                    # leaving a window for a concurrent request to claim the identifier.
+                    conflict_message = (
+                        f"The external user ID '{new_external_user_id}' is already linked to another NAU user."
+                    )
+                    logger.error(f"PartnerSSOManagementView: {conflict_message}")
+
+                    return Response({"error": conflict_message}, status=status.HTTP_409_CONFLICT)
+
+            serializer = SSOUserSerializer(sso_register)
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except SSOPartnerIntegration.DoesNotExist:
+            error_message = f"SSO register with {described_as} not found."
             logger.error(f"PartnerSSOManagementView: {error_message}")
 
             return Response({"error": error_message}, status=status.HTTP_404_NOT_FOUND)
@@ -616,7 +827,11 @@ class PartnerSSOManagementView(APIView):
     def get(self, request):
         """
         HTTP GET handler to retrieve SSO registers for the authenticated partner client.
+
+        A register can be addressed by `external_user_id` or by the NAU `username`.
         """
+        described_as = None
+
         try:
             logger.info("PartnerSSOManagementView: GET request received.")
 
@@ -625,25 +840,29 @@ class PartnerSSOManagementView(APIView):
                 logger.error("PartnerSSOManagementView: Inactive client attempted to access endpoint.")
                 raise PartnerIntegrationInactiveClientException()
 
-            external_user_id = self.request.query_params.get("external_user_id")
-            # By the current implementation, we require the `external_user_id` to retrieve SSO registers,
+            # By the current implementation, we require an identifier to retrieve SSO registers,
             # but it's clearly possible to exist scenarious where we want to retrieve all registers for
             # a given client. For this to work, oriented by necessity, we need to change this implementation
-            # making this to consider more information beyond of only `external_user_id`.
+            # making this to consider more information beyond of only the single register identifiers.
+            lookup, described_as = self.build_register_lookup(
+                client,
+                external_user_id=self.request.query_params.get("external_user_id"),
+                username=self.request.query_params.get("username"),
+            )
 
-            if not external_user_id:
-                error_message = "External user ID must be provided to retrieve SSO registers."
+            if not lookup:
+                error_message = "An external user ID or a username must be provided to retrieve SSO registers."
                 logger.error(f"PartnerSSOManagementView: {error_message}")
                 return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
 
-            logger.info(f"PartnerSSOManagementView: Retrieving SSO register for external_user_id '{external_user_id}'.")
-            sso_register = SSOPartnerIntegration.objects.get(partner_client=client, external_user_id=external_user_id)
+            logger.info(f"PartnerSSOManagementView: Retrieving SSO register for {described_as}.")
+            sso_register = SSOPartnerIntegration.objects.get(**lookup)
             serializer = SSOUserSerializer(sso_register)
             data = serializer.data
 
             return Response(data, status=status.HTTP_200_OK)
         except SSOPartnerIntegration.DoesNotExist:
-            error_message = f"SSO register with external_user_id '{external_user_id}' not found."
+            error_message = f"SSO register with {described_as} not found."
             logger.error(f"PartnerSSOManagementView: {error_message}")
             return Response({"error": error_message}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:  # pylint: disable=broad-except

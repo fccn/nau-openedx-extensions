@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2026-04-14 18:29-0500\n"
+"POT-Creation-Date: 2026-08-25 14:02-0300\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -324,19 +324,19 @@ msgid ""
 "out in order to obtain a certificate."
 msgstr ""
 
-#: nau_openedx_extensions/partner_integration/course_filters.py:95
+#: nau_openedx_extensions/partner_integration/course_filters.py:101
 msgid ""
 "The SSO partner integration has not been completed. Please complete the "
 "SSO partner integration before enrolling."
 msgstr ""
 
-#: nau_openedx_extensions/partner_integration/course_filters.py:108
+#: nau_openedx_extensions/partner_integration/course_filters.py:133
 msgid ""
 "The partner integration has no access configured for any course. Please "
 "contact support."
 msgstr ""
 
-#: nau_openedx_extensions/partner_integration/course_filters.py:118
+#: nau_openedx_extensions/partner_integration/course_filters.py:139
 msgid ""
 "The partner integration does not have permission to enroll users in this "
 "course. Please contact support."

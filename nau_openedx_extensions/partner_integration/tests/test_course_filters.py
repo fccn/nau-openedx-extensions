@@ -73,7 +73,7 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
 
         with patch("nau_openedx_extensions.partner_integration.course_filters.apps.get_model") as mock_get_model:
             mock_model = MagicMock()
-            mock_model.objects.get.return_value = mock_sso
+            mock_model.objects.filter.return_value.select_related.return_value = [mock_sso]
             mock_get_model.return_value = mock_model
 
             with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment) as context:
@@ -102,6 +102,55 @@ class FilterSSOPartnerAccountLinkTests(TestCase):
         self.assertIn(
             "The partner integration does not have permission to enroll users in this course. "
             "Please contact support.", error_message
+        )
+
+    def test_filter_passes_when_one_of_several_links_allows_the_course(self, _mock_settings):
+        """Test filter passes when the user is linked to several partners and one allows it.
+
+        A user holds one link per partner client, so more than one record may exist for
+        the same user. Every link is considered, not only an arbitrary one.
+        """
+        other_partner = PartnerAPIClientFactory.create(
+            query_security_scope={
+                "base_security_scope": {"org": "different_org"},
+                "base_certificates_scope": {}
+            }
+        )
+        allowed_partner = PartnerAPIClientFactory.create(
+            query_security_scope={
+                "base_security_scope": {"org": self.course.org},
+                "base_certificates_scope": {}
+            }
+        )
+        SSOPartnerIntegrationFactory.create(user=self.user, partner_client=other_partner)
+        SSOPartnerIntegrationFactory.create(user=self.user, partner_client=allowed_partner)
+
+        result = FilterSSOPartnerAccountLink.run_filter(None, self.user, self.course.id, "honor")
+        self.assertEqual(result, {})
+
+    def test_filter_raises_when_no_link_allows_the_course(self, _mock_settings):
+        """Test filter prevents enrollment when none of the user's links covers the course."""
+        first_partner = PartnerAPIClientFactory.create(
+            query_security_scope={
+                "base_security_scope": {"org": "different_org"},
+                "base_certificates_scope": {}
+            }
+        )
+        second_partner = PartnerAPIClientFactory.create(
+            query_security_scope={
+                "base_security_scope": {"org": "another_org"},
+                "base_certificates_scope": {}
+            }
+        )
+        SSOPartnerIntegrationFactory.create(user=self.user, partner_client=first_partner)
+        SSOPartnerIntegrationFactory.create(user=self.user, partner_client=second_partner)
+
+        with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment) as context:
+            FilterSSOPartnerAccountLink.run_filter(None, self.user, self.course.id, "honor")
+
+        self.assertIn(
+            "The partner integration does not have permission to enroll users in this course. "
+            "Please contact support.", str(context.exception)
         )
 
     def test_filter_passes_with_multiple_orgs_in_scope(self, _mock_settings):

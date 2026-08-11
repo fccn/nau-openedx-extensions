@@ -23,8 +23,12 @@ class FilterSSOPartnerAccountLink(PipelineStep):
     with a partner that has access to the course.
 
     This filter checks:
-    1. If the user has an SSOPartnerIntegration record (linked account).
-    2. If the partner client's base_security_scope allows access to the course.
+    1. If the user has at least one SSOPartnerIntegration record (linked account).
+    2. If any of those partner clients' base_security_scope allows access to the course.
+
+    A user may be linked to several partners, one link per partner client, so every
+    link is considered and the enrollment is allowed as soon as one of them covers
+    the course.
 
     If either check fails, enrollment is prevented with a Portuguese error message.
 
@@ -85,9 +89,11 @@ class FilterSSOPartnerAccountLink(PipelineStep):
             logger.error("SSOPartnerIntegration model not found")
             return {}
 
-        try:
-            sso_record = SSOPartnerIntegration.objects.get(user=user)
-        except SSOPartnerIntegration.DoesNotExist as exc:
+        sso_records = list(
+            SSOPartnerIntegration.objects.filter(user=user).select_related("partner_client")
+        )
+
+        if not sso_records:
             logger.warning(
                 f"User {user.id} ({user.username}) has no SSO partner integration record"
             )
@@ -95,36 +101,45 @@ class FilterSSOPartnerAccountLink(PipelineStep):
                 "The SSO partner integration has not been completed. "
                 "Please complete the SSO partner integration before enrolling."
             )
-            raise CourseEnrollmentStarted.PreventEnrollment(exception_msg) from exc
+            raise CourseEnrollmentStarted.PreventEnrollment(exception_msg)
 
-        partner_client = sso_record.partner_client
-        base_security_scope = partner_client.query_security_scope.get("base_security_scope", {})
+        any_scope_configured = False
 
-        if not base_security_scope:
+        for sso_record in sso_records:
+            partner_client = sso_record.partner_client
+            base_security_scope = partner_client.query_security_scope.get("base_security_scope", {})
+
+            if not base_security_scope:
+                logger.warning(
+                    f"Partner {partner_client.name} has no base_security_scope configured"
+                )
+                continue
+
+            any_scope_configured = True
+
+            if FilterSSOPartnerAccountLink._is_course_allowed_for_partner(course_key, base_security_scope):
+                logger.info(
+                    f"User {user.id} ({user.username}) validated for enrollment in {course_key} "
+                    f"via partner {partner_client.name}"
+                )
+                return {}
+
             logger.warning(
-                f"Partner {partner_client.name} has no base_security_scope configured"
+                f"Partner {partner_client.name} does not have access to course {course_key}"
             )
+
+        if not any_scope_configured:
             exception_msg = _(
                 "The partner integration has no access configured for any course. "
                 "Please contact support."
             )
             raise CourseEnrollmentStarted.PreventEnrollment(exception_msg)
 
-        if not FilterSSOPartnerAccountLink._is_course_allowed_for_partner(course_key, base_security_scope):
-            logger.warning(
-                f"Partner {partner_client.name} does not have access to course {course_key}"
-            )
-            exception_msg = _(
-                "The partner integration does not have permission to enroll users in this course. "
-                "Please contact support."
-            )
-            raise CourseEnrollmentStarted.PreventEnrollment(exception_msg)
-
-        logger.info(
-            f"User {user.id} ({user.username}) validated for enrollment in {course_key} "
-            f"via partner {partner_client.name}"
+        exception_msg = _(
+            "The partner integration does not have permission to enroll users in this course. "
+            "Please contact support."
         )
-        return {}
+        raise CourseEnrollmentStarted.PreventEnrollment(exception_msg)
 
     @staticmethod
     def _is_course_allowed_for_partner(course_key, base_security_scope):
