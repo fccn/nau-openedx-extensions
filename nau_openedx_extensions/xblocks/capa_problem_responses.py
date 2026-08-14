@@ -35,6 +35,14 @@ extraction (skipping ``<choicehint>``/``<compoundhint>`` feedback children)
 whenever the upstream logic returns an empty result, without changing any
 other behaviour.
 
+A second, related failure mode affects ``find_correct_answer_text`` only:
+its ``', '.join(xml_element.xpath('*[@correct="true"]/text()'))`` can match
+multiple *whitespace-only* text nodes when the OLX is pretty-printed/indented
+(e.g. after a Studio export/import round-trip), producing a non-empty string
+made up solely of whitespace and comma separators instead of an empty one.
+See ``_BLANK_JOINED_TEXT_RE`` below for how this is detected and routed
+through the same recovery fallback.
+
 TODO(nau-technical#948): This is a stopgap fix for an upstream Open edX bug.
 Once an upstream fix lands in edx-platform/xblocks-contrib, remove these
 monkeypatches.
@@ -49,7 +57,7 @@ log = logging.getLogger(__name__)
 # actual answer text), which `find_correct_answer_text`'s original `', '.join(...)`
 # can produce when every joined `text()` fragment is itself blank (e.g. when choice
 # text is authored across multiple pretty-printed/indented whitespace text nodes).
-_BLANK_JOINED_TEXT_RE = re.compile(r'^[\s,]*$')
+_BLANK_JOINED_TEXT_RE = re.compile(r'[\s,]*')
 
 
 def _extract_choice_nested_text(choice_element):
@@ -128,7 +136,7 @@ def get_find_correct_answer_text_factory(prev_find_correct_answer_text_func):
         of `<choice>`.
         """
         result = prev_find_correct_answer_text_func(self, answer_id)
-        if result and not _BLANK_JOINED_TEXT_RE.match(result):
+        if result and not _BLANK_JOINED_TEXT_RE.fullmatch(result):
             return result
 
         xml_elements = self.tree.xpath('//*[@id=$answer_id]', answer_id=answer_id)
