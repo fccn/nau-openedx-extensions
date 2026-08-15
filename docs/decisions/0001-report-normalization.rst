@@ -173,6 +173,36 @@ per-report work for the target catalog is close to zero.
 The ceiling is stated openly: a monkeypatch breaks silently if upstream renames
 those modules, changes the import style, or adds a fourth report module.
 
+Verified against the target catalog, the learner value is present in all four
+reports today, under four different names:
+
+.. code-block::
+
+    student_profile_info         username           # already snake_case
+    grade_report                 Username
+    export_course_certificates   student username
+    course_survey_results        User Name
+
+``username`` is also the **only** identifier present in all four. ``user.id``
+appears in three, but not in ``export_course_certificates``, which iterates
+``GeneratedCertificate`` and emits email, username and name — never the id.
+Choosing ``user_id`` as the key would force a code change; choosing ``username``
+forces none. This settles point 3's learner field on evidence rather than
+preference; what remains open is only the GDPR question below.
+
+**5b. Two per-report adjustments are still required.**
+
+- ``export_course_certificates`` already emits its own ``course_id`` as its
+  first column. Once the wrapper prepends the base structure the file would
+  carry that header twice. The report is NAU-owned, so its own column is
+  dropped as redundant. This must land in the same change as the wrapper, or
+  the file is malformed.
+- ``student_profile_info`` builds its header from
+  ``student_profile_download_fields``, a site configuration value that
+  **replaces** the default feature list. A deployment configured without
+  ``username`` silently stops satisfying the contract. The conformance test
+  (point 10) must cover that configuration, not only the default.
+
 **6. Base columns are prepended, and the change is breaking.** Consumers reading
 by column position break at the cutover, announced with version 1 of the
 catalog. The behaviour ships behind a plugin setting, defaulting to off — a
@@ -268,9 +298,11 @@ Open Questions
   post-Verawood recommendation alone. **Largest effect on effort.**
 - Does "Course ID" mean the full opaque key or the course number? Point 3 emits
   both; confirmation would let us drop one.
-- Is ``username`` acceptable as the learner key under GDPR, or should joins run
-  on the course-specific anonymous id, with identity confined to
-  ``student_profile_info``?
+- Is ``username`` acceptable as the learner key **under GDPR**? Technically it
+  is settled — see point 5, it is the only identifier all four reports already
+  carry. The remaining question is whether joins should instead run on the
+  course-specific anonymous id, with identity confined to
+  ``student_profile_info``.
 - Does ARTE ingestion map columns by header name or by position? This decides
   whether point 6 is a release note or a dated cutover.
 - Is a three-field base structure accepted for course-grain reports?
