@@ -74,10 +74,15 @@ original sibling-of-response-tag lookup), and to extract text recursively
 (via ``itertext()``) instead of relying on the direct ``.text`` node, in
 both cases falling back to this recovery only when the original lookup
 didn't already find real question text. It also recognises ``<div>`` as a
-valid prompt-wrapper element (in addition to ``<p>``/``<label>``), since
-"matching"/dropdown problems (``optionresponse`` with multiple
-``<optioninput>`` sub-answers) author each sub-answer's own prompt as a
-``<div>`` sibling immediately preceding it, rather than a ``<p>``/``<label>``.
+valid prompt-wrapper element for ``<optioninput>`` answers specifically (in
+addition to ``<p>``/``<label>``), since "matching"/dropdown problems
+(``optionresponse`` with multiple ``<optioninput>`` sub-answers) author each
+sub-answer's own prompt as a ``<div>`` sibling immediately preceding it,
+rather than a ``<p>``/``<label>``. This is intentionally scoped to
+``<optioninput>`` only, rather than applied to every response type: ``<div>``
+is too generic/common a tag elsewhere in capa OLX (images, layout wrappers,
+feedback blocks, etc.) to safely assume any preceding one is the question
+prompt.
 
 TODO(nau-technical#948): This is a stopgap fix for an upstream Open edX bug.
 Once an upstream fix lands in edx-platform/xblocks-contrib, remove these
@@ -196,23 +201,28 @@ def get_find_correct_answer_text_factory(prev_find_correct_answer_text_func):
     return find_correct_answer_text_wrapper
 
 
-def _find_label_element_text(xml_element):
+def _find_label_element_text(xml_element, allow_div=False):
     """
-    Look for a `<p>`/`<label>`/`<div>` element immediately preceding
-    `xml_element` (skipping `<description>` elements, which are feedback
-    text rather than the question prompt), and return its text extracted
-    recursively (via `itertext()`, so inline rich-text markup like
-    `<strong>` doesn't cause an empty result), or `None` if no such
-    element/text is found.
+    Look for a `<p>`/`<label>` element (or, if `allow_div` is True, also a
+    `<div>` element) immediately preceding `xml_element` (skipping
+    `<description>` elements, which are feedback text rather than the
+    question prompt), and return its text extracted recursively (via
+    `itertext()`, so inline rich-text markup like `<strong>` doesn't cause
+    an empty result), or `None` if no such element/text is found.
 
-    `<div>` is included alongside `<p>`/`<label>` to also recover prompts
-    for problems built with per-item `<div>` descriptions (e.g. a multi
-    `<optioninput>` "matching" problem, where each dropdown's own prompt is
-    a `<div>` sibling immediately preceding it), not just Studio's
-    rich-text-editor `<p>` prompts.
+    `allow_div` is intentionally opt-in (default False) and should only be
+    passed as True when `xml_element` is itself an `<optioninput>`: `<div>`
+    is an extremely common, generic container used throughout capa OLX for
+    many unrelated purposes (images, layout wrappers, feedback blocks not
+    tagged `<description>`, etc.), so treating any preceding `<div>` as a
+    question prompt for e.g. MCQ/checkbox problems risks silently
+    substituting unrelated text as the "question". It's only safe/intended
+    to recover per-item prompts for `<optioninput>`-based "matching"
+    problems, where each dropdown's own prompt is authored as a `<div>`
+    sibling immediately preceding it, not a `<p>`/`<label>`.
     """
     SKIP_ELEMS = ('description',)
-    LABEL_ELEMS = ('p', 'label', 'div')
+    LABEL_ELEMS = ('p', 'label', 'div') if allow_div else ('p', 'label')
 
     candidate = xml_element.getprevious()
     while candidate is not None and candidate.tag in SKIP_ELEMS:
@@ -249,20 +259,48 @@ def get_find_question_label_factory(prev_find_question_label_func):
         """
         result = prev_find_question_label_func(self, answer_id)
 
+        # Detect whether `result` is the generic default that
+        # `prev_find_question_label_func` falls back to when it can't find a
+        # real prompt ("Question 1", or its translation), so we know whether
+        # recovery should be attempted below. Matched via a regex built from
+        # the translated template with a numeric placeholder -- rather than
+        # reconstructing and exact-string-comparing one specific question
+        # number from `answer_id` -- so this doesn't depend on `answer_id`
+        # matching the platform's usual `..._<n>_<m>` format.
         try:
-            # Named to avoid babel's translation-string extraction (which
-            # matches on the literal identifier `_`/`gettext`/etc.): this
-            # reconstructs the *same* already-translated default that
-            # `prev_find_question_label_func` computes internally, purely
-            # for sentinel comparison below, so it isn't new user-facing
-            # text requiring its own catalog entry in this package.
+            # Named `gettext_fn` (not `_`) to avoid babel's translation-string
+            # extraction (which matches on the literal identifier
+            # `_`/`gettext`/etc., regardless of context -- confirmed by
+            # running `pybabel extract -F nau_openedx_extensions/locale/babel.cfg`
+            # against this file: naming it `_` does add a new `"Question {}"`
+            # msgid, `gettext_fn` doesn't). This reconstructs the *same*
+            # already-translated template `prev_find_question_label_func`
+            # uses internally, purely to detect its generic default output
+            # below, so it isn't new user-facing text requiring its own
+            # catalog entry in this package.
             gettext_fn = self.capa_system.i18n.gettext
-            question_nr = int(answer_id.split('_')[-2]) - 1
-            default_label = gettext_fn("Question {}").format(question_nr)
-        except (IndexError, ValueError):
-            default_label = None
+            default_label_template = gettext_fn("Question {}")
+            prefix, placeholder, suffix = default_label_template.partition('{}')
+            is_default_result = bool(placeholder) and re.fullmatch(
+                re.escape(prefix) + r'-?\d+' + re.escape(suffix), result or '',
+            ) is not None
+        except (AttributeError, TypeError):
+            # AttributeError: `capa_system`/`i18n` missing, or `gettext_fn`
+            # returned something without a `.partition` method (e.g. None).
+            # TypeError: `gettext_fn` itself isn't callable. Defensive: the
+            # i18n service should always be present/callable in practice,
+            # but if it isn't for some reason, log it and fall back to *not*
+            # attempting recovery for a non-empty `result` (same as the
+            # pre-existing behaviour) rather than raising.
+            log.warning(
+                "find_question_label_wrapper: couldn't determine whether "
+                "the original result is the generic default label for "
+                "answer_id=%r; skipping question-text recovery for it.",
+                answer_id, exc_info=True,
+            )
+            is_default_result = False
 
-        if result and result != default_label:
+        if result and not is_default_result:
             return result
 
         xml_elements = self.tree.xpath('//*[@id=$answer_id]', answer_id=answer_id)
@@ -273,15 +311,21 @@ def get_find_question_label_factory(prev_find_question_label_func):
 
         # Studio's rich-text/per-choice-feedback editor nests the question
         # prompt inside the response tag, as a sibling of the answer element
-        # itself -- check that location first.
-        question_text = _find_label_element_text(xml_element)
+        # itself -- check that location first. `allow_div` is only enabled
+        # for `<optioninput>` answers (multi-item "matching" problems, where
+        # each dropdown's own prompt is a `<div>` sibling), since `<div>` is
+        # too generic/common a tag to safely treat as a prompt for other
+        # response types (e.g. MCQ/checkbox).
+        question_text = _find_label_element_text(xml_element, allow_div=xml_element.tag == 'optioninput')
         if question_text:
             return question_text
 
         # Otherwise, re-check the "legacy" layout the original implementation
         # targets (the prompt as a sibling of the parent response tag), using
         # recursive text extraction in case the original only failed due to
-        # inline rich-text markup.
+        # inline rich-text markup. `<div>` is intentionally not allowed here:
+        # this layout is shared by all response types, and there's no
+        # verified/tested case of a `<div>`-wrapped prompt at this level.
         parent = xml_element.getparent()
         if parent is None:
             return result
