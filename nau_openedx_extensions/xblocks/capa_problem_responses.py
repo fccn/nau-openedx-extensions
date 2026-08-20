@@ -73,7 +73,11 @@ prompt as a sibling of the answer element itself (in addition to the
 original sibling-of-response-tag lookup), and to extract text recursively
 (via ``itertext()``) instead of relying on the direct ``.text`` node, in
 both cases falling back to this recovery only when the original lookup
-didn't already find real question text.
+didn't already find real question text. It also recognises ``<div>`` as a
+valid prompt-wrapper element (in addition to ``<p>``/``<label>``), since
+"matching"/dropdown problems (``optionresponse`` with multiple
+``<optioninput>`` sub-answers) author each sub-answer's own prompt as a
+``<div>`` sibling immediately preceding it, rather than a ``<p>``/``<label>``.
 
 TODO(nau-technical#948): This is a stopgap fix for an upstream Open edX bug.
 Once an upstream fix lands in edx-platform/xblocks-contrib, remove these
@@ -194,14 +198,21 @@ def get_find_correct_answer_text_factory(prev_find_correct_answer_text_func):
 
 def _find_label_element_text(xml_element):
     """
-    Look for a `<p>`/`<label>` element immediately preceding `xml_element`
-    (skipping `<description>` elements, which are feedback text rather than
-    the question prompt), and return its text extracted recursively (via
-    `itertext()`, so inline rich-text markup like `<strong>` doesn't cause
-    an empty result), or `None` if no such element/text is found.
+    Look for a `<p>`/`<label>`/`<div>` element immediately preceding
+    `xml_element` (skipping `<description>` elements, which are feedback
+    text rather than the question prompt), and return its text extracted
+    recursively (via `itertext()`, so inline rich-text markup like
+    `<strong>` doesn't cause an empty result), or `None` if no such
+    element/text is found.
+
+    `<div>` is included alongside `<p>`/`<label>` to also recover prompts
+    for problems built with per-item `<div>` descriptions (e.g. a multi
+    `<optioninput>` "matching" problem, where each dropdown's own prompt is
+    a `<div>` sibling immediately preceding it), not just Studio's
+    rich-text-editor `<p>` prompts.
     """
     SKIP_ELEMS = ('description',)
-    LABEL_ELEMS = ('p', 'label')
+    LABEL_ELEMS = ('p', 'label', 'div')
 
     candidate = xml_element.getprevious()
     while candidate is not None and candidate.tag in SKIP_ELEMS:
