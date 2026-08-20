@@ -12,6 +12,7 @@ from lxml import etree
 from nau_openedx_extensions.xblocks.capa_problem_responses import (
     get_extract_choices_factory,
     get_find_correct_answer_text_factory,
+    get_find_question_label_factory,
 )
 
 
@@ -230,3 +231,147 @@ class TestFindCorrectAnswerTextFactory(unittest.TestCase):
         result = wrapper(lcp, 'p_2_1')
 
         self.assertEqual(result, 'Right answer.')
+
+
+class TestFindQuestionLabelFactory(unittest.TestCase):
+    """
+    Test cases for get_find_question_label_factory / find_question_label_wrapper.
+
+    See nau_openedx_extensions.xblocks.capa_problem_responses for the root
+    cause of the "Pergunta" (question) column showing "Questão N" instead of
+    the actual question text, a follow-up to fccn/nau-technical#948.
+    """
+
+    @staticmethod
+    def _make_lcp(tree):
+        """
+        Build a Mock LoncapaProblem-like object with just enough attributes
+        for find_question_label_wrapper: a real lxml tree and an i18n
+        gettext that's a no-op passthrough (like the real i18n service
+        would be for English source strings).
+        """
+        lcp = Mock()
+        lcp.tree = tree
+        lcp.capa_system.i18n.gettext = lambda text: text
+        return lcp
+
+    def test_passthrough_when_original_result_is_real_text(self):
+        """
+        When the original implementation already found real question text
+        (not the generic "Question N" default), keep it as-is.
+        """
+        tree = _parse('<problem><multiplechoiceresponse><choicegroup id="x_2_1"/></multiplechoiceresponse></problem>')
+        original_func = Mock(return_value='Real question text')
+        wrapper = get_find_question_label_factory(original_func)
+
+        result = wrapper(self._make_lcp(tree), 'x_2_1')
+
+        self.assertEqual(result, 'Real question text')
+
+    def test_recovers_question_nested_inside_response_tag(self):
+        """
+        Reproduces the actual production bug: Studio's rich-text/per-choice
+        feedback editor nests the question prompt *inside* the response tag,
+        as a sibling of the choice group, instead of as a sibling of the
+        response tag itself. The original implementation only checks the
+        latter, so it falls back to a generic "Question N" label; the
+        wrapper must recover the real prompt text (including from inline
+        rich-text markup like <strong>).
+        """
+        tree = _parse(
+            '<problem><multiplechoiceresponse>'
+            '<p><strong>O que e o CienciaVitae?</strong></p>'
+            '<choicegroup id="x_2_1">'
+            '<choice correct="true"><div>Answer</div></choice>'
+            '</choicegroup>'
+            '</multiplechoiceresponse></problem>'
+        )
+        # Simulate the real (buggy) upstream behaviour: falls back to the
+        # generic default because it looks one level too high in the tree.
+        original_func = Mock(return_value='Question 1')
+        wrapper = get_find_question_label_factory(original_func)
+
+        result = wrapper(self._make_lcp(tree), 'x_2_1')
+
+        self.assertEqual(result, 'O que e o CienciaVitae?')
+
+    def test_recovers_question_with_rich_text_markup_in_legacy_layout(self):
+        """
+        Even for the "legacy" layout the original implementation targets
+        (prompt as a sibling of the response tag itself), a prompt authored
+        with inline rich-text markup (e.g. <strong>) resolves to None via
+        the original's direct `.text` read; the wrapper must recover it via
+        recursive text extraction.
+        """
+        tree = _parse(
+            '<problem>'
+            '<p><strong>Legacy bold question text</strong></p>'
+            '<multiplechoiceresponse>'
+            '<choicegroup id="x_2_1">'
+            '<choice correct="true"><div>Answer</div></choice>'
+            '</choicegroup>'
+            '</multiplechoiceresponse></problem>'
+        )
+        # Simulate the real (buggy) upstream behaviour: None from choice.text.
+        original_func = Mock(return_value=None)
+        wrapper = get_find_question_label_factory(original_func)
+
+        result = wrapper(self._make_lcp(tree), 'x_2_1')
+
+        self.assertEqual(result, 'Legacy bold question text')
+
+    def test_no_matching_element_falls_back_to_original(self):
+        """
+        If the answer_id can't be found in the tree at all, don't attempt
+        recovery -- just return the original result unmodified.
+        """
+        tree = _parse('<problem></problem>')
+        original_func = Mock(return_value='Question 1')
+        wrapper = get_find_question_label_factory(original_func)
+
+        result = wrapper(self._make_lcp(tree), 'missing_id')
+
+        self.assertEqual(result, 'Question 1')
+
+    def test_falls_back_to_original_when_no_recovery_possible(self):
+        """
+        If neither the answer element's own preceding sibling nor its
+        parent's preceding sibling is a usable <p>/<label>, gracefully
+        return the original (default) result rather than raising or
+        returning an empty value.
+        """
+        tree = _parse(
+            '<problem><multiplechoiceresponse>'
+            '<choicegroup id="x_2_1">'
+            '<choice correct="true"><div>Answer</div></choice>'
+            '</choicegroup>'
+            '</multiplechoiceresponse></problem>'
+        )
+        original_func = Mock(return_value='Question 1')
+        wrapper = get_find_question_label_factory(original_func)
+
+        result = wrapper(self._make_lcp(tree), 'x_2_1')
+
+        self.assertEqual(result, 'Question 1')
+
+    def test_skips_description_elements_when_looking_for_label(self):
+        """
+        A <description> element (feedback text, not the question prompt)
+        immediately preceding the answer element must be skipped over so the
+        real <p>/<label> further back is still found.
+        """
+        tree = _parse(
+            '<problem><multiplechoiceresponse>'
+            '<p>Real question text</p>'
+            '<description>Some descriptive text, not the question.</description>'
+            '<choicegroup id="x_2_1">'
+            '<choice correct="true"><div>Answer</div></choice>'
+            '</choicegroup>'
+            '</multiplechoiceresponse></problem>'
+        )
+        original_func = Mock(return_value='Question 1')
+        wrapper = get_find_question_label_factory(original_func)
+
+        result = wrapper(self._make_lcp(tree), 'x_2_1')
+
+        self.assertEqual(result, 'Real question text')
