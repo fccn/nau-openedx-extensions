@@ -400,3 +400,78 @@ class TestFindQuestionLabelFactory(unittest.TestCase):
 
         self.assertEqual(wrapper(self._make_lcp(tree), 'x_2_1'), 'First item prompt')
         self.assertEqual(wrapper(self._make_lcp(tree), 'x_2_2'), 'Second item prompt')
+
+    def test_ignores_non_prompt_div_for_non_optioninput_answers(self):
+        """
+        `<div>` recovery is intentionally scoped to `<optioninput>` answers
+        only (see `_find_label_element_text`'s `allow_div` docstring): for
+        other response types (e.g. MCQ/checkbox), a `<div>` immediately
+        preceding the answer element is common for unrelated purposes (an
+        image wrapper, a shared/general instructions block, etc.), so it
+        must NOT be picked up as the question prompt -- doing so would
+        silently substitute incorrect text into the report instead of the
+        (at least honest) "Question N" placeholder.
+        """
+        tree = _parse(
+            '<problem><multiplechoiceresponse>'
+            '<div>Some unrelated image caption, not a question prompt.</div>'
+            '<choicegroup id="x_2_1">'
+            '<choice correct="true"><div>Answer</div></choice>'
+            '</choicegroup>'
+            '</multiplechoiceresponse></problem>'
+        )
+        original_func = Mock(return_value='Question 1')
+        wrapper = get_find_question_label_factory(original_func)
+
+        result = wrapper(self._make_lcp(tree), 'x_2_1')
+
+        self.assertEqual(result, 'Question 1')
+
+    def test_recovers_question_even_with_malformed_answer_id(self):
+        """
+        The generic-default detection must not depend on `answer_id`
+        matching the platform's usual `..._<n>_<m>` format: it's derived
+        from a regex over the translated template, not from parsing
+        `answer_id` itself, so recovery still works even for an unexpected
+        answer_id shape.
+        """
+        tree = _parse(
+            '<problem><multiplechoiceresponse>'
+            '<p>What is the real question?</p>'
+            '<choicegroup id="not-the-usual-id-format">'
+            '<choice correct="true"><div>Answer</div></choice>'
+            '</choicegroup>'
+            '</multiplechoiceresponse></problem>'
+        )
+        original_func = Mock(return_value='Question 1')
+        wrapper = get_find_question_label_factory(original_func)
+
+        result = wrapper(self._make_lcp(tree), 'not-the-usual-id-format')
+
+        self.assertEqual(result, 'What is the real question?')
+
+    def test_falls_back_gracefully_when_i18n_gettext_raises(self):
+        """
+        If `capa_system.i18n.gettext` is missing/raises an AttributeError or
+        TypeError for some reason (e.g. the i18n service itself being
+        unavailable/misconfigured), the wrapper must not propagate the
+        exception: it should log a warning and fall back to returning the
+        original (non-empty) result unmodified, exactly as if recovery had
+        been skipped.
+        """
+        tree = _parse(
+            '<problem><multiplechoiceresponse>'
+            '<p>Real question text</p>'
+            '<choicegroup id="x_2_1">'
+            '<choice correct="true"><div>Answer</div></choice>'
+            '</choicegroup>'
+            '</multiplechoiceresponse></problem>'
+        )
+        original_func = Mock(return_value='Question 1')
+        wrapper = get_find_question_label_factory(original_func)
+        lcp = self._make_lcp(tree)
+        lcp.capa_system.i18n.gettext = Mock(side_effect=AttributeError('i18n unavailable'))
+
+        result = wrapper(lcp, 'x_2_1')
+
+        self.assertEqual(result, 'Question 1')
