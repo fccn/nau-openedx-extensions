@@ -43,6 +43,38 @@ made up solely of whitespace and comma separators instead of an empty one.
 See ``_BLANK_JOINED_TEXT_RE`` below for how this is detected and routed
 through the same recovery fallback.
 
+Follow-up (still nau-technical#948): the "Pergunta" (question) column shows a
+generic "Question N" placeholder instead of the actual question text for the
+same problems. This is caused by ``LoncapaProblem.find_question_label``,
+which looks for the question prompt (a ``<p>``/``<label>`` element) as the
+sibling immediately *preceding the response tag itself*, e.g.::
+
+    <p>What is 2+2?</p>
+    <multiplechoiceresponse>
+        <choicegroup id="...">...</choicegroup>
+    </multiplechoiceresponse>
+
+But Studio's rich-text/per-choice-feedback editor instead nests the prompt
+*inside* the response tag, as a sibling of the choice group, e.g.::
+
+    <multiplechoiceresponse>
+        <p>What is 2+2?</p>
+        <choicegroup id="...">...</choicegroup>
+    </multiplechoiceresponse>
+
+so the original lookup walks up one level too many and never finds it,
+falling through to the "Question N" default. A second, independent bug
+affects even the "expected" (sibling-of-response-tag) layout: the prompt's
+text is read via the element's direct ``.text`` node only, so a prompt
+authored with any inline rich-text formatting (e.g. ``<p><strong>What is
+2+2?</strong></p>``) also resolves to empty/``None`` instead of the actual
+text. This module patches ``find_question_label`` to also look for the
+prompt as a sibling of the answer element itself (in addition to the
+original sibling-of-response-tag lookup), and to extract text recursively
+(via ``itertext()``) instead of relying on the direct ``.text`` node, in
+both cases falling back to this recovery only when the original lookup
+didn't already find real question text.
+
 TODO(nau-technical#948): This is a stopgap fix for an upstream Open edX bug.
 Once an upstream fix lands in edx-platform/xblocks-contrib, remove these
 monkeypatches.
@@ -158,3 +190,92 @@ def get_find_correct_answer_text_factory(prev_find_correct_answer_text_func):
         return combined_text or result
 
     return find_correct_answer_text_wrapper
+
+
+def _find_label_element_text(xml_element):
+    """
+    Look for a `<p>`/`<label>` element immediately preceding `xml_element`
+    (skipping `<description>` elements, which are feedback text rather than
+    the question prompt), and return its text extracted recursively (via
+    `itertext()`, so inline rich-text markup like `<strong>` doesn't cause
+    an empty result), or `None` if no such element/text is found.
+    """
+    SKIP_ELEMS = ('description',)
+    LABEL_ELEMS = ('p', 'label')
+
+    candidate = xml_element.getprevious()
+    while candidate is not None and candidate.tag in SKIP_ELEMS:
+        candidate = candidate.getprevious()
+
+    if candidate is not None and candidate.tag in LABEL_ELEMS:
+        text = ''.join(candidate.itertext()).strip()
+        if text:
+            return text
+    return None
+
+
+def get_find_question_label_factory(prev_find_question_label_func):
+    """
+    Factory to create a patched `LoncapaProblem.find_question_label` method.
+
+    Calls the original implementation first, and only falls back to the
+    recovery logic below when it returned the generic "Question N" default
+    (or nothing at all), so behaviour for already-working problems is
+    unchanged.
+    """
+
+    def find_question_label_wrapper(self, answer_id):
+        """
+        Wrapped version of `LoncapaProblem.find_question_label` that fixes
+        the question prompt not being found for problems whose choices were
+        authored with Studio's rich-text / per-choice feedback editor, which
+        nests the prompt (e.g. `<p>...</p>`) *inside* the response tag, as a
+        sibling of the answer element, rather than as a sibling of the
+        response tag itself (the only location the original implementation
+        checks). Also fixes prompts using inline rich-text markup (e.g.
+        `<p><strong>...</strong></p>`), which the original implementation
+        misses because it only reads the element's direct `.text` node.
+        """
+        result = prev_find_question_label_func(self, answer_id)
+
+        try:
+            # Named to avoid babel's translation-string extraction (which
+            # matches on the literal identifier `_`/`gettext`/etc.): this
+            # reconstructs the *same* already-translated default that
+            # `prev_find_question_label_func` computes internally, purely
+            # for sentinel comparison below, so it isn't new user-facing
+            # text requiring its own catalog entry in this package.
+            gettext_fn = self.capa_system.i18n.gettext
+            question_nr = int(answer_id.split('_')[-2]) - 1
+            default_label = gettext_fn("Question {}").format(question_nr)
+        except (IndexError, ValueError):
+            default_label = None
+
+        if result and result != default_label:
+            return result
+
+        xml_elements = self.tree.xpath('//*[@id=$answer_id]', answer_id=answer_id)
+        if len(xml_elements) != 1:
+            return result
+
+        xml_element = xml_elements[0]
+
+        # Studio's rich-text/per-choice-feedback editor nests the question
+        # prompt inside the response tag, as a sibling of the answer element
+        # itself -- check that location first.
+        question_text = _find_label_element_text(xml_element)
+        if question_text:
+            return question_text
+
+        # Otherwise, re-check the "legacy" layout the original implementation
+        # targets (the prompt as a sibling of the parent response tag), using
+        # recursive text extraction in case the original only failed due to
+        # inline rich-text markup.
+        parent = xml_element.getparent()
+        if parent is None:
+            return result
+
+        question_text = _find_label_element_text(parent)
+        return question_text or result
+
+    return find_question_label_wrapper
