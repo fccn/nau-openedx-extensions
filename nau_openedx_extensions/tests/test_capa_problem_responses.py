@@ -375,3 +375,28 @@ class TestFindQuestionLabelFactory(unittest.TestCase):
         result = wrapper(self._make_lcp(tree), 'x_2_1')
 
         self.assertEqual(result, 'Real question text')
+
+    def test_recovers_question_from_div_wrapped_prompt(self):
+        """
+        Reproduces a real production "matching" problem: a single
+        <optionresponse> containing several <optioninput> sub-answers, each
+        with its own <div> prompt immediately preceding it (not <p>/<label>).
+        The original implementation only recognises <p>/<label>, so it falls
+        back to the generic default for every sub-answer; the wrapper must
+        also recognise <div> and recover each sub-answer's own prompt.
+        """
+        tree = _parse(
+            '<problem><optionresponse>'
+            '<div>Overall instructions, not a specific prompt.</div>'
+            '<div>First item prompt</div>'
+            '<optioninput id="x_2_1"><option correct="true">A</option></optioninput>'
+            '<br/>'
+            '<div>Second item prompt</div>'
+            '<optioninput id="x_2_2"><option correct="true">B</option></optioninput>'
+            '</optionresponse></problem>'
+        )
+        original_func = Mock(return_value='Question 1')
+        wrapper = get_find_question_label_factory(original_func)
+
+        self.assertEqual(wrapper(self._make_lcp(tree), 'x_2_1'), 'First item prompt')
+        self.assertEqual(wrapper(self._make_lcp(tree), 'x_2_2'), 'Second item prompt')
