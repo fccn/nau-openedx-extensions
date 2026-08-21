@@ -4,7 +4,7 @@
 Status
 ******
 
-**Draft** *2026-08-14*
+**Draft** *2026-08-20*
 
 Scope: Phase 2 only, and within it only what report normalization means and how
 it is built. Phase 1 (profile field collection) and Phase 3 (ZIP bundling) are
@@ -31,8 +31,7 @@ reports are ZIP archives with no rows at all.
 The result is that joining two reports needs rules invented per report, and
 cross-course analysis needs file-name parsing. FCCN has asked for a mandatory
 base structure — Course ID, Course Run, Student/User ID, Org ID — in every
-report, and has also asked whether a consolidated per-course "super-report" is
-viable.
+report.
 
 Decision
 ********
@@ -46,42 +45,71 @@ report.
 
 Two grains exist:
 
-- **learner grain** — one row per learner per course run. Carries all base
-  columns.
-- **course grain** — one row about the course run itself. Carries the course
-  columns; the learner column is omitted, not left empty.
+- **learner grain** — one row per learner per course run. Example:
+  ``grade_report``, one row per enrolled learner. Carries all base columns.
+- **course grain** — one row about the course run itself, or an aggregate over
+  it. Example: ``cohort_results``, one row per cohort, describing how many
+  learners were added to it. Carries the course columns only; the learner
+  column is omitted, not left empty.
 
-ZIP reports have no rows. They are outside the column contract and normalize on
-file naming only.
+ZIP reports are a third case. ``export_course_certificates_pdfs`` and
+``submission_files`` are archives of binary files, so there is no CSV header to
+add columns to. They already carry ``{org}_{course}_{run}`` in their file name,
+and that is all the normalization they get.
 
 This is why the contract cannot simply be "four columns in every report".
-``cohort_results`` has no learner to name. An empty column would look joinable
-without being joinable.
+``cohort_results`` has no single learner to name, so a learner column there
+would have to be empty. An empty column looks joinable without being joinable,
+which is worse for the consumer than an honest omission.
 
 2. The base columns
 ===================
 
 .. code-block::
 
-    org_id         FCT                             # course_key.org
-    course_id      course-v1:FCT+CTC101x+2020_T2   # str(course_key)
-    course_number  CTC101x                         # course_key.course
-    course_run     2020_T2                         # course_key.run
-    username       jdoe                            # learner grain only
+    org_id             FCT                             # course_key.org
+    course_id          course-v1:FCT+CTC101x+2020_T2   # str(course_key)
+    course_run         2020_T2                         # course_key.run
+    anonymous_user_id  a3f1c9...                       # learner grain only
 
-The full opaque key is emitted next to its decomposed parts. It is the only
-globally unique join key, and the decomposed fields are what people filter on.
-Emitting both costs three columns and removes all parsing from the consumer.
+``course_id`` is the full course key string. It is the only globally unique join
+key. ``course_run`` is emitted separately because filtering and grouping by run
+is the common case and should not require parsing.
 
 Names are ``snake_case``, lowercase, English. No report header passes through
 ``gettext``, so column names are safe to treat as a machine contract.
 
-``username`` is the learner key because it is the only identifier all four
-target reports already carry. ``user.id`` is absent from
-``export_course_certificates``, which iterates certificates and emits email,
-username and name but never the id.
+3. The learner key is the course-specific anonymous ID, not the username
+========================================================================
 
-3. The columns are added by wrapping the platform's write path
+Usernames are personally identifiable information under GDPR. A join key is
+copied into every report and travels to the partner's analytical systems, so it
+is the worst place to put PII.
+
+The platform already provides a suitable key. ``anonymous_id_for_user(user,
+course_id)`` returns a stable per-(user, course) identifier, persisted in
+``AnonymousUserId``, designed for exactly this purpose. It is unique, stable
+across report runs, and carries no identity on its own.
+
+Alternatives considered:
+
+- ``username`` — the only identifier all four target reports already carry, so
+  it is the cheapest option. Rejected: it is PII, and it is also mutable, since
+  learners can be renamed.
+- ``user.id`` — stable, but re-identifying, meaningless to the partner, and
+  absent from ``export_course_certificates``, which emits email, username and
+  name but never the id.
+
+This decision does **not** remove existing identity columns. Reports that
+already carry ``Username`` or ``Email`` keep them; whether an individual report
+may expose identity is a GDPR scoping question per report, not part of this
+contract. What changes is only which column the partner joins on.
+
+The wrapper still needs a learner column to resolve, and ``username`` is the one
+column all four target reports already have. It is used as the lookup input, not
+published as the key. See *Implementation*.
+
+4. The columns are added by wrapping the platform's write path
 ==============================================================
 
 All reports, native and custom, are written through three functions in
@@ -93,31 +121,54 @@ We do not edit ``edx-platform``, and ``instructor_task`` offers no extension
 point. The plugin therefore installs a wrapper at startup. See *Implementation*
 below.
 
-4. Base columns go first, and this is a breaking change
-=======================================================
+5. Base columns go first
+========================
 
-Consumers that read by column position will break. The change is announced with
-a dated cutover and version 1 of the report catalog. It ships behind a plugin
-setting that defaults to off, so rollback needs no code change.
+Consumers that read by column position will break. This is a new feature
+affecting every report, so the release is a major version bump regardless, and
+the change is announced with version 1 of the report catalog. It ships behind a
+plugin setting that defaults to off, so rollback needs no code change.
 
-5. Profile data without a recorded collection context is omitted
+6. Profile data without a recorded collection context is omitted
 ================================================================
 
-This is deny-by-default. Recording that context is Phase 1 work; this ADR only
-decides what the report does when it is missing.
+*Collection context* means the course and organization a learner was in when
+they answered a profile question. NAU collects profile fields at registration,
+inside a specific course and org, and GDPR requires that the answer only be used
+in that context.
 
-6. The certificate issue date is delivered by a join, not a new column
+Example: a learner enrols in a course of **org X** and provides their NIF during
+registration. If that same learner later enrols in a course of **org Y**, the
+NIF must not appear in org Y's ``student_profile_info`` report, because it was
+never collected for org Y.
+
+Today nothing records that context, so this ADR fixes the safe behaviour: **when
+no collection context is recorded for a profile answer, the column is omitted.**
+That is deny-by-default. Recording the context is Phase 1 work; this ADR only
+decides what the report does while it is missing.
+
+Note this is about *profile* columns only. The base structure itself, and the
+report's own columns such as grades or enrolment status, are unaffected.
+
+7. The certificate issue date is delivered by a join, not a new column
 ======================================================================
 
-Issue #32 asks for the certificate date in ``grade_report``. That value already
-exists in ``export_course_certificates``. Once both reports carry the base
-structure they join on ``course_id`` and ``username``, so the requirement is met
-with no code.
+`Issue #32 <https://github.com/fccn/nau-technical/issues/32>`_ asks for the
+certificate issue date in ``grade_report``. That value already exists as
+``certificate created date`` in ``export_course_certificates``, which is a
+NAU-owned report.
 
-This is the first demonstration of what normalization buys. The same argument
-answers the "super-report" request: we deliver the join keys instead of the
-join, and the partner builds any consolidation they need in their own analytical
-layer.
+Once both reports carry the base structure, they join on ``course_id`` and
+``anonymous_user_id``:
+
+.. code-block::
+
+    grade_report                 org_id  course_id  course_run  anonymous_user_id  Grade  ...
+    export_course_certificates   org_id  course_id  course_run  anonymous_user_id  certificate created date  ...
+
+So the requirement is met with no code. This is the concrete payoff of the base
+structure: values that live in different reports become combinable without a
+new report being built for each combination.
 
 Implementation
 **************
@@ -133,7 +184,8 @@ so the plugin rebinds them there from ``AppConfig.ready()``:
     # Upgrade path: an openedx-filters step once one exists upstream.
     # test_base_columns.py is what detects breakage on upgrade.
 
-    COURSE_HEADERS = ["org_id", "course_id", "course_number", "course_run"]
+    COURSE_HEADERS = ["org_id", "course_id", "course_run"]
+    LEARNER_HEADER = "anonymous_user_id"
     LEARNER_KEY_ALIASES = {"username", "user name", "student username"}
 
 
@@ -142,10 +194,7 @@ so the plugin rebinds them there from ``AppConfig.ready()``:
         def wrapper(rows, csv_name, course_id, timestamp, *args, **kwargs):
             rows = list(rows)
             if _enabled() and rows:
-                values = _course_values(course_id)
-                rows = [COURSE_HEADERS + _normalize_header(rows[0])] + [
-                    values + list(row) for row in rows[1:]
-                ]
+                rows = _add_base_columns(rows, course_id)
             return upload(rows, csv_name, course_id, timestamp, *args, **kwargs)
 
         return wrapper
@@ -166,27 +215,35 @@ so the plugin rebinds them there from ``AppConfig.ready()``:
         )
 
 Large grade reports are streamed to a temporary file instead of built as a row
-list. For those, ``_wrap_file`` prepends a CSV-escaped constant prefix to each
-line, so the report is never re-parsed.
+list. For those, ``_wrap_file`` applies the same transformation line by line, so
+the report is never re-parsed.
 
 ``upload_zip_to_report_store`` is deliberately left unwrapped.
 
 NAU custom reports need no patching. They already import these functions through
 ``edxapp_wrapper``.
 
-Renaming the learner key
-========================
+Resolving the anonymous ID
+==========================
 
-The wrapper sees the header row, so it also renames the learner key through the
-alias map. The value is already present in all four target reports, only the
-name differs:
+The wrapper reads the header row and looks for a learner column using the alias
+map. The value is already present in all four target reports, under four
+different names:
 
 .. code-block::
 
-    student_profile_info         username           # already correct
+    student_profile_info         username
     grade_report                 Username
     export_course_certificates   student username
     course_survey_results        User Name
+
+If a learner column is found, the report is learner grain, and the wrapper
+resolves each username to ``anonymous_id_for_user(user, course_id)``. The
+mapping is built once per report with a single query over the course's enrolled
+users, not once per row.
+
+If no learner column is found, the report is course grain and only the course
+columns are added.
 
 Because of this, no report needs to be edited to satisfy the contract. The whole
 normalization is one module and one test.
@@ -201,29 +258,43 @@ Two adjustments are still required
 - ``student_profile_info`` builds its header from
   ``student_profile_download_fields``, a site configuration value that
   *replaces* the default field list. A deployment configured without
-  ``username`` would silently stop satisfying the contract, so the conformance
-  test must cover that case.
+  ``username`` would leave the wrapper with no learner column to resolve, and
+  the report would silently drop to course grain. The conformance test must
+  cover that case.
 
 The conformance test
 ====================
 
-One test runs each report generator and asserts its leading columns. It is
-mandatory, not optional: the wrapper is a monkeypatch, and this test is the only
-thing that detects an upstream rename during an upgrade. Without it, reports
-would keep generating, silently missing the base structure.
+A new test in the plugin, ``tests/test_base_columns.py``. For each report
+generator it runs the report against a small fixture course and asserts three
+things:
+
+1. the first columns of the output are exactly ``COURSE_HEADERS``, with the
+   course's own values;
+2. learner-grain reports carry ``anonymous_user_id`` next, matching
+   ``anonymous_id_for_user`` for that learner;
+3. course-grain reports carry no learner column at all.
+
+It is mandatory, not optional. The wrapper is a monkeypatch, so this test is the
+only thing that detects an upstream rename during an Open edX upgrade. Without
+it, reports would keep generating and silently lose the base structure.
 
 Consequences
 ************
 
-- Every CSV grows by four to five columns.
-- Consumers reading by column position break at the cutover. Consumers mapping
-  by header name are unaffected.
+- Every CSV grows by three to four columns.
+- Consumers reading by column position break at the release that lands this.
+  Consumers mapping by header name are unaffected.
 - Every Open edX upgrade must run the conformance test before release.
 - Cross-report joins no longer need file-name parsing, and cross-course
   aggregation needs no further platform work.
-- Learners who registered before Phase 1 records a collection context will lose
-  their profile columns, unless a backfill is agreed. FCCN needs to hear this
-  before seeing it in a report.
+- The partner joins on an anonymous ID, so cross-report analysis no longer
+  requires handling personal data.
+- Learners whose profile answers predate Phase 1 recording a collection context
+  have no context on those answers. Under decision 6 those columns are omitted,
+  so ``student_profile_info`` will show fewer profile fields for them than it
+  does today. Either a backfill rule is agreed, or FCCN accepts the loss. This
+  needs to be said before it is discovered in a report.
 - The report catalog becomes a deliverable: per report, its name, row grain,
   base fields, full column list, and the variables that still require
   partner-side inference.
@@ -235,16 +306,22 @@ These are not solved by the column contract.
 
 **The platform's report listing ignores** ``parent_dir``.
 ``ReportStore.links_for()`` resolves its path without it, so a report written to
-a custom directory disappears from the Data Download listing. Until the plugin
-has its own listing endpoint, ``parent_dir`` stays unused.
+a custom directory would disappear from the Data Download listing. *Today this
+has no consequence*: no NAU report passes ``parent_dir``, so every report is
+listed normally. It only becomes a problem if we move reports into a separate
+directory, which decision below defers.
 
 **Verawood removes the instructor dashboard tab mechanism.** The NAU area today
 is ``FilterCertificateExportTab``, a template fragment rendered through
 ``InstructorDashboardRenderStarted``. Anything built as a template tab has an
-expiry date. The listing should therefore be built as a REST endpoint that the
-current tab consumes now and an MFE slot consumes later. That endpoint also
-resolves the ``parent_dir`` limitation above, and it is the architectural
-recommendation FCCN asked for as a Phase 2 deliverable.
+expiry date.
+
+We therefore do **not** build a separate reporting area or listing endpoint now.
+Reports stay in the standard Data Download listing, ``parent_dir`` stays unused,
+and where reports should live is decided by the Verawood migration plan, which
+is the Phase 2 deliverable FCCN asked for. Building a listing today would be
+significant work for little immediate gain, and it would be rewritten anyway if
+Verawood centralizes reporting itself — which the migration plan must confirm.
 
 **Profile data has no collection context.** ``NauUserExtendedModel`` is a
 ``OneToOneField`` on the user, so profile answers are global. Until Phase 1
@@ -273,41 +350,26 @@ report has been reported as complete.
 that look joinable and are not.
 
 **Renaming all legacy headers.** Breaks every consumer at once and forks files
-that change every release. We rename only the learner key, which is the column
-the contract depends on.
-
-**Building a consolidated "super-report".** Different row grains would duplicate
-or drop rows. Grade reports have a per-course variable column count, so the
-consolidated schema would differ per course, which is the opposite of
-normalization. It would also cost the heaviest report plus the join on every
-request.
+that change every release. The wrapper adds columns and does not rename existing
+ones.
 
 Open Questions
 **************
 
-**Where do the reports live?** The scope email says the survey report goes in
-"the same reporting area instructors already use". The issue's acceptance
-criteria call for a dedicated NAU area with a different name. If reports stay in
-the standard listing, ``parent_dir`` is unused and the listing work shrinks to
-the post-Verawood recommendation alone. *This has the largest effect on effort.*
+**Does ARTE map columns by header name or by position?** Position-mapping
+consumers break when the base columns are added, so this determines what
+migration support the partner needs.
 
-**Does "Course ID" mean the full opaque key or the course number?** We emit
-both; a confirmation would let us drop one.
+**Is a three-field base structure accepted for course-grain reports?** Reports
+like ``cohort_results`` describe a cohort, not a learner, so they can carry
+``org_id``, ``course_id`` and ``course_run`` but no learner key.
 
-**Is** ``username`` **acceptable under GDPR?** Technically it is settled. The
-question is whether joins should run on the course-specific anonymous id
-instead, with identity confined to ``student_profile_info``.
+**Is a backfill of profile collection context required for existing learners**,
+or is the reduced ``student_profile_info`` output acceptable for them?
 
-**Does ARTE map columns by header name or by position?** This decides whether
-the change is a release note or a dated cutover.
-
-**Is a three-field base structure accepted for course-grain reports?**
-
-**Is a backfill of profile collection context required for existing learners?**
-
-**Is the certificate date acceptable as a join, or must it be a real column?**
-
-**Is "join keys instead of a super-report" accepted?**
+**Is the certificate issue date acceptable as a join with**
+``export_course_certificates``, or must it be a real column inside
+``grade_report``?
 
 References
 **********
@@ -321,6 +383,7 @@ References
   `#735 <https://github.com/fccn/nau-technical/issues/735>`_
 - Code: ``lms/djangoapps/instructor_task/tasks_helper/utils.py``,
   ``lms/djangoapps/instructor_task/models.py``,
+  ``common/djangoapps/student/models/user.py`` — ``anonymous_id_for_user``,
   ``nau_openedx_extensions/edxapp_wrapper/backends/instructor_task_r_v1.py``,
   ``nau_openedx_extensions/filters/pipeline.py``,
   ``nau_openedx_extensions/certificate_export/management/commands/export_course_certificates.py``
