@@ -54,8 +54,11 @@ Two grains exist:
 
 ZIP reports are a third case. ``export_course_certificates_pdfs`` and
 ``submission_files`` are archives of binary files, so there is no CSV header to
-add columns to. They already carry ``{org}_{course}_{run}`` in their file name,
-and that is all the normalization they get.
+add columns to. They do not need one. ``export_course_certificates`` already has
+one row per certificate, including ``certificate_download_pdf_link``, so once
+that CSV carries the base structure every PDF inside the archive is reachable
+from a normalized row. The archives are in Phase 2; what moved to Phase 3 is ZIP
+*bundling*, which is a different subject.
 
 This is why the contract cannot simply be "four columns in every report".
 ``cohort_results`` has no single learner to name, so a learner column there
@@ -129,26 +132,23 @@ affecting every report, so the release is a major version bump regardless, and
 the change is announced with version 1 of the report catalog. It ships behind a
 plugin setting that defaults to off, so rollback needs no code change.
 
-6. Profile data without a recorded collection context is omitted
-================================================================
+6. Profile fields are account data, and this contract does not scope them
+=========================================================================
 
-*Collection context* means the course and organization a learner was in when
-they answered a profile question. NAU collects profile fields at registration,
-inside a specific course and org, and GDPR requires that the answer only be used
-in that context.
+Phase 1 stores the NAU profile fields on ``NAUUserExtendedModel``, which hangs
+off the user account. They are asked for at registration, and the completion
+gate before course access exists to collect them from learners who registered
+before the fields existed. They are account data, not course data.
 
-Example: a learner enrols in a course of **org X** and provides their NIF during
-registration. If that same learner later enrols in a course of **org Y**, the
-NIF must not appear in org Y's ``student_profile_info`` report, because it was
-never collected for org Y.
+``student_profile_info`` therefore reports them for any course the learner is
+enrolled in, and this ADR adds no per-course filtering of its own.
 
-Today nothing records that context, so this ADR fixes the safe behaviour: **when
-no collection context is recorded for a profile answer, the column is omitted.**
-That is deny-by-default. Recording the context is Phase 1 work; this ADR only
-decides what the report does while it is missing.
-
-Note this is about *profile* columns only. The base structure itself, and the
-report's own columns such as grades or enrolment status, are unaffected.
+This conflicts with a requirement raised on the issue, which asks that data
+provided in one course or organization must not appear in a report for another.
+That requirement assumes the fields are collected per course. Phase 1 is not
+building them that way. The conflict is real and is listed under *Open
+Questions*; it has to be settled before the column set of
+``student_profile_info`` can be frozen.
 
 7. The certificate issue date is delivered by a join, not a new column
 ======================================================================
@@ -275,9 +275,12 @@ things:
    ``anonymous_id_for_user`` for that learner;
 3. course-grain reports carry no learner column at all.
 
-It is mandatory, not optional. The wrapper is a monkeypatch, so this test is the
-only thing that detects an upstream rename during an Open edX upgrade. Without
-it, reports would keep generating and silently lose the base structure.
+It is mandatory, not optional. The wrapper rebinds functions inside three
+``edx-platform`` modules we do not control. If an upgrade renames those modules
+or changes how they import the upload functions, the rebinding silently does
+nothing: reports keep generating, just without the base columns. Nothing fails,
+so the loss would surface only when the partner reports missing data. This test
+makes it surface during the upgrade instead.
 
 Consequences
 ************
@@ -290,11 +293,6 @@ Consequences
   aggregation needs no further platform work.
 - The partner joins on an anonymous ID, so cross-report analysis no longer
   requires handling personal data.
-- Learners whose profile answers predate Phase 1 recording a collection context
-  have no context on those answers. Under decision 6 those columns are omitted,
-  so ``student_profile_info`` will show fewer profile fields for them than it
-  does today. Either a backfill rule is agreed, or FCCN accepts the loss. This
-  needs to be said before it is discovered in a report.
 - The report catalog becomes a deliverable: per report, its name, row grain,
   base fields, full column list, and the variables that still require
   partner-side inference.
@@ -303,13 +301,6 @@ Dependencies
 ************
 
 These are not solved by the column contract.
-
-**The platform's report listing ignores** ``parent_dir``.
-``ReportStore.links_for()`` resolves its path without it, so a report written to
-a custom directory would disappear from the Data Download listing. *Today this
-has no consequence*: no NAU report passes ``parent_dir``, so every report is
-listed normally. It only becomes a problem if we move reports into a separate
-directory, which decision below defers.
 
 **Verawood removes the instructor dashboard tab mechanism.** The NAU area today
 is ``FilterCertificateExportTab``, a template fragment rendered through
@@ -323,10 +314,9 @@ is the Phase 2 deliverable FCCN asked for. Building a listing today would be
 significant work for little immediate gain, and it would be rewritten anyway if
 Verawood centralizes reporting itself — which the migration plan must confirm.
 
-**Profile data has no collection context.** ``NauUserExtendedModel`` is a
-``OneToOneField`` on the user, so profile answers are global. Until Phase 1
-records where each answer was collected, the column set of
-``student_profile_info`` cannot be frozen.
+**The profile scoping conflict.** Until it is settled (see *Open Questions*),
+the column set of ``student_profile_info`` cannot be frozen, so that report's
+entry in the catalog stays open.
 
 Rejected Alternatives
 *********************
@@ -360,12 +350,12 @@ Open Questions
 consumers break when the base columns are added, so this determines what
 migration support the partner needs.
 
-**Is a three-field base structure accepted for course-grain reports?** Reports
-like ``cohort_results`` describe a cohort, not a learner, so they can carry
-``org_id``, ``course_id`` and ``course_run`` but no learner key.
-
-**Is a backfill of profile collection context required for existing learners**,
-or is the reduced ``student_profile_info`` output acceptable for them?
+**Are the NAU profile fields account data or course data?** Phase 1 stores them
+on the user account and collects them at registration. The issue thread asks
+that data provided in one course or org must not appear in a report for another,
+which only makes sense if they are collected per course. These two positions are
+incompatible, and the answer decides whether ``student_profile_info`` needs
+per-course filtering at all.
 
 **Is the certificate issue date acceptable as a join with**
 ``export_course_certificates``, or must it be a real column inside
