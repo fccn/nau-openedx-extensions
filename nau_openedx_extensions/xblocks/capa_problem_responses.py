@@ -220,12 +220,29 @@ def _find_label_element_text(xml_element, allow_div=False):
     to recover per-item prompts for `<optioninput>`-based "matching"
     problems, where each dropdown's own prompt is authored as a `<div>`
     sibling immediately preceding it, not a `<p>`/`<label>`.
+
+    `<br/>`/`<hr/>` and XML comments are also skipped alongside
+    `<description>`: Studio/hand-authored OLX commonly inserts these purely
+    for layout/spacing or as authoring notes, and without skipping them the
+    positional lookup would land on one of these instead (none of which are
+    a valid label or something worth stopping at) and silently fail to find
+    the real prompt one element further back. This is intentionally a
+    narrow, explicit list of known structural/non-prompt element kinds --
+    NOT a blanket "skip any element with no text" rule, which would also
+    (unsafely) skip past a genuinely empty `<p>`/`<label>`/`<div>` slot into
+    unrelated shared/"overall instructions" content further back and return
+    the wrong text.
     """
-    SKIP_ELEMS = ('description',)
+    SKIP_ELEMS = ('description', 'br', 'hr')
     LABEL_ELEMS = ('p', 'label', 'div') if allow_div else ('p', 'label')
 
     candidate = xml_element.getprevious()
-    while candidate is not None and candidate.tag in SKIP_ELEMS:
+    while candidate is not None and (
+        candidate.tag in SKIP_ELEMS or not isinstance(candidate.tag, str)
+    ):
+        # `not isinstance(candidate.tag, str)` catches XML comment/processing
+        # instruction nodes, whose `.tag` is a callable (e.g. `etree.Comment`)
+        # rather than a string, so they'd never match `SKIP_ELEMS` by name.
         candidate = candidate.getprevious()
 
     if candidate is not None and candidate.tag in LABEL_ELEMS:
