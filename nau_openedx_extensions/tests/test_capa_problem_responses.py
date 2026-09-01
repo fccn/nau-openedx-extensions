@@ -401,6 +401,56 @@ class TestFindQuestionLabelFactory(unittest.TestCase):
         self.assertEqual(wrapper(self._make_lcp(tree), 'x_2_1'), 'First item prompt')
         self.assertEqual(wrapper(self._make_lcp(tree), 'x_2_2'), 'Second item prompt')
 
+    def test_recovers_question_from_div_wrapped_prompt_with_trailing_br(self):
+        """
+        Same "matching" problem shape as `test_recovers_question_from_div_wrapped_prompt`,
+        but with a bare `<br/>` (layout/spacing only, no text) sitting directly
+        between the `<div>` prompt and its own `<optioninput>` -- a plausible
+        Studio/hand-authored OLX layout that isn't covered by the other test
+        (where the `<br/>` only appears *between* sub-answers, not between a
+        prompt and its own answer). `<br/>` must be skipped just like
+        `<description>`, otherwise the positional lookup lands on the `<br/>`
+        itself and silently fails to find the real prompt one element further
+        back, falling through to the generic "Question N" default.
+        """
+        tree = _parse(
+            '<problem><optionresponse>'
+            '<div>First item prompt</div>'
+            '<br/>'
+            '<optioninput id="x_2_1"><option correct="true">A</option></optioninput>'
+            '</optionresponse></problem>'
+        )
+        original_func = Mock(return_value='Question 1')
+        wrapper = get_find_question_label_factory(original_func)
+
+        result = wrapper(self._make_lcp(tree), 'x_2_1')
+
+        self.assertEqual(result, 'First item prompt')
+
+    def test_recovers_question_from_div_wrapped_prompt_with_hr_and_comment(self):
+        """
+        Same as the `<br/>` case above, but for the other structural/layout
+        noise elements the lookup must also skip: a bare `<hr/>` and an XML
+        comment. Both must be skipped just like `<br/>`/`<description>`,
+        otherwise the positional lookup lands on one of them (neither a
+        valid label nor previously in `SKIP_ELEMS`) and silently falls back
+        to the generic "Question N" default.
+        """
+        tree = _parse(
+            '<problem><optionresponse>'
+            '<div>First item prompt</div>'
+            '<hr/>'
+            '<!-- a hand-authored comment -->'
+            '<optioninput id="x_2_1"><option correct="true">A</option></optioninput>'
+            '</optionresponse></problem>'
+        )
+        original_func = Mock(return_value='Question 1')
+        wrapper = get_find_question_label_factory(original_func)
+
+        result = wrapper(self._make_lcp(tree), 'x_2_1')
+
+        self.assertEqual(result, 'First item prompt')
+
     def test_ignores_non_prompt_div_for_non_optioninput_answers(self):
         """
         `<div>` recovery is intentionally scoped to `<optioninput>` answers
