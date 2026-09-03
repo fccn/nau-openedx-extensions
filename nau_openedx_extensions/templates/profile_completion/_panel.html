@@ -1,0 +1,39 @@
+## mako
+<%page expression_filter="h"/>
+<%! from django.utils.translation import gettext as _ %>
+## Colours and button styling come from the site theme, not from here. The panel
+## only lays things out: the NAU theme paints .btn.btn-primary through its own
+## mixin, so hardcoding a palette here would drift the moment the theme changes.
+<style>
+  .nau-profile-completion {
+    max-width: 34rem;
+    margin: 2rem auto;
+    padding: 2rem;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 0.25rem;
+  }
+  .nau-profile-completion h2 { margin: 0 0 0.75rem; }
+  .nau-profile-completion p { margin: 0 0 1rem; }
+  .nau-profile-completion ul { margin: 0 0 1.5rem; padding-left: 1.25rem; }
+  .nau-profile-completion li { margin-bottom: 0.25rem; }
+  .nau-profile-completion .nau-profile-completion-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+</style>
+<section class="nau-profile-completion">
+  <h2>${heading}</h2>
+  <p>${body_text}</p>
+  <ul>
+    % for label in missing_labels:
+      <li>${label}</li>
+    % endfor
+  </ul>
+  <div class="nau-profile-completion-actions">
+    <a class="btn btn-primary" href="${account_url}">${_("Go to my account")}</a>
+    % if course_about_url:
+      <a class="btn btn-secondary" href="${course_about_url}">${_("Back to the course")}</a>
+    % endif
+  </div>
+</section>

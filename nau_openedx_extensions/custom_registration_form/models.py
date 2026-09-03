@@ -10,6 +10,11 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from openedx.core.djangoapps.user_api.errors import AccountValidationError  # pylint: disable=import-error
 
+from nau_openedx_extensions.custom_registration_form.choices import (
+    CAE4_CHOICES,
+    EMPLOYMENT_SITUATION_CHOICES,
+    NUTS_CHOICES,
+)
 from nau_openedx_extensions.utils.nif import is_nif_valid
 
 # Backwards compatible settings.AUTH_USER_MODEL
@@ -41,22 +46,6 @@ class NauUserExtendedModel(models.Model):
     Holds data authorization field
     Used during user registration as a form extension.
     """
-
-    STUDENT = 'Student'
-    UNEMPLOYED = 'Unemployed'
-    PUBLIC_SERVICE_CONTRACT = 'Public service contract'
-    PRIVATE_INSTITUTION_CONTRACT = 'Private institution contract'
-    SELF_EMPLOYED = 'Self employed entrepreneur'
-    OTHER = 'Other'
-
-    EMPLOYMENT_SITUATION_CHOICES = [
-        (STUDENT, _('Student')),
-        (UNEMPLOYED, _('Unemployed')),
-        (PUBLIC_SERVICE_CONTRACT, _('Public service contract')),
-        (PRIVATE_INSTITUTION_CONTRACT, _('Private institution contract')),
-        (SELF_EMPLOYED, _('Self employed entrepreneur')),
-        (OTHER, _('Other'))
-    ]
 
     user = models.OneToOneField(USER_MODEL, on_delete=models.CASCADE, null=True)
     data_authorization = models.BooleanField(
@@ -98,6 +87,12 @@ class NauUserExtendedModel(models.Model):
     )
     employment_situation = models.TextField(
         verbose_name=_("Employment situation"), blank=True, null=True, choices=EMPLOYMENT_SITUATION_CHOICES
+    )
+    nuts = models.CharField(
+        verbose_name=_("NUTS II - NUTS III"), max_length=64, blank=True, null=True, choices=NUTS_CHOICES
+    )
+    cae4 = models.CharField(
+        verbose_name=_("CAE4"), max_length=64, blank=True, null=True, choices=CAE4_CHOICES
     )
     allow_newsletter = models.BooleanField(
         verbose_name=_("Allow newsletter"), default=False
@@ -149,10 +144,39 @@ setattr(User, 'nau_nif', property(get_nau_nif))  # lint-amnesty, pylint: disable
 
 
 def get_nau_user_extended_model_employment_situation(self):
+    """
+    Employment situation as its readable label, so reports carry text and not codes.
+    """
     if hasattr(self, "nauuserextendedmodel"):
-        return self.nauuserextendedmodel.employment_situation
+        return self.nauuserextendedmodel.get_employment_situation_display()
     return None
 
 
 setattr(User, 'nau_user_extended_model_employment_situation', property(
     get_nau_user_extended_model_employment_situation))
+
+
+def get_nau_user_extended_model_nuts(self):
+    """
+    NUTS II - NUTS III as its readable label.
+    """
+    if hasattr(self, "nauuserextendedmodel"):
+        return self.nauuserextendedmodel.get_nuts_display()
+    return None
+
+
+setattr(User, 'nau_user_extended_model_nuts', property(  # lint-amnesty, pylint: disable=literal-used-as-attribute
+    get_nau_user_extended_model_nuts))
+
+
+def get_nau_user_extended_model_cae4(self):
+    """
+    CAE4 as its readable label.
+    """
+    if hasattr(self, "nauuserextendedmodel"):
+        return self.nauuserextendedmodel.get_cae4_display()
+    return None
+
+
+setattr(User, 'nau_user_extended_model_cae4', property(  # lint-amnesty, pylint: disable=literal-used-as-attribute
+    get_nau_user_extended_model_cae4))
