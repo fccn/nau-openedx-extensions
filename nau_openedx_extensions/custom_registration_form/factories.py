@@ -19,5 +19,5 @@ class NauUserExtendedModelFactory(factory.django.DjangoModelFactory):
     cc_nif = factory.Sequence(lambda n: f"{n:09d}")
     cc_first_name = factory.LazyAttribute(lambda o: o.user.first_name)
     cc_last_name = factory.LazyAttribute(lambda o: o.user.last_name)
-    employment_situation = NauUserExtendedModel.STUDENT
+    employment_situation = "student"
     allow_newsletter = False

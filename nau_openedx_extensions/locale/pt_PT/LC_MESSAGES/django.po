@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2026-08-25 14:02-0300\n"
+"POT-Creation-Date: 2026-09-04 12:57-0500\n"
 "PO-Revision-Date: 2025-07-17 15:32+0100\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -83,40 +83,16 @@ msgstr "Filtro de curso NAU"
 msgid "NAU Course Filters"
 msgstr "Filtros de curso NAU"
 
-#: nau_openedx_extensions/custom_registration_form/forms.py:39
+#: nau_openedx_extensions/custom_registration_form/forms.py:42
 msgid "You must read and understood the Privacy Policy"
 msgstr "Deverá ler e compreender a Politica de Privacidade"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:25
-#: nau_openedx_extensions/custom_registration_form/models.py:29
+#: nau_openedx_extensions/custom_registration_form/models.py:30
+#: nau_openedx_extensions/custom_registration_form/models.py:34
 msgid "Invalid NIF"
 msgstr "NIF inválido"
 
 #: nau_openedx_extensions/custom_registration_form/models.py:53
-msgid "Student"
-msgstr "Estudante"
-
-#: nau_openedx_extensions/custom_registration_form/models.py:54
-msgid "Unemployed"
-msgstr "Desempregado"
-
-#: nau_openedx_extensions/custom_registration_form/models.py:55
-msgid "Public service contract"
-msgstr "Contrato em instituição pública"
-
-#: nau_openedx_extensions/custom_registration_form/models.py:56
-msgid "Private institution contract"
-msgstr "Contrato em instituição privada"
-
-#: nau_openedx_extensions/custom_registration_form/models.py:57
-msgid "Self employed entrepreneur"
-msgstr "Trabalhador independente/empresário"
-
-#: nau_openedx_extensions/custom_registration_form/models.py:58
-msgid "Other"
-msgstr "Outro"
-
-#: nau_openedx_extensions/custom_registration_form/models.py:64
 msgid ""
 "I have read and understood the <a href='https://www.nau.edu.pt/legal"
 "/politica-de-privacidade/' rel='noopener' target='_blank'>Privacy "
@@ -125,55 +101,63 @@ msgstr ""
 "Li e compreendi a <a href='https://www.nau.edu.pt/legal/politica-de-"
 "privacidade/' rel='noopener' target='_blank'>Política de Privacidade</a>"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:69
+#: nau_openedx_extensions/custom_registration_form/models.py:58
 msgid "NIF"
 msgstr "NIF - Nº de Identificação Fiscal"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:72
+#: nau_openedx_extensions/custom_registration_form/models.py:61
 msgid "CC NIF"
 msgstr "CC NIF"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:75
+#: nau_openedx_extensions/custom_registration_form/models.py:64
 msgid "CC NIC"
 msgstr "CC NIC"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:78
+#: nau_openedx_extensions/custom_registration_form/models.py:67
 msgid "CC NIC Check Digit"
 msgstr "CC NIC Dígito de controlo"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:81
+#: nau_openedx_extensions/custom_registration_form/models.py:70
 msgid "CC First name"
 msgstr "Nome próprio do Cartão de Cidadão"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:83
+#: nau_openedx_extensions/custom_registration_form/models.py:72
 msgid "CC Last name"
 msgstr "Apelido do Cartão de Cidadão"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:85
+#: nau_openedx_extensions/custom_registration_form/models.py:74
 msgid "CC Nacionality"
 msgstr "Nacionalidade do Cartão de Cidadão"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:88
+#: nau_openedx_extensions/custom_registration_form/models.py:77
 msgid "CC Zip code 3 digits"
 msgstr "Código postal 3 dígitos do Cartão de Cidadão"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:91
+#: nau_openedx_extensions/custom_registration_form/models.py:80
 msgid "CC Zip code 4 digits"
 msgstr "Código postal 4 dígitos do Cartão de Cidadão"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:94
+#: nau_openedx_extensions/custom_registration_form/models.py:83
 msgid "CC Document number"
 msgstr "Número do documento do Cartão de Cidadão"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:97
+#: nau_openedx_extensions/custom_registration_form/models.py:86
 msgid "CC Birth date"
 msgstr "Data de nascimento do Cartão de Cidadão"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:100
+#: nau_openedx_extensions/custom_registration_form/models.py:89
 msgid "Employment situation"
 msgstr "Situação profissional"
 
-#: nau_openedx_extensions/custom_registration_form/models.py:103
+#: nau_openedx_extensions/custom_registration_form/models.py:92
+msgid "NUTS II - NUTS III"
+msgstr ""
+
+#: nau_openedx_extensions/custom_registration_form/models.py:95
+msgid "CAE4"
+msgstr ""
+
+#: nau_openedx_extensions/custom_registration_form/models.py:98
 msgid "Allow newsletter"
 msgstr ""
 "Li e aceito prestar o meu <a target='_blank' "
@@ -226,7 +210,7 @@ msgid "Duplicate selected allowed lists"
 msgstr "Duplicar listas selecionadas"
 
 #: nau_openedx_extensions/enrollment_by_domain/domain_filter.py:95
-#: nau_openedx_extensions/filters/pipeline.py:63
+#: nau_openedx_extensions/filters/pipeline.py:70
 #, python-brace-format
 msgid ""
 "You need to activate your account before you can enroll in the course. "
@@ -298,11 +282,11 @@ msgstr "Inscrição Domínio permitido"
 msgid "Enrollment Allowed Domains"
 msgstr "Registo Domínios permitidos"
 
-#: nau_openedx_extensions/filters/pipeline.py:75
+#: nau_openedx_extensions/filters/pipeline.py:82
 msgid "If you think this is an error, contact the course support."
 msgstr "Se achar que se trata de um erro, contacte o suporte."
 
-#: nau_openedx_extensions/filters/pipeline.py:76
+#: nau_openedx_extensions/filters/pipeline.py:83
 #, python-format
 msgid ""
 "You can't enroll on this course because your email domain is not allowed."
@@ -311,7 +295,7 @@ msgstr ""
 "Não pode inscrever-se neste curso porque o seu domínio de e-mail não é "
 "permitido. %(custom_message)s"
 
-#: nau_openedx_extensions/filters/pipeline.py:129
+#: nau_openedx_extensions/filters/pipeline.py:136
 msgid ""
 "You need to associate Autenticação Gov to your account or add NIF to your"
 " account."
@@ -319,27 +303,58 @@ msgstr ""
 "É necessário associar a Autenticação Gov à sua conta ou adicionar o NIF à"
 " sua conta."
 
-#: nau_openedx_extensions/filters/pipeline.py:204
+#: nau_openedx_extensions/filters/pipeline.py:251
+#: nau_openedx_extensions/filters/pipeline.py:345
+#, python-brace-format
+msgid ""
+"Please complete your profile before enrolling in this course. Missing: "
+"{fields}."
+msgstr ""
+"Complete o seu perfil antes de se inscrever neste curso. Em falta: "
+"{fields}."
+
+#: nau_openedx_extensions/filters/pipeline.py:338
+msgid "Complete your profile to enroll"
+msgstr "Complete o seu perfil para se inscrever"
+
+#: nau_openedx_extensions/filters/pipeline.py:339
+msgid "To enroll in this course, please complete the following information:"
+msgstr "Para se inscrever neste curso, por favor complete a seguinte informação:"
+
+#: nau_openedx_extensions/filters/pipeline.py:417
+msgid "Complete your profile to continue"
+msgstr "Complete o seu perfil para continuar"
+
+#: nau_openedx_extensions/filters/pipeline.py:418
+msgid "To continue with the course, please complete the following information:"
+msgstr "Para continuar com o curso, por favor complete a seguinte informação:"
+
+#: nau_openedx_extensions/filters/pipeline.py:424
+#, python-brace-format
+msgid "Please complete your profile to open this course. Missing: {fields}."
+msgstr "Complete o seu perfil para aceder a este curso. Em falta: {fields}."
+
+#: nau_openedx_extensions/filters/pipeline.py:499
 msgid "CSV export task started successfully!"
 msgstr "Tarefa de exportação do CSV iniciada com sucesso!"
 
-#: nau_openedx_extensions/filters/pipeline.py:205
+#: nau_openedx_extensions/filters/pipeline.py:500
 msgid "Failed to start CSV export task."
 msgstr "Falhou o inicio da tarefa de exportação do CSV."
 
-#: nau_openedx_extensions/filters/pipeline.py:206
+#: nau_openedx_extensions/filters/pipeline.py:501
 msgid "ZIP export task started successfully!"
 msgstr "Tarefa de exportação do ZIP iniciada com sucesso!"
 
-#: nau_openedx_extensions/filters/pipeline.py:207
+#: nau_openedx_extensions/filters/pipeline.py:502
 msgid "Failed to start ZIP export task."
 msgstr "Falhou o inicio da tarefa de exportação do ZIP."
 
-#: nau_openedx_extensions/filters/pipeline.py:208
+#: nau_openedx_extensions/filters/pipeline.py:503
 msgid "An unexpected error occurred. Please try again later."
 msgstr "Ocorreu um erro. Por favor tente novamente mais tarde."
 
-#: nau_openedx_extensions/filters/pipeline.py:222
+#: nau_openedx_extensions/filters/pipeline.py:517
 msgid "Certificate Export"
 msgstr "Exportação de certificados"
 
@@ -436,6 +451,18 @@ msgstr "Informação"
 msgid "Warning"
 msgstr "Aviso"
 
+#: nau_openedx_extensions/templates/profile_completion/_panel.html:34
+msgid "Go to my account"
+msgstr "Ir para a minha conta"
+
+#: nau_openedx_extensions/templates/profile_completion/_panel.html:36
+msgid "Back to the course"
+msgstr "Voltar ao curso"
+
+#: nau_openedx_extensions/templates/profile_completion/required_fields.html:12
+msgid "Complete your profile"
+msgstr "Complete o seu perfil"
+
 #: nau_openedx_extensions/utils/admin.py:63
 msgid "Export Selected to CSV"
 msgstr "Exportar selecionados para CSV"
@@ -457,4 +484,37 @@ msgstr "Exportar selecionados para CSV"
 
 #~ msgid "Send Message"
 #~ msgstr "Enviar Mensagem"
+
+#~ msgid "Student"
+#~ msgstr "Estudante"
+
+#~ msgid "Unemployed"
+#~ msgstr "Desempregado"
+
+#~ msgid "Public service contract"
+#~ msgstr "Contrato em instituição pública"
+
+#~ msgid "Private institution contract"
+#~ msgstr "Contrato em instituição privada"
+
+#~ msgid "Self employed entrepreneur"
+#~ msgstr "Trabalhador independente/empresário"
+
+#~ msgid "Other"
+#~ msgstr "Outro"
+
+#~ msgid "You need to complete your profile before enrolling in this course."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Before enrolling in {course_name} you "
+#~ "need to fill in the following "
+#~ "information in your account."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "To open {course_name} you need to "
+#~ "fill in the following information in "
+#~ "your account."
+#~ msgstr ""
 

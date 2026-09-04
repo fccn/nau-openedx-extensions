@@ -2,18 +2,23 @@
 Tests for the pipeline module used in nau_openex_extensions
 """
 
+import re
 from unittest.mock import MagicMock, Mock, patch
 
 from django.test import TestCase
 from django.test.utils import override_settings
+from django.utils import translation
 from django_mock_queries.query import MockModel, MockSet
 from opaque_keys.edx.keys import CourseKey
-from openedx_filters.learning.filters import CourseEnrollmentStarted
+from openedx_filters.learning.filters import CourseAboutRenderStarted, CourseEnrollmentStarted, RenderXBlockStarted
 
 from nau_openedx_extensions.filters.pipeline import (
     FilterEnrollmentByDomain,
     FilterEnrollmentRequireNIF,
+    FilterEnrollmentRequireProfileFields,
     FilterUsersWithAllowedNewsletter,
+    RequireProfileFieldsOnCourseAbout,
+    RequireProfileFieldsOnXBlockRender,
 )
 
 
@@ -382,3 +387,350 @@ class FilterUsersWithAllowedNewsletterTest(TestCase):
         self.assertIn("schedules", result)
         self.assertEqual(len(result["schedules"]), 1)
         self.assertEqual(result["schedules"][0].mock_name, "allow_newsletter_true")
+
+
+class FilterEnrollmentRequireProfileFieldsTest(TestCase):
+    """
+    Test FilterEnrollmentRequireProfileFields, which blocks enrollment when the
+    learner is missing the profile fields the course asks for.
+    """
+
+    # The filter returns an empty dict to let the enrollment through. Compared
+    # against a name rather than a `{}` literal so the assertions stay exact:
+    # `not response` would also pass if the filter returned None by mistake.
+    ENROLLMENT_ALLOWED = {}
+
+    def setUp(self):
+        super().setUp()
+        self.course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
+        self.mode = "audit"
+
+    @staticmethod
+    def _course_settings(required_fields):
+        """Build the other_course_settings shape the filter reads."""
+        return {"value": {"filter_enrollment_require_profile_fields": required_fields}}
+
+    class FakeModel:
+        """
+        Plain stand-in for a model instance.
+
+        MockModel cannot be used here: it answers hasattr() for any name and
+        returns None, so a field that does not exist would look present but
+        empty. Telling those two apart is exactly what this filter does.
+        """
+
+        def __init__(self, **fields):
+            self.__dict__.update(fields)
+
+    def _user(self, nau_nif=None, profile_fields=None, **extended_fields):
+        """A user whose NAU extended model and native profile carry the given fields."""
+        return self.FakeModel(
+            email="example@example.com",
+            is_active=True,
+            nau_nif=nau_nif,
+            nauuserextendedmodel=self.FakeModel(**extended_fields),
+            profile=self.FakeModel(**(profile_fields or {})),
+        )
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_course_without_the_setting_enrolls_everyone(self, get_other_course_settings_mock):
+        get_other_course_settings_mock.return_value = {"value": {}}
+        user = self._user(nuts=None, cae4=None)
+
+        response = FilterEnrollmentRequireProfileFields.run_filter(self, user, self.course_key, self.mode)
+
+        assert response == self.ENROLLMENT_ALLOWED
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_empty_list_enrolls_everyone(self, get_other_course_settings_mock):
+        get_other_course_settings_mock.return_value = self._course_settings([])
+        user = self._user(nuts=None)
+
+        response = FilterEnrollmentRequireProfileFields.run_filter(self, user, self.course_key, self.mode)
+
+        assert response == self.ENROLLMENT_ALLOWED
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_all_required_fields_filled(self, get_other_course_settings_mock):
+        get_other_course_settings_mock.return_value = self._course_settings(["nuts", "cae4"])
+        user = self._user(nuts="norte_cavado", cae4="tertiary_education")
+
+        response = FilterEnrollmentRequireProfileFields.run_filter(self, user, self.course_key, self.mode)
+
+        assert response == self.ENROLLMENT_ALLOWED
+
+    @translation.override("en")
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_missing_field_blocks_enrollment(self, get_other_course_settings_mock):
+        get_other_course_settings_mock.return_value = self._course_settings(["nuts", "cae4"])
+        user = self._user(nuts="norte_cavado", cae4=None)
+
+        with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment) as blocked:
+            FilterEnrollmentRequireProfileFields.run_filter(self, user, self.course_key, self.mode)
+
+        # The message names what is missing, so the learner knows what to go and fill in.
+        assert blocked.exception.message == (
+            "Please complete your profile before enrolling in this course. Missing: CAE4."
+        )
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_nif_is_validated_not_just_present(self, get_other_course_settings_mock):
+        # A stored but invalid NIF must not count as filled, same as in
+        # FilterEnrollmentRequireNIF.
+        get_other_course_settings_mock.return_value = self._course_settings(["nif"])
+        user = self._user(nau_nif="111111111")
+
+        with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment):
+            FilterEnrollmentRequireProfileFields.run_filter(self, user, self.course_key, self.mode)
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_valid_nif_passes(self, get_other_course_settings_mock):
+        get_other_course_settings_mock.return_value = self._course_settings(["nif"])
+        user = self._user(nau_nif="123456789")
+
+        response = FilterEnrollmentRequireProfileFields.run_filter(self, user, self.course_key, self.mode)
+
+        assert response == self.ENROLLMENT_ALLOWED
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_native_profile_field_is_read_from_the_profile(self, get_other_course_settings_mock):
+        get_other_course_settings_mock.return_value = self._course_settings(["year_of_birth"])
+        user = self._user(profile_fields={"year_of_birth": 1990})
+
+        response = FilterEnrollmentRequireProfileFields.run_filter(self, user, self.course_key, self.mode)
+
+        assert response == self.ENROLLMENT_ALLOWED
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_unknown_field_is_ignored_instead_of_blocking(self, get_other_course_settings_mock):
+        # A typo in the course settings should not lock the course for everyone.
+        get_other_course_settings_mock.return_value = self._course_settings(["nutz"])
+        user = self._user(nuts="norte_cavado")
+
+        response = FilterEnrollmentRequireProfileFields.run_filter(self, user, self.course_key, self.mode)
+
+        assert response == self.ENROLLMENT_ALLOWED
+
+
+class RequireProfileFieldsOnCourseAboutTest(TestCase):
+    """
+    Test RequireProfileFieldsOnCourseAbout, which replaces the course about page
+    with a note listing the profile fields the learner still has to fill in.
+    """
+
+    ACCOUNT_URL = "http://apps.example.com/account/"
+
+    def setUp(self):
+        super().setUp()
+        self.course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
+        self.template_name = "courseware/course_about.html"
+
+    class FakeModel:
+        """Plain stand-in, for the same reason as in the filter test above."""
+
+        def __init__(self, **fields):
+            self.__dict__.update(fields)
+
+    def _context(self):
+        return {
+            "course": self.FakeModel(id=self.course_key, display_name_with_default="Demo Course"),
+            "course_target": "/courses/course-v1:Demo+DemoX+Demo_Course/about",
+        }
+
+    def _user(self, is_authenticated=True, **extended_fields):
+        return self.FakeModel(
+            is_authenticated=is_authenticated,
+            nau_nif=None,
+            nauuserextendedmodel=self.FakeModel(**extended_fields),
+            profile=self.FakeModel(),
+        )
+
+    @staticmethod
+    def _course_settings(required_fields):
+        return {"value": {"filter_enrollment_require_profile_fields": required_fields}}
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_current_user')
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_course_without_the_setting_renders_normally(self, settings_mock, user_mock):
+        settings_mock.return_value = {"value": {}}
+        user_mock.return_value = self._user(nuts=None)
+        context = self._context()
+
+        response = RequireProfileFieldsOnCourseAbout.run_filter(self, context, self.template_name)
+
+        assert response == {"context": context, "template_name": self.template_name}
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_current_user')
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_learner_with_everything_filled_renders_normally(self, settings_mock, user_mock):
+        settings_mock.return_value = self._course_settings(["nuts"])
+        user_mock.return_value = self._user(nuts="norte_cavado")
+        context = self._context()
+
+        response = RequireProfileFieldsOnCourseAbout.run_filter(self, context, self.template_name)
+
+        assert response == {"context": context, "template_name": self.template_name}
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_current_user')
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_anonymous_user_renders_normally(self, settings_mock, user_mock):
+        # The about page is public, so an anonymous visitor must still see it.
+        settings_mock.return_value = self._course_settings(["nuts"])
+        user_mock.return_value = self._user(is_authenticated=False, nuts=None)
+        context = self._context()
+
+        response = RequireProfileFieldsOnCourseAbout.run_filter(self, context, self.template_name)
+
+        assert response == {"context": context, "template_name": self.template_name}
+
+    @translation.override("en")
+    @override_settings(ACCOUNT_MICROFRONTEND_URL=ACCOUNT_URL)
+    @patch('nau_openedx_extensions.filters.pipeline.get_current_user')
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_missing_field_replaces_the_page_with_the_note(self, settings_mock, user_mock):
+        settings_mock.return_value = self._course_settings(["nuts", "cae4"])
+        user_mock.return_value = self._user(nuts="norte_cavado", cae4=None)
+
+        with self.assertRaises(CourseAboutRenderStarted.RenderCustomResponse) as blocked:
+            RequireProfileFieldsOnCourseAbout.run_filter(self, self._context(), self.template_name)
+
+        # The learner is told what is missing and where to go, which is the whole
+        # reason this renders a response instead of redirecting.
+        body = blocked.exception.response.content.decode("utf-8")
+        assert "CAE4" in body
+        assert f"{self.ACCOUNT_URL}?missing=cae4" in body
+        # The course name is deliberately not in the copy: the learner knows which
+        # course they are in, and leaving it out keeps the string translatable
+        # without a placeholder.
+        assert "Demo Course" not in body
+        assert "please complete the following information" in body
+        assert "CAE4" in blocked.exception.message
+
+    @override_settings(ACCOUNT_MICROFRONTEND_URL="")
+    @patch('nau_openedx_extensions.filters.pipeline.get_current_user')
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_without_an_account_url_the_page_still_renders(self, settings_mock, user_mock):
+        # A note pointing nowhere would be a dead end, so the about page is left
+        # alone and the enrollment filter does the blocking.
+        settings_mock.return_value = self._course_settings(["nuts"])
+        user_mock.return_value = self._user(nuts=None)
+        context = self._context()
+
+        response = RequireProfileFieldsOnCourseAbout.run_filter(self, context, self.template_name)
+
+        assert response == {"context": context, "template_name": self.template_name}
+
+
+class RequireProfileFieldsOnXBlockRenderTest(TestCase):
+    """
+    Test RequireProfileFieldsOnXBlockRender, which replaces course content with
+    the profile completion panel while the learner is missing required fields.
+
+    This is the filter that matters for a learner who is already enrolled, from
+    before the course required the fields or through a bulk enrollment.
+    """
+
+    ACCOUNT_URL = "http://apps.example.com/account/"
+
+    def setUp(self):
+        super().setUp()
+        self.course_key = CourseKey.from_string("course-v1:Demo+DemoX+Demo_Course")
+        self.student_view_context = {}
+
+    class FakeModel:
+        """Plain stand-in, for the same reason as in the filter tests above."""
+
+        def __init__(self, **fields):
+            self.__dict__.update(fields)
+
+    def _context(self, staff_access=False):
+        return {
+            "course": self.FakeModel(id=self.course_key, display_name_with_default="Demo Course"),
+            "staff_access": staff_access,
+        }
+
+    def _user(self, is_authenticated=True, **extended_fields):
+        return self.FakeModel(
+            is_authenticated=is_authenticated,
+            nau_nif=None,
+            nauuserextendedmodel=self.FakeModel(**extended_fields),
+            profile=self.FakeModel(),
+        )
+
+    @staticmethod
+    def _course_settings(required_fields):
+        return {"value": {"filter_enrollment_require_profile_fields": required_fields}}
+
+    def _unchanged(self, context):
+        return {"context": context, "student_view_context": self.student_view_context}
+
+    @override_settings(ACCOUNT_MICROFRONTEND_URL=ACCOUNT_URL)
+    @patch('nau_openedx_extensions.filters.pipeline.get_current_user')
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_missing_field_replaces_the_content(self, settings_mock, user_mock):
+        settings_mock.return_value = self._course_settings(["nuts", "cae4"])
+        user_mock.return_value = self._user(nuts="norte_cavado", cae4=None)
+
+        with self.assertRaises(RenderXBlockStarted.RenderCustomResponse) as blocked:
+            RequireProfileFieldsOnXBlockRender.run_filter(
+                self, self._context(), self.student_view_context)
+
+        # The view wraps this in a Fragment, so it has to be markup, not a response.
+        assert isinstance(blocked.exception.response, str)
+        assert "CAE4" in blocked.exception.response
+        assert f"{self.ACCOUNT_URL}?missing=cae4" in blocked.exception.response
+
+    @override_settings(ACCOUNT_MICROFRONTEND_URL=ACCOUNT_URL)
+    @patch('nau_openedx_extensions.filters.pipeline.get_current_user')
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_colours_come_from_the_theme(self, settings_mock, user_mock):
+        # The panel must not carry its own palette, or it drifts from the site
+        # theme the moment the theme changes.
+        settings_mock.return_value = self._course_settings(["nuts"])
+        user_mock.return_value = self._user(nuts=None)
+
+        with self.assertRaises(RenderXBlockStarted.RenderCustomResponse) as blocked:
+            RequireProfileFieldsOnXBlockRender.run_filter(
+                self, self._context(), self.student_view_context)
+
+        markup = blocked.exception.response
+        assert "btn btn-primary" in markup
+        assert not re.search(r"#[0-9a-fA-F]{3,6}", markup)
+
+    @override_settings(ACCOUNT_MICROFRONTEND_URL=ACCOUNT_URL)
+    @patch('nau_openedx_extensions.filters.pipeline.get_current_user')
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_staff_can_always_open_the_course(self, settings_mock, user_mock):
+        settings_mock.return_value = self._course_settings(["nuts"])
+        user_mock.return_value = self._user(nuts=None)
+        context = self._context(staff_access=True)
+
+        response = RequireProfileFieldsOnXBlockRender.run_filter(
+            self, context, self.student_view_context)
+
+        assert response == self._unchanged(context)
+
+    @override_settings(ACCOUNT_MICROFRONTEND_URL=ACCOUNT_URL)
+    @patch('nau_openedx_extensions.filters.pipeline.get_current_user')
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_learner_with_everything_filled_sees_the_content(self, settings_mock, user_mock):
+        settings_mock.return_value = self._course_settings(["nuts"])
+        user_mock.return_value = self._user(nuts="norte_cavado")
+        context = self._context()
+
+        response = RequireProfileFieldsOnXBlockRender.run_filter(
+            self, context, self.student_view_context)
+
+        assert response == self._unchanged(context)
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_current_user')
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_course_without_the_setting_shows_the_content(self, settings_mock, user_mock):
+        settings_mock.return_value = {"value": {}}
+        user_mock.return_value = self._user(nuts=None)
+        context = self._context()
+
+        response = RequireProfileFieldsOnXBlockRender.run_filter(
+            self, context, self.student_view_context)
+
+        assert response == self._unchanged(context)
