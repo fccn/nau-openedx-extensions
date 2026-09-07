@@ -38,6 +38,15 @@ class PartnerAPIClientManager(BaseUserManager):
 class PartnerAPIClient(AbstractBaseUser, PermissionsMixin):
     """
     Can authenticate via JWT and works with DRF and templates.
+
+    Security disclaimer -- plaintext ``password``:
+    This model is an API access register for partner systems, not a person's
+    account. The ``password`` (the partner secret) is deliberately stored in
+    plaintext and compared with plain string equality (see ``check_password``).
+    This is a documented operational decision, not an oversight: the NAU
+    technical team must be able to read the secret in order to authenticate
+    and consume the partner API exactly as the partner does, which is
+    essential to reproduce and debug integration problems.
     """
     name = models.CharField(max_length=100, unique=True)
     client_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -73,7 +82,11 @@ class PartnerAPIClient(AbstractBaseUser, PermissionsMixin):
 
     def check_password(self, password):
         """
-        Override check_password in order to have a different behavior.
+        Override check_password to compare the partner secret in plaintext.
+
+        The secret is intentionally not hashed so the NAU team can operate the
+        API as the partner does. See the class docstring and
+        https://github.com/fccn/nau-technical/issues/901 for the rationale.
         """
         return password == self.password
 

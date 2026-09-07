@@ -49,6 +49,10 @@ The `partner_integration` module provides secure, scalable REST APIs for partner
     - Date ranges for enrollments or certificate creation
   - Invalid or unauthorized fields are removed before query execution.
 
+- **Partner Secret Storage (disclaimer)**
+  - The `PartnerAPIClient.password` field (the partner secret) is stored in **plaintext** and checked with plain string equality. This is a deliberate, documented decision, not an oversight.
+  - `PartnerAPIClient` is an API access register for partner systems, not a person's account. Keeping the secret readable lets the NAU technical team authenticate and consume the API exactly as the partner does, which is essential to reproduce and debug integration problems.
+
 - **Error Handling**
   - Custom exceptions:
     - `PartnerIntegrationInternalErrorException`
