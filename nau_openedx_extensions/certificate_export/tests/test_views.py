@@ -26,7 +26,28 @@ course_data_researcher_role_patch = patch(f"{VIEWS_MODULE_PATH}.CourseDataResear
 export_csv_task_patch = patch(f"{VIEWS_MODULE_PATH}.export_course_certificates_task")
 
 
-class CertificateExportPdfAPIViewTest(APITestCase):
+class RolePatchesMixin:
+    """
+    Patch the course instructor and org data researcher roles for the whole
+    test (nau-technical#735), defaulting to "no access". Tests that exercise
+    those roles flip `has_user` on the exposed mocks.
+    """
+
+    def setUp(self):
+        """Start the role patches and register their cleanup."""
+        super().setUp()
+        for attribute, target in (
+            ("course_instructor_role_mock", f"{VIEWS_MODULE_PATH}.CourseInstructorRole"),
+            ("org_data_researcher_role_mock", f"{VIEWS_MODULE_PATH}.OrgDataResearcherRole"),
+        ):
+            patcher = patch(target)
+            mock = patcher.start()
+            mock.return_value.has_user.return_value = False
+            setattr(self, attribute, mock)
+            self.addCleanup(patcher.stop)
+
+
+class CertificateExportPdfAPIViewTest(RolePatchesMixin, APITestCase):
     """Test cases for CertificateExportPdfAPIView."""
 
     def setUp(self):
@@ -86,6 +107,30 @@ class CertificateExportPdfAPIViewTest(APITestCase):
         self._assert_success_response(response)
         export_certificates_mock.assert_called_once_with(course_ids=[self.course_id])
 
+    @export_certificates_patch
+    @course_staff_role_patch
+    @course_data_researcher_role_patch
+    def test_successful_export_with_org_data_researcher_role(
+        self,
+        course_staff_role_mock: MagicMock,
+        course_data_researcher_role_mock: MagicMock,
+        export_certificates_mock: MagicMock,
+    ):
+        """
+        Test successful PDF export for an org-wide data researcher without any
+        course-level role (nau-technical#735).
+        """
+        course_staff_role_mock.return_value.has_user.return_value = False
+        course_data_researcher_role_mock.return_value.has_user.return_value = False
+        self.org_data_researcher_role_mock.return_value.has_user.return_value = True
+        export_certificates_mock.return_value = Response(status=status.HTTP_200_OK)
+
+        response = self._make_request()
+
+        self._assert_success_response(response)
+        self.org_data_researcher_role_mock.assert_called_once_with(self.course_key.org)
+        export_certificates_mock.assert_called_once_with(course_ids=[self.course_id])
+
     def test_invalid_course_id(self):
         """Test export with invalid course ID."""
         response = self._make_request("invalid-course-id")
@@ -112,7 +157,7 @@ class CertificateExportPdfAPIViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class CertificateExportAPIViewTest(APITestCase):
+class CertificateExportAPIViewTest(RolePatchesMixin, APITestCase):
     """Test cases for CertificateExportAPIView (CSV export)."""
 
     def setUp(self):
@@ -189,6 +234,51 @@ class CertificateExportAPIViewTest(APITestCase):
         response = self._make_request()
 
         self._assert_success_response(response)
+        export_csv_task_mock.delay.assert_called_once_with(self.course_id)
+
+    @export_csv_task_patch
+    @course_staff_role_patch
+    @course_data_researcher_role_patch
+    def test_successful_csv_export_with_course_instructor_role(
+        self,
+        course_staff_role_mock: MagicMock,
+        course_data_researcher_role_mock: MagicMock,
+        export_csv_task_mock: MagicMock,
+    ):
+        """Test successful CSV export when user only has the course instructor role (nau-technical#735)."""
+        course_staff_role_mock.return_value.has_user.return_value = False
+        course_data_researcher_role_mock.return_value.has_user.return_value = False
+        self.course_instructor_role_mock.return_value.has_user.return_value = True
+        export_csv_task_mock.delay.return_value = MagicMock()
+
+        response = self._make_request()
+
+        self._assert_success_response(response)
+        export_csv_task_mock.delay.assert_called_once_with(self.course_id)
+
+    @export_csv_task_patch
+    @course_staff_role_patch
+    @course_data_researcher_role_patch
+    def test_successful_csv_export_with_org_data_researcher_role(
+        self,
+        course_staff_role_mock: MagicMock,
+        course_data_researcher_role_mock: MagicMock,
+        export_csv_task_mock: MagicMock,
+    ):
+        """
+        Test successful CSV export for an org-wide data researcher without any
+        course-level role (nau-technical#735).
+        """
+        course_staff_role_mock.return_value.has_user.return_value = False
+        course_data_researcher_role_mock.return_value.has_user.return_value = False
+        self.org_data_researcher_role_mock.return_value.has_user.return_value = True
+        export_csv_task_mock.delay.return_value = MagicMock()
+
+        response = self._make_request()
+
+        self._assert_success_response(response)
+        # The org role is checked against the course org, not the course key.
+        self.org_data_researcher_role_mock.assert_called_once_with(self.course_key.org)
         export_csv_task_mock.delay.assert_called_once_with(self.course_id)
 
     @export_csv_task_patch
@@ -319,9 +409,11 @@ class CertificateExportAPIViewTest(APITestCase):
 
         response = self._make_request()
 
-        # Verify both role checks were performed
+        # Verify all role checks were performed
         course_staff_role_mock.assert_called_once_with(self.course_key)
         course_data_researcher_role_mock.assert_called_once_with(self.course_key)
+        self.course_instructor_role_mock.assert_called_once_with(self.course_key)
+        self.org_data_researcher_role_mock.assert_called_once_with(self.course_key.org)
 
         # Verify the staff role check
         course_staff_role_mock.return_value.has_user.assert_called_once_with(self.user)
