@@ -525,3 +525,61 @@ class TestFindQuestionLabelFactory(unittest.TestCase):
         result = wrapper(lcp, 'x_2_1')
 
         self.assertEqual(result, 'Question 1')
+
+
+class TestCombinedPatchesIntegration(unittest.TestCase):
+    """
+    Integration-style test exercising all three monkeypatches
+    (extract_choices, find_correct_answer_text, find_question_label)
+    together on a single synthetic rich-text MCQ tree -- the same overall
+    shape as a real problem authored with Studio's rich-text/per-choice
+    feedback editor (nau-technical#948): a nested, rich-text question
+    prompt, and choices whose text is wrapped in <div> rather than a
+    direct text node.
+
+    Each patch already has its own dedicated unit tests above (in
+    isolation); this test guards against a regression that only shows up
+    when all three are applied to the *same* tree, e.g. if a future change
+    to one patch's tree-walking logic accidentally interfered with another
+    (they don't share state today, but nothing prevents that from changing).
+    """
+
+    def test_all_three_patches_recover_correctly_on_the_same_tree(self):
+        tree = _parse(
+            '<problem>'
+            '<multiplechoiceresponse id="p_1">'
+            '<p><strong>What is the capital of Portugal?</strong></p>'
+            '<choicegroup id="p_2_1">'
+            '<choice name="choice_0" correct="false">'
+            '<div>Porto</div>'
+            '<choicehint><div>Wrong hint.</div></choicehint>'
+            '</choice>'
+            '<choice name="choice_1" correct="true">'
+            '<div>Lisbon</div>'
+            '<choicehint><div>Right hint.</div></choicehint>'
+            '</choice>'
+            '</choicegroup>'
+            '</multiplechoiceresponse>'
+            '</problem>'
+        )
+        choicegroup = tree.xpath('//choicegroup')[0]
+
+        lcp = Mock()
+        lcp.tree = tree
+        lcp.capa_system.i18n.gettext = lambda text: text
+
+        extract_choices_wrapper = get_extract_choices_factory(
+            Mock(return_value=[('choice_0', None), ('choice_1', None)]),
+        )
+        find_correct_answer_text_wrapper = get_find_correct_answer_text_factory(Mock(return_value=''))
+        find_question_label_wrapper = get_find_question_label_factory(Mock(return_value='Question 1'))
+
+        self.assertEqual(
+            extract_choices_wrapper(choicegroup, i18n=Mock(), text_only=True),
+            [('choice_0', 'Porto'), ('choice_1', 'Lisbon')],
+        )
+        self.assertEqual(find_correct_answer_text_wrapper(lcp, 'p_2_1'), 'Lisbon')
+        self.assertEqual(
+            find_question_label_wrapper(lcp, 'p_2_1'),
+            'What is the capital of Portugal?',
+        )

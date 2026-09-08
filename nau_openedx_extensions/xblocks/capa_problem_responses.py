@@ -100,6 +100,16 @@ log = logging.getLogger(__name__)
 # text is authored across multiple pretty-printed/indented whitespace text nodes).
 _BLANK_JOINED_TEXT_RE = re.compile(r'[\s,]*')
 
+# Element tags to skip over (in addition to non-string `.tag`s, i.e. XML
+# comment/processing-instruction nodes) when walking backwards from an
+# answer element looking for its question-prompt label -- see
+# `_find_label_element_text` below for the full rationale.
+_SKIP_ELEMS = ('description', 'br', 'hr')
+# Valid prompt-wrapper tags. `<div>` is added only when `allow_div=True`
+# (see `_find_label_element_text`'s docstring for why it's opt-in).
+_LABEL_ELEMS = ('p', 'label')
+_LABEL_ELEMS_WITH_DIV = _LABEL_ELEMS + ('div',)
+
 
 def _extract_choice_nested_text(choice_element):
     """
@@ -233,19 +243,18 @@ def _find_label_element_text(xml_element, allow_div=False):
     unrelated shared/"overall instructions" content further back and return
     the wrong text.
     """
-    SKIP_ELEMS = ('description', 'br', 'hr')
-    LABEL_ELEMS = ('p', 'label', 'div') if allow_div else ('p', 'label')
+    label_elems = _LABEL_ELEMS_WITH_DIV if allow_div else _LABEL_ELEMS
 
     candidate = xml_element.getprevious()
     while candidate is not None and (
-        candidate.tag in SKIP_ELEMS or not isinstance(candidate.tag, str)
+        candidate.tag in _SKIP_ELEMS or not isinstance(candidate.tag, str)
     ):
         # `not isinstance(candidate.tag, str)` catches XML comment/processing
         # instruction nodes, whose `.tag` is a callable (e.g. `etree.Comment`)
-        # rather than a string, so they'd never match `SKIP_ELEMS` by name.
+        # rather than a string, so they'd never match `_SKIP_ELEMS` by name.
         candidate = candidate.getprevious()
 
-    if candidate is not None and candidate.tag in LABEL_ELEMS:
+    if candidate is not None and candidate.tag in label_elems:
         text = ''.join(candidate.itertext()).strip()
         if text:
             return text
@@ -284,6 +293,20 @@ def get_find_question_label_factory(prev_find_question_label_func):
         # reconstructing and exact-string-comparing one specific question
         # number from `answer_id` -- so this doesn't depend on `answer_id`
         # matching the platform's usual `..._<n>_<m>` format.
+        #
+        # This still assumes upstream's default template is (and stays)
+        # exactly `_("Question {}")`, formatted via `str.format`, as of
+        # `LoncapaProblem.find_question_label`'s nested
+        # `generate_default_question_label()` in
+        # `xmodule/capa/capa_problem.py` (edx-platform). If that ever
+        # changes (wording, `%s`-style formatting, capitalisation, etc.),
+        # `is_default_result` silently becomes always-`False` for non-empty
+        # results and this patch stops recovering the "generic Question N"
+        # case specifically -- it would still recover the empty/`None` case
+        # below, and is never worse than the pre-patch behaviour, but the
+        # rich-text-prompt fix this PR targets would silently regress with
+        # no test/CI signal, since it depends on live upstream behaviour
+        # rather than anything in this repo.
         try:
             # Named `gettext_fn` (not `_`) to avoid babel's translation-string
             # extraction (which matches on the literal identifier
