@@ -19,6 +19,7 @@ log = logging.getLogger(__name__)
 _DEFAULT_FILTER_KEYS = (
     "filter_enrollment_by_domain_list",
     "filter_enrollment_require_nif",
+    "filter_enrollment_require_profile_fields",
     "certificate_require_portuguese_citizen_card",
 )
 

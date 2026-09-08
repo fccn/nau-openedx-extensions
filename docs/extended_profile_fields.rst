@@ -155,6 +155,18 @@ Three filters read this setting, covering the three ways into a course:
 All three are registered in ``OPEN_EDX_FILTERS_CONFIG``; see their docstrings in
 ``nau_openedx_extensions.filters.pipeline`` for the exact pipeline entries.
 
+Two pieces come with the setting, matching how ``filter_enrollment_require_nif``
+already works:
+
+* The key is in ``_DEFAULT_FILTER_KEYS`` in ``course_filters/sync.py``, so a row
+  lands in ``NauCourseFilter`` on course publish and operators can query which
+  courses require profile data.
+* ``enforce_no_course_enrollment_allowed_when_nif_required`` refuses a
+  Course Enrollment Allowed row for a course that requires these fields. Without
+  it an instructor could invite someone by email, the invite would auto-enrol
+  them on activation, and they would land enrolled but locked out of the
+  content.
+
 What the gate does not cover
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

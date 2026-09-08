@@ -45,3 +45,22 @@ class EnforceNoCeaWhenNifRequiredTest(TestCase):
     def test_ok_when_course_id_none(self, mock_get):
         enforce_no_course_enrollment_allowed_when_nif_required(None)
         mock_get.assert_not_called()
+
+    @patch("nau_openedx_extensions.course_enrollment_allowed_guard.get_other_course_settings")
+    def test_raises_when_profile_fields_are_required(self, mock_get):
+        # An invite would auto-enrol someone who is then kept out of the content
+        # by the profile field filters, so it is refused at the source.
+        mock_get.return_value = {
+            "value": {"filter_enrollment_require_profile_fields": ["nif", "nuts"]}
+        }
+
+        with self.assertRaises(ValidationError) as refused:
+            enforce_no_course_enrollment_allowed_when_nif_required(self.course_key)
+
+        # The instructor is told which fields, otherwise the message is a dead end.
+        assert "nif, nuts" in str(refused.exception)
+
+    @patch("nau_openedx_extensions.course_enrollment_allowed_guard.get_other_course_settings")
+    def test_ok_when_profile_fields_list_is_empty(self, mock_get):
+        mock_get.return_value = {"value": {"filter_enrollment_require_profile_fields": []}}
+        enforce_no_course_enrollment_allowed_when_nif_required(self.course_key)
