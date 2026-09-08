@@ -82,3 +82,8 @@ def plugin_settings(settings):
     settings.NAU_SEND_COURSE_CERTIFICATE_CONFIG = getattr(
         settings, "ENV_TOKENS", {}
     ).get("NAU_SEND_COURSE_CERTIFICATE_CONFIG", [])
+
+    # ADR 0001 (report normalization): base columns on every CSV course report.
+    settings.NAU_REPORTS_ENABLE_BASE_COLUMNS = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_REPORTS_ENABLE_BASE_COLUMNS", settings.NAU_REPORTS_ENABLE_BASE_COLUMNS
+    )

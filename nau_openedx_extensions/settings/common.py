@@ -90,3 +90,9 @@ def plugin_settings(settings):
     settings.NAU_INSTRUCTOR_TASK_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.instructor_task_r_v1"
     settings.NAU_SITE_CONFIGURATION_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_r_v1"
     settings.NAU_CONTENT_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.content_r_v1"
+
+    # ADR 0001 (report normalization): when enabled, every CSV course report is
+    # prepended with org_id, course_id, course_run and, on learner-grain
+    # reports, anonymous_user_id. Default off; enabling it is a breaking change
+    # for consumers that read reports by column position.
+    settings.NAU_REPORTS_ENABLE_BASE_COLUMNS = False

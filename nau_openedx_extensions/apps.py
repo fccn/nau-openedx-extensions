@@ -40,6 +40,13 @@ class NauOpenEdxConfig(AppConfig):
         """
         Method to perform actions after apps registry is ended
         """
+        # Prepend the common report base columns (ADR 0001, report
+        # normalization) by wrapping the platform's report write path.
+        # Inert unless NAU_REPORTS_ENABLE_BASE_COLUMNS is enabled (default off).
+        from nau_openedx_extensions.reports import base_columns  # pylint: disable=import-outside-toplevel # noqa
+
+        base_columns.install()
+
         # Override the default Video xBlock the _poster private function.
         # Override the class was giving more work because of the html dependencies
         # was being loaded from the new package. So it was more easy just replace the
