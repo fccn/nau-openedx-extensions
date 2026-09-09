@@ -42,7 +42,12 @@ Fields
 The native profile fields Phase 1 also relies on (sex, year of birth, country of
 residence, education level) are ``gender``, ``year_of_birth``, ``country`` and
 ``level_of_education`` on the platform's own ``UserProfile``. They are not
-duplicated here.
+duplicated here, and the gate reads them from there, so all eight fields ARTE
+requires can gate a course through the same course setting.
+
+``country`` is worth a note: it is a ``CountryField``, not a plain string, and an
+unset one is a ``Country`` with an empty code, which is falsy. The gate therefore
+reads it correctly without a special case.
 
 All four fields are ``blank=True, null=True``. That is deliberate: a learner has
 to be able to save a partial profile, and which fields are mandatory is a

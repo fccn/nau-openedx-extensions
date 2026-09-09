@@ -5,6 +5,7 @@ Tests for the pipeline module used in nau_openex_extensions
 import re
 from unittest.mock import MagicMock, Mock, patch
 
+from ddt import data, ddt, unpack
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.utils import translation
@@ -389,6 +390,7 @@ class FilterUsersWithAllowedNewsletterTest(TestCase):
         self.assertEqual(result["schedules"][0].mock_name, "allow_newsletter_true")
 
 
+@ddt
 class FilterEnrollmentRequireProfileFieldsTest(TestCase):
     """
     Test FilterEnrollmentRequireProfileFields, which blocks enrollment when the
@@ -500,6 +502,28 @@ class FilterEnrollmentRequireProfileFieldsTest(TestCase):
         response = FilterEnrollmentRequireProfileFields.run_filter(self, user, self.course_key, self.mode)
 
         assert response == self.ENROLLMENT_ALLOWED
+
+    @data(
+        ("country", "PT", ""),
+        ("gender", "f", ""),
+        ("year_of_birth", 1990, None),
+        ("level_of_education", "b", ""),
+    )
+    @unpack
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_the_four_native_fields_arte_requires(self, field, filled, empty, settings_mock):
+        # ARTE requires country of residence, gender, year of birth and education
+        # level alongside the NAU fields, and all four live on the native
+        # UserProfile rather than on NauUserExtendedModel.
+        settings_mock.return_value = self._course_settings([field])
+
+        allowed = FilterEnrollmentRequireProfileFields.run_filter(
+            self, self._user(profile_fields={field: filled}), self.course_key, self.mode)
+        assert allowed == self.ENROLLMENT_ALLOWED
+
+        with self.assertRaises(CourseEnrollmentStarted.PreventEnrollment):
+            FilterEnrollmentRequireProfileFields.run_filter(
+                self, self._user(profile_fields={field: empty}), self.course_key, self.mode)
 
     @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
     def test_unknown_field_is_ignored_instead_of_blocking(self, get_other_course_settings_mock):
