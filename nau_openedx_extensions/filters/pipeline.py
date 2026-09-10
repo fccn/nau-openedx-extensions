@@ -256,7 +256,7 @@ class FilterEnrollmentRequireProfileFields(PipelineStep):
         return {}
 
 
-def profile_completion_context(course, missing, heading, body_text):
+def profile_completion_context(missing, heading, body_text):
     """
     Context for the profile completion panel, shared by the pages that show it.
     """
@@ -267,7 +267,6 @@ def profile_completion_context(course, missing, heading, body_text):
         "body_text": body_text,
         "missing_labels": [profile_field_label(name) for name in missing],
         "account_url": f"{account_url}{separator}{urlencode({'missing': ','.join(missing)})}",
-        "course_about_url": f"/courses/{course.id}/about",
     }
 
 
@@ -333,14 +332,10 @@ class RequireProfileFieldsOnCourseAbout(PipelineStep):
             return {"context": context, "template_name": template_name}
 
         template_context = profile_completion_context(
-            course,
             missing,
             _("Complete your profile to enroll"),
             _("To enroll in this course, please complete the following information:"),
         )
-        # There is nowhere to go back to from the about page itself.
-        template_context["course_about_url"] = ""
-
         raise CourseAboutRenderStarted.RenderCustomResponse(
             _("Please complete your profile before enrolling in this course. Missing: {fields}.").format(
                 fields=", ".join(template_context["missing_labels"])
@@ -412,7 +407,6 @@ class RequireProfileFieldsOnXBlockRender(PipelineStep):
             return unchanged
 
         template_context = profile_completion_context(
-            course,
             missing,
             _("Complete your profile to continue"),
             _("To continue with the course, please complete the following information:"),

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2026-09-09 18:51-0500\n"
+"POT-Creation-Date: 2026-09-10 14:21-0500\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -291,55 +291,55 @@ msgid ""
 msgstr ""
 
 #: nau_openedx_extensions/filters/pipeline.py:251
-#: nau_openedx_extensions/filters/pipeline.py:345
+#: nau_openedx_extensions/filters/pipeline.py:340
 #, python-brace-format
 msgid ""
 "Please complete your profile before enrolling in this course. Missing: "
 "{fields}."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:338
+#: nau_openedx_extensions/filters/pipeline.py:336
 msgid "Complete your profile to enroll"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:339
+#: nau_openedx_extensions/filters/pipeline.py:337
 msgid "To enroll in this course, please complete the following information:"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:417
+#: nau_openedx_extensions/filters/pipeline.py:411
 msgid "Complete your profile to continue"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:418
+#: nau_openedx_extensions/filters/pipeline.py:412
 msgid "To continue with the course, please complete the following information:"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:424
+#: nau_openedx_extensions/filters/pipeline.py:418
 #, python-brace-format
 msgid "Please complete your profile to open this course. Missing: {fields}."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:499
+#: nau_openedx_extensions/filters/pipeline.py:493
 msgid "CSV export task started successfully!"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:500
+#: nau_openedx_extensions/filters/pipeline.py:494
 msgid "Failed to start CSV export task."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:501
+#: nau_openedx_extensions/filters/pipeline.py:495
 msgid "ZIP export task started successfully!"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:502
+#: nau_openedx_extensions/filters/pipeline.py:496
 msgid "Failed to start ZIP export task."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:503
+#: nau_openedx_extensions/filters/pipeline.py:497
 msgid "An unexpected error occurred. Please try again later."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:517
+#: nau_openedx_extensions/filters/pipeline.py:511
 msgid "Certificate Export"
 msgstr ""
 
@@ -426,10 +426,6 @@ msgstr ""
 msgid "Go to my account"
 msgstr ""
 
-#: nau_openedx_extensions/templates/profile_completion/_panel.html:36
-msgid "Back to the course"
-msgstr ""
-
 #: nau_openedx_extensions/templates/profile_completion/required_fields.html:12
 msgid "Complete your profile"
 msgstr ""
@@ -493,5 +489,8 @@ msgstr ""
 #~ "To open {course_name} you need to "
 #~ "fill in the following information in "
 #~ "your account."
+#~ msgstr ""
+
+#~ msgid "Back to the course"
 #~ msgstr ""
 

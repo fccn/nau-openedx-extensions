@@ -209,12 +209,7 @@ the database and are never shown:
     extended fields component filters against.
 
 ``REGISTRATION_EXTRA_FIELDS`` and ``REGISTRATION_FIELD_ORDER``
-    Control whether a field is asked for at registration and in what order. Note
-    that ``nif`` currently ships as ``hidden``.
-
-``NAU_ACCOUNTS_CC_VISIBLE_FIELDS``
-    Which of the extended fields the account page exposes. It already includes
-    the four.
+    Control whether a field is asked for at registration and in what order.
 
 A field marked ``optional`` renders on the progressive profiling page, which the
 learner can skip, and that page saves through the account API into
@@ -224,14 +219,20 @@ land in this model have to be collected at registration itself.
 Known limitations
 -----------------
 
-* Editing these fields on the account page depends on extension points that
-  exist in the ``fccn/openedx-platform`` fork, not in upstream Open edX. Upstream
-  added ``ExtendedProfileFieldsSlot`` to ``frontend-app-account`` for this, but it
-  landed after the Teak cut and is available from Ulmo onwards.
+* **There is currently no way to edit these fields after registration.** The
+  account page used to render them through ``NAU_ACCOUNTS_CC_VISIBLE_FIELDS`` and
+  the ``NAU_STUDENT_ACCOUNT_*`` extension points, which only ever worked against
+  the ``fccn/openedx-platform`` fork. Those were removed from this plugin, so the
+  path is gone. Upstream added ``ExtendedProfileFieldsSlot`` to
+  ``frontend-app-account`` as the replacement, but it landed after the Teak cut
+  and is available from Ulmo onwards.
+
+  This matters for the gate: the completion panel sends the learner to the
+  account page to fill the missing fields, and until that slot is in place there
+  is nothing there for them to fill. Collecting the fields at registration is the
+  only working path today.
 * The completion panel links to the account page with the missing field names in
-  a ``missing`` query parameter. The account page does not read it yet, so
-  nothing is highlighted there; that needs a change in the frontend component
-  that renders the extended profile.
+  a ``missing`` query parameter, ready for whenever the component reads it.
 * The enrollment API returns the reason in the 403 body, as ``message`` and
   ``localizedMessage``, but neither ``frontend-app-learning`` nor
   ``frontend-app-learner-dashboard`` reads it, so a learner clicking enroll from
