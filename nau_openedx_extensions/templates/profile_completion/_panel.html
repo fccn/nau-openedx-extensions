@@ -5,12 +5,24 @@
 ## only lays things out: the NAU theme paints .btn.btn-primary through its own
 ## mixin, so hardcoding a palette here would drift the moment the theme changes.
 <style>
+  /* Reads as a modal without being one: nothing renders behind it, because the
+     block is never built. The scrim is the page, not a layer over content. */
+  .nau-profile-completion-scrim {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    padding: 2rem 1rem;
+    background: rgba(0, 0, 0, 0.04);
+  }
   .nau-profile-completion {
+    width: 100%;
     max-width: 34rem;
-    margin: 2rem auto;
     padding: 2rem;
+    background: white;
     border: 1px solid rgba(0, 0, 0, 0.12);
-    border-radius: 0.25rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
   }
   .nau-profile-completion h2 { margin: 0 0 0.75rem; }
   .nau-profile-completion p { margin: 0 0 1rem; }
@@ -22,6 +34,7 @@
     gap: 0.75rem;
   }
 </style>
+<div class="nau-profile-completion-scrim">
 <section class="nau-profile-completion">
   <h2>${heading}</h2>
   <p>${body_text}</p>
@@ -34,3 +47,4 @@
     <a class="btn btn-primary" href="${account_url}">${_("Go to my account")}</a>
   </div>
 </section>
+</div>
