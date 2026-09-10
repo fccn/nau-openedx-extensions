@@ -16,7 +16,6 @@ from io import StringIO
 from tempfile import TemporaryDirectory, TemporaryFile
 from unittest.mock import patch
 
-from common.djangoapps.student.models import anonymous_id_for_user  # pylint: disable=import-error
 from common.djangoapps.student.tests.factories import (  # pylint: disable=import-error
     CourseEnrollmentFactory,
     UserFactory,
@@ -37,10 +36,16 @@ from nau_openedx_extensions.certificate_export.management.commands.export_course
 from nau_openedx_extensions.reports import base_columns
 
 COURSE_KEY = CourseKey.from_string("course-v1:FCT+CTC101x+2020_T2")
-BASE_VALUES = ["FCT", "course-v1:FCT+CTC101x+2020_T2", "2020_T2"]
+COURSE_ID_VALUE = str(COURSE_KEY)
+LEARNER_PREFIX = ["course_id", "email", "username", "student_id"]
 CURRENT_TASK_PATCH = "lms.djangoapps.instructor_task.tasks_helper.runner._get_current_task"
 
 User = get_user_model()
+
+
+def _identity(user):
+    """Return the prepended identity cells for a learner row."""
+    return [COURSE_ID_VALUE, user.email, user.username, str(user.id)]
 
 
 def _stored_reports(root):
@@ -102,9 +107,8 @@ class WrapperBehaviorTest(TestCase):
     @override_settings(NAU_REPORTS_ENABLE_BASE_COLUMNS=True)
     def test_learner_grain_gets_all_base_columns(self):
         """
-        A report with a username column is learner grain: it gets org_id,
-        course_id, course_run and anonymous_user_id first, and the anonymous
-        id must match anonymous_id_for_user for that learner and course.
+        A report with a username column is learner grain: it gets course_id,
+        email, username and student_id first, resolved from the User model.
         """
         learner_1 = User.objects.create(username="learner1", email="l1@example.com")
         learner_2 = User.objects.create(username="learner2", email="l2@example.com")
@@ -118,16 +122,10 @@ class WrapperBehaviorTest(TestCase):
 
         self.assertEqual(
             new_rows[0],
-            ["org_id", "course_id", "course_run", "anonymous_user_id", "Username", "Grade"],
+            LEARNER_PREFIX + ["Username", "Grade"],
         )
-        self.assertEqual(
-            new_rows[1],
-            BASE_VALUES + [anonymous_id_for_user(learner_1, COURSE_KEY), "learner1", "0.83"],
-        )
-        self.assertEqual(
-            new_rows[2],
-            BASE_VALUES + [anonymous_id_for_user(learner_2, COURSE_KEY), "learner2", "0.21"],
-        )
+        self.assertEqual(new_rows[1], _identity(learner_1) + ["learner1", "0.83"])
+        self.assertEqual(new_rows[2], _identity(learner_2) + ["learner2", "0.21"])
 
     @override_settings(NAU_REPORTS_ENABLE_BASE_COLUMNS=True)
     def test_learner_column_aliases_of_the_four_target_reports(self):
@@ -142,15 +140,14 @@ class WrapperBehaviorTest(TestCase):
                 new_rows = base_columns.add_base_columns(
                     [[header, "Other"], ["learner1", "x"]], COURSE_KEY
                 )
-                self.assertEqual(new_rows[0][3], "anonymous_user_id")
-                self.assertTrue(new_rows[1][3])  # anonymous id resolved
+                self.assertEqual(new_rows[0][:4], LEARNER_PREFIX)
+                self.assertEqual(new_rows[1][3], str(User.objects.get(username="learner1").id))
 
     @override_settings(NAU_REPORTS_ENABLE_BASE_COLUMNS=True)
     def test_course_grain_gets_course_columns_only(self):
         """
         A report without a learner column (e.g. cohort_results) is course
-        grain: only the course columns are added and no learner column is
-        introduced — omitted, never empty.
+        grain: only course_id is added. Learner columns are omitted, never empty.
         """
         rows = [
             ["Cohort Name", "Exists in Cohort", "Learners Added"],
@@ -161,10 +158,11 @@ class WrapperBehaviorTest(TestCase):
 
         self.assertEqual(
             new_rows[0],
-            ["org_id", "course_id", "course_run", "Cohort Name", "Exists in Cohort", "Learners Added"],
+            ["course_id", "Cohort Name", "Exists in Cohort", "Learners Added"],
         )
-        self.assertEqual(new_rows[1], BASE_VALUES + ["cohort-a", "True", "12"])
-        self.assertNotIn("anonymous_user_id", new_rows[0])
+        self.assertEqual(new_rows[1], [COURSE_ID_VALUE, "cohort-a", "True", "12"])
+        self.assertNotIn("email", new_rows[0])
+        self.assertNotIn("student_id", new_rows[0])
 
     @override_settings(NAU_REPORTS_ENABLE_BASE_COLUMNS=True)
     def test_profile_report_without_username_degrades_to_course_grain(self):
@@ -179,20 +177,22 @@ class WrapperBehaviorTest(TestCase):
 
         new_rows = base_columns.add_base_columns(rows, COURSE_KEY)
 
-        self.assertNotIn("anonymous_user_id", new_rows[0])
-        self.assertEqual(new_rows[0][:3], ["org_id", "course_id", "course_run"])
+        self.assertEqual(new_rows[0][0], "course_id")
+        self.assertNotIn("username", new_rows[0][:4])
+        self.assertNotIn("student_id", new_rows[0])
 
     @override_settings(NAU_REPORTS_ENABLE_BASE_COLUMNS=True)
-    def test_unresolvable_username_gets_empty_anonymous_id(self):
+    def test_unresolvable_username_gets_empty_identity_cells(self):
         """
         A username that no longer resolves to a user (e.g. retired account)
-        yields an empty anonymous_user_id cell rather than failing the report.
+        keeps the username from the row and leaves email and student_id empty
+        rather than failing the report.
         """
         new_rows = base_columns.add_base_columns(
             [["Username", "Grade"], ["ghost-user", "0.5"]], COURSE_KEY
         )
 
-        self.assertEqual(new_rows[1][3], "")
+        self.assertEqual(new_rows[1][:4], [COURSE_ID_VALUE, "", "ghost-user", ""])
 
     @override_settings(NAU_REPORTS_ENABLE_BASE_COLUMNS=True)
     def test_file_wrapper_transforms_streamed_reports(self):
@@ -215,14 +215,8 @@ class WrapperBehaviorTest(TestCase):
 
         uploaded_file = calls[0][0]
         content = list(csv.reader(uploaded_file))
-        self.assertEqual(
-            content[0],
-            ["org_id", "course_id", "course_run", "anonymous_user_id", "Username", "Grade"],
-        )
-        self.assertEqual(
-            content[1],
-            BASE_VALUES + [anonymous_id_for_user(learner, COURSE_KEY), "learner1", "0.83"],
-        )
+        self.assertEqual(content[0], LEARNER_PREFIX + ["Username", "Grade"])
+        self.assertEqual(content[1], _identity(learner) + ["learner1", "0.83"])
 
 
 class InstallConformanceTest(TestCase):
@@ -314,8 +308,7 @@ class EndToEndReportStoreTest(TestCase):
 
     def test_report_carries_base_columns_with_setting_on(self):
         """
-        With the setting on, the stored report starts with the base columns
-        and the resolved anonymous id.
+        With the setting on, the stored report starts with the identity columns.
         """
         learner = User.objects.create(username="learner1", email="l1@example.com")
         rows = [["Username", "Grade"], ["learner1", "0.83"]]
@@ -327,14 +320,8 @@ class EndToEndReportStoreTest(TestCase):
             )
 
         stored = self._stored_csv_rows()
-        self.assertEqual(
-            stored[0],
-            ["org_id", "course_id", "course_run", "anonymous_user_id", "Username", "Grade"],
-        )
-        self.assertEqual(
-            stored[1],
-            BASE_VALUES + [anonymous_id_for_user(learner, COURSE_KEY), "learner1", "0.83"],
-        )
+        self.assertEqual(stored[0], LEARNER_PREFIX + ["Username", "Grade"])
+        self.assertEqual(stored[1], _identity(learner) + ["learner1", "0.83"])
 
     def test_nau_custom_reports_go_through_the_wrapper(self):
         """
@@ -355,8 +342,8 @@ class EndToEndReportStoreTest(TestCase):
             )
 
         stored = self._stored_csv_rows()
-        self.assertEqual(stored[0][3], "anonymous_user_id")
-        self.assertEqual(stored[1][3], anonymous_id_for_user(learner, COURSE_KEY))
+        self.assertEqual(stored[0][:4], LEARNER_PREFIX)
+        self.assertEqual(stored[1][:4], _identity(learner))
 
 
 class RealGeneratorConformanceTest(TestCase):
@@ -394,7 +381,7 @@ class RealGeneratorConformanceTest(TestCase):
     def test_student_profile_info_is_learner_grain(self):
         """
         The real student_profile_info generator produces a learner-grain
-        report: base columns first, anonymous id resolved per learner.
+        report: identity columns first, then the generator's own columns.
         """
         with patch(CURRENT_TASK_PATCH):
             enrollments.upload_students_csv(
@@ -405,13 +392,12 @@ class RealGeneratorConformanceTest(TestCase):
         self.assertIn("student_profile_info", name)
         self.assertEqual(
             rows[0],
-            ["org_id", "course_id", "course_run", "anonymous_user_id", "id", "username", "email"],
+            LEARNER_PREFIX + ["id", "username", "email"],
         )
         self.assertEqual(
             rows[1],
-            BASE_VALUES
+            _identity(self.learner)
             + [
-                anonymous_id_for_user(self.learner, COURSE_KEY),
                 str(self.learner.id),
                 self.learner.username,
                 self.learner.email,
@@ -422,7 +408,7 @@ class RealGeneratorConformanceTest(TestCase):
         """
         The ADR hazard, through the real generator: if the deployment's
         student_profile_download_fields omits username, the report silently
-        degrades to course grain (course columns only, no anonymous id).
+        degrades to course grain (course_id only, no learner identity columns).
         """
         with patch(CURRENT_TASK_PATCH):
             enrollments.upload_students_csv(
@@ -430,8 +416,8 @@ class RealGeneratorConformanceTest(TestCase):
             )
 
         _name, rows = self._single_stored_report()
-        self.assertEqual(rows[0], ["org_id", "course_id", "course_run", "id", "email"])
-        self.assertNotIn("anonymous_user_id", rows[0])
+        self.assertEqual(rows[0], ["course_id", "id", "email"])
+        self.assertNotIn("student_id", rows[0])
 
     def test_may_enroll_info_is_course_grain(self):
         """
@@ -445,21 +431,20 @@ class RealGeneratorConformanceTest(TestCase):
 
         name, rows = self._single_stored_report()
         self.assertIn("may_enroll_info", name)
-        self.assertEqual(rows[0], ["org_id", "course_id", "course_run", "email"])
+        self.assertEqual(rows[0], ["course_id", "email"])
 
 
 class CertificateExportConformanceTest(TestCase):
     """
     Run the NAU-owned export_course_certificates command end to end with the
-    contract enabled: its own course_id column must be gone and the base
-    columns (including the anonymous id resolved from "student username") must
-    be present exactly once.
+    contract enabled: its own course_id column must be gone and the identity
+    columns (resolved from "student username") must be present exactly once.
     """
 
     def test_certificates_report_conforms_without_duplicate_course_id(self):
         """
-        The stored CSV starts with the base columns, carries course_id exactly
-        once, and resolves the anonymous id from the certificate's user.
+        The stored CSV starts with the identity columns, carries course_id
+        exactly once, and resolves email/username/student_id from the user.
         """
         learner = UserFactory(username="cert_learner1")
         certificate = GeneratedCertificateFactory(
@@ -484,11 +469,8 @@ class CertificateExportConformanceTest(TestCase):
         rows = next(iter(reports.values()))
         self.assertEqual(
             rows[0],
-            [
-                "org_id",
-                "course_id",
-                "course_run",
-                "anonymous_user_id",
+            LEARNER_PREFIX
+            + [
                 "student email",
                 "student username",
                 "student name",
@@ -499,7 +481,7 @@ class CertificateExportConformanceTest(TestCase):
             ],
         )
         self.assertEqual(rows[0].count("course_id"), 1)
-        self.assertEqual(rows[1][:4], BASE_VALUES + [anonymous_id_for_user(learner, COURSE_KEY)])
+        self.assertEqual(rows[1][:4], _identity(learner))
         self.assertEqual(rows[1][5], learner.username)
         self.assertEqual(rows[1][8], certificate.verify_uuid)
 
@@ -517,8 +499,8 @@ class RealGradeReportConformanceTest(SharedModuleStoreTestCase):
 
     def test_grade_report_is_learner_grain(self):
         """
-        grade_report carries a Username column, so it is learner grain: base
-        columns plus anonymous_user_id first, legacy columns untouched.
+        grade_report carries a Username column, so it is learner grain:
+        identity columns first, legacy columns untouched.
         """
         learner = UserFactory(username="grade_learner1")
         CourseEnrollmentFactory(user=learner, course_id=self.course.id, is_active=True)
@@ -538,10 +520,10 @@ class RealGradeReportConformanceTest(SharedModuleStoreTestCase):
         grade_reports = {name: rows for name, rows in reports.items() if "grade_report" in name}
         self.assertEqual(len(grade_reports), 1, f"expected one grade report, got {list(reports)}")
         rows = next(iter(grade_reports.values()))
-        base = ["NAU", str(self.course.id), "2026_T1"]
-        self.assertEqual(rows[0][:4], ["org_id", "course_id", "course_run", "anonymous_user_id"])
+        self.assertEqual(rows[0][:4], LEARNER_PREFIX)
         self.assertIn("Username", rows[0])
         learner_row = next(row for row in rows[1:] if learner.username in row)
         self.assertEqual(
-            learner_row[:4], base + [anonymous_id_for_user(learner, self.course.id)]
+            learner_row[:4],
+            [str(self.course.id), learner.email, learner.username, str(learner.id)],
         )

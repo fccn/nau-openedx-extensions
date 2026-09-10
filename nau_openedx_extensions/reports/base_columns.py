@@ -1,26 +1,28 @@
 """
-Common base columns for every CSV course report (ADR 0001).
+Common base columns for every CSV course report.
 
-Prepends a common base structure to every CSV course report by wrapping the
-platform's report write path:
+Prepends a common identity block to every CSV course report by wrapping the
+platform's report write path, matching the Phase 2 standardization NAU asked
+for (fccn/nau-technical#955):
 
-- ``org_id``, ``course_id``, ``course_run`` on every CSV report;
-- ``anonymous_user_id`` on learner-grain reports, i.e. reports whose header
-  carries a username column under one of its known spellings (see
-  ``LEARNER_KEY_ALIASES``). Course-grain reports (no learner column) get the
-  course columns only; the learner column is omitted, never left empty.
+- ``course_id`` on every CSV report;
+- ``email``, ``username``, ``student_id`` on learner-grain reports, i.e.
+  reports whose header carries a username column under one of its known
+  spellings (see ``LEARNER_KEY_ALIASES``). Course-grain reports (no learner
+  column) get ``course_id`` only; the learner columns are omitted, never left
+  empty.
 
 This is a monkeypatch, because ``instructor_task`` exposes no filter hook.
-Upgrade path: an openedx-filters step once one exists upstream.
-``tests/test_base_columns.py`` is the conformance test that detects silent
-breakage on upstream refactors — keep it passing on every platform upgrade.
+The lasting landing is upstream (edx-platform); this plugin delivery is the
+Phase 2 ship vehicle. ``tests/test_base_columns.py`` is the conformance test
+that detects silent breakage on upstream refactors.
 
 The wrappers are installed once from ``AppConfig.ready()`` and stay inert
 unless ``NAU_REPORTS_ENABLE_BASE_COLUMNS`` is ``True`` (default ``False``),
 so rollback needs no code change.
 
 ``upload_zip_to_report_store`` is deliberately left unwrapped: ZIP archives
-have no CSV header to extend (see the ADR).
+have no CSV header to extend.
 """
 
 import csv
@@ -33,8 +35,8 @@ from opaque_keys.edx.keys import CourseKey
 
 log = logging.getLogger(__name__)
 
-COURSE_HEADERS = ["org_id", "course_id", "course_run"]
-LEARNER_HEADER = "anonymous_user_id"
+COURSE_HEADERS = ["course_id"]
+LEARNER_HEADERS = ["email", "username", "student_id"]
 # Lowercased spellings of the learner column across the four target reports:
 # student_profile_info -> "username", grade_report -> "Username",
 # export_course_certificates -> "student username",
@@ -69,38 +71,30 @@ def _find_learner_column(header):
     return None
 
 
-def _anonymous_id_map(usernames, course_key):
+def _learner_map(usernames):
     """
-    Map each username to its course-specific anonymous user id.
+    Map each username to ``[email, username, student_id]``.
 
-    Existing ids are fetched with a single bulk query, mirroring
-    ``anonymous_id_for_user``'s read path (most recent row wins). Ids that do
-    not exist yet are created through ``anonymous_id_for_user`` itself, so the
-    result always matches what the platform would return. Usernames that do
-    not resolve to a user (e.g. deleted accounts) are left out of the map and
-    end up as an empty cell in the report.
+    Usernames that do not resolve to a user (e.g. deleted accounts) are left
+    out of the map; the caller fills email and student_id with empty cells
+    and keeps the username from the row.
     """
-    # pylint: disable=import-error,import-outside-toplevel
-    from common.djangoapps.student.models import AnonymousUserId, anonymous_id_for_user
+    # pylint: disable=import-outside-toplevel
     from django.contrib.auth import get_user_model
 
-    usernames = set(usernames)
     mapping = {}
-    existing = (
-        AnonymousUserId.objects.filter(user__username__in=usernames, course_id=course_key)
-        .select_related("user")
-        .order_by("user_id", "-id")
-    )
-    for row in existing:
-        # First row seen per user is the one with the highest id, which is
-        # the one anonymous_id_for_user returns.
-        mapping.setdefault(row.user.username, row.anonymous_user_id)
-
-    missing = usernames - set(mapping)
-    if missing:
-        for user in get_user_model().objects.filter(username__in=missing):
-            mapping[user.username] = anonymous_id_for_user(user, course_key)
+    for user in get_user_model().objects.filter(username__in=set(usernames)).only(
+        "id", "username", "email"
+    ):
+        mapping[user.username] = [user.email or "", user.username, str(user.id)]
     return mapping
+
+
+def _learner_values(username, learners):
+    """
+    Return ``[email, username, student_id]`` for ``username``.
+    """
+    return learners.get(username, ["", username, ""])
 
 
 def add_base_columns(rows, course_id):
@@ -108,11 +102,11 @@ def add_base_columns(rows, course_id):
     Return ``rows`` (header first) with the base columns prepended.
 
     Learner-grain reports (header carries a username column) get
-    ``org_id, course_id, course_run, anonymous_user_id``; course-grain
-    reports get the course columns only.
+    ``course_id, email, username, student_id``; course-grain reports get
+    ``course_id`` only.
     """
     course_key = _as_course_key(course_id)
-    course_values = [course_key.org, str(course_key), course_key.run]
+    course_values = [str(course_key)]
     header = list(rows[0])
     learner_index = _find_learner_column(header)
 
@@ -124,12 +118,12 @@ def add_base_columns(rows, course_id):
     usernames = {
         str(row[learner_index]) for row in rows[1:] if len(row) > learner_index
     }
-    anonymous_ids = _anonymous_id_map(usernames, course_key)
-    new_rows = [COURSE_HEADERS + [LEARNER_HEADER] + header]
+    learners = _learner_map(usernames)
+    new_rows = [COURSE_HEADERS + LEARNER_HEADERS + header]
     for row in rows[1:]:
         row = list(row)
         username = str(row[learner_index]) if len(row) > learner_index else ""
-        new_rows.append(course_values + [anonymous_ids.get(username, "")] + row)
+        new_rows.append(course_values + _learner_values(username, learners) + row)
     return new_rows
 
 
@@ -139,8 +133,8 @@ def _transform_csv_file(source, course_key):
     ``source`` (a text-mode file positioned at the beginning).
 
     The file is processed line by line in two passes (the first collects the
-    usernames so the anonymous-id map is built with a bulk query, the second
-    writes the transformed rows), so the full report is never held in memory.
+    usernames so the learner map is built with a bulk query, the second writes
+    the transformed rows), so the full report is never held in memory.
     """
     reader = csv.reader(source)
     try:
@@ -149,13 +143,13 @@ def _transform_csv_file(source, course_key):
         source.seek(0)
         return source
 
-    course_values = [course_key.org, str(course_key), course_key.run]
+    course_values = [str(course_key)]
     learner_index = _find_learner_column(header)
 
-    anonymous_ids = {}
+    learners = {}
     if learner_index is not None:
         usernames = {row[learner_index] for row in reader if len(row) > learner_index}
-        anonymous_ids = _anonymous_id_map(usernames, course_key)
+        learners = _learner_map(usernames)
         source.seek(0)
         reader = csv.reader(source)
         next(reader)  # skip the header again
@@ -166,10 +160,10 @@ def _transform_csv_file(source, course_key):
         writer.writerow(COURSE_HEADERS + header)
         writer.writerows(course_values + row for row in reader)
     else:
-        writer.writerow(COURSE_HEADERS + [LEARNER_HEADER] + header)
+        writer.writerow(COURSE_HEADERS + LEARNER_HEADERS + header)
         for row in reader:
             username = row[learner_index] if len(row) > learner_index else ""
-            writer.writerow(course_values + [anonymous_ids.get(username, "")] + row)
+            writer.writerow(course_values + _learner_values(username, learners) + row)
     output.seek(0)
     return output
 

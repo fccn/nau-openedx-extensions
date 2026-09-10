@@ -97,11 +97,10 @@ class Command(BaseCommand):
                 )
 
             if base_columns.is_enabled():
-                # ADR 0001: the base-columns wrapper prepends org_id, course_id
-                # and course_run to every CSV report, so this report's own
-                # course_id column (the first one) is dropped to avoid carrying
-                # the same header twice. With the setting off, the legacy
-                # format is unchanged.
+                # The base-columns wrapper prepends course_id to every CSV
+                # report, so this report's own course_id column (the first
+                # one) is dropped to avoid carrying the same header twice.
+                # With the setting off, the legacy format is unchanged.
                 rows = [row[1:] for row in rows]
 
             upload_csv_to_report_store(
