@@ -93,3 +93,14 @@ class NauOpenEdxConfig(AppConfig):
         prev_find_question_label_func = LoncapaProblem.find_question_label  # pylint: disable=protected-access
         LoncapaProblem.find_question_label = \
             get_find_question_label_factory(prev_find_question_label_func)  # pylint: disable=protected-access
+
+        # Wrap the Student Profile Info report task to append per-course extra
+        # profile fields from the course advanced setting
+        # nau_additional_features_on_instructor_analytics_student_profile_info,
+        # filtered against the Django allowlist
+        # NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO
+        # (fccn/nau-technical#797).
+        from nau_openedx_extensions.utils.instructor_analytics import \
+            install_upload_students_csv_wrapper  # pylint: disable=import-outside-toplevel # noqa
+
+        install_upload_students_csv_wrapper()

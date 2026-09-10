@@ -73,3 +73,12 @@ def plugin_settings(settings):
     settings.NAU_SEND_COURSE_CERTIFICATE_CONFIG = getattr(
         settings, "ENV_TOKENS", {}
     ).get("NAU_SEND_COURSE_CERTIFICATE_CONFIG", [])
+
+    # Allowlist of extra Student Profile Info CSV fields selectable per course
+    # (fccn/nau-technical#797).
+    settings.NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO = getattr(
+        settings, "ENV_TOKENS", {}
+    ).get(
+        "NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO",
+        settings.NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO,
+    )
