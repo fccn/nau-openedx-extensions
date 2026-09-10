@@ -42,15 +42,6 @@ def plugin_settings(settings):
     settings.NAU_CERTIFICATE_CONTEXT_EXTENSION = (
         "nau_openedx_extensions.certificates.context_extender.update_cert_context"
     )
-    settings.NAU_STUDENT_ACCOUNT_CONTEXT_EXTENSION = (
-        "nau_openedx_extensions.custom_registration_form.context_extender.update_account_view"
-    )
-    settings.NAU_STUDENT_SERIALIZER_CONTEXT_EXTENSION = (
-        "nau_openedx_extensions.custom_registration_form.context_extender.update_account_serializer"
-    )
-    settings.NAU_STUDENT_ACCOUNT_PARTIAL_UPDATE = (
-        "nau_openedx_extensions.custom_registration_form.context_extender.partial_update"
-    )
     settings.NAU_COURSEWARE_MODULE = (
         "nau_openedx_extensions.edxapp_wrapper.backends.courseware_h_v1"
     )
@@ -72,7 +63,7 @@ def plugin_settings(settings):
     settings.NAU_COURSE_MESSAGE_BATCH_SIZE = 50
     settings.NAU_COURSE_MESSAGE_RECIPIENT_FIELDS = ["profile__name", "email"]
     settings.NAU_CC_ALLOWED_SLUG = "cccmd:"
-    settings.NAU_ACCOUNTS_CC_VISIBLE_FIELDS = ["employment_situation", "nif", "allow_newsletter"]
+    settings.SCORMXBLOCK_ASYNC_THRESHOLD = 500
     settings.NAU_SITE_CONFIGURATION_HELPERS_MODULE = (
         "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_helpers_l_v1"
     )
