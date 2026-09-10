@@ -162,8 +162,7 @@ def install_upload_students_csv_wrapper():
     """
     try:
         from lms.djangoapps.instructor_task import tasks  # pylint: disable=import-outside-toplevel
-        from lms.djangoapps.instructor_task.tasks_helper import \
-            enrollments  # pylint: disable=import-outside-toplevel
+        from lms.djangoapps.instructor_task.tasks_helper import enrollments  # pylint: disable=import-outside-toplevel
     except ImportError:
         logger.info("Instructor task modules unavailable; NAU profile columns wrapper not installed.")
         return

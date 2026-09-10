@@ -15,6 +15,10 @@ from unittest.mock import patch
 
 from django.test import TestCase
 from django.test.utils import override_settings
+from xmodule.modulestore.tests.django_utils import \
+    SharedModuleStoreTestCase  # isort:skip pylint: disable=import-error,wrong-import-order
+from xmodule.modulestore.tests.factories import \
+    CourseFactory  # isort:skip pylint: disable=import-error,wrong-import-order
 
 from nau_openedx_extensions.utils.instructor_analytics import (
     _COURSE_SETTING_KEY,
@@ -28,10 +32,6 @@ from common.djangoapps.student.tests.factories import (  # isort:skip pylint: di
     CourseEnrollmentFactory,
     UserFactory,
 )
-from xmodule.modulestore.tests.django_utils import \
-    SharedModuleStoreTestCase  # isort:skip pylint: disable=import-error,wrong-import-order
-from xmodule.modulestore.tests.factories import \
-    CourseFactory  # isort:skip pylint: disable=import-error,wrong-import-order
 
 _ALL_EXTRA_FEATURES = ["nau_nif", "nau_user_extended_model_cc_nic"]
 _GET_SETTINGS_PATCH = "nau_openedx_extensions.utils.instructor_analytics.get_other_course_settings"
