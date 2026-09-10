@@ -17,7 +17,12 @@ from rest_framework.views import APIView
 
 from nau_openedx_extensions.certificate_export.management.commands import PDFCommand
 from nau_openedx_extensions.certificate_export.tasks import export_course_certificates_task
-from nau_openedx_extensions.edxapp_wrapper.student import CourseDataResearcherRole, CourseStaffRole
+from nau_openedx_extensions.edxapp_wrapper.student import (
+    CourseDataResearcherRole,
+    CourseInstructorRole,
+    CourseStaffRole,
+    OrgDataResearcherRole,
+)
 
 # Constants for response messages
 SUCCESS_MESSAGE = _("Export task started successfully.")
@@ -50,7 +55,12 @@ def validate_course_access(request: Request, course_id: str) -> Tuple[bool, Resp
         [
             request.user.is_staff,
             CourseStaffRole(course_key).has_user(request.user),
+            CourseInstructorRole(course_key).has_user(request.user),
             CourseDataResearcherRole(course_key).has_user(request.user),
+            # nau-technical#735: data researchers appointed at the organization
+            # level (`data_researcher` role scoped to the org, no course id)
+            # can export certificates without holding any course-level role.
+            OrgDataResearcherRole(course_key.org).has_user(request.user),
         ]
     )
 

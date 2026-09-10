@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2026-08-25 14:02-0300\n"
+"POT-Creation-Date: 2026-09-10 20:57+0000\n"
 "PO-Revision-Date: 2025-07-17 15:32+0100\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -35,15 +35,15 @@ msgstr ""
 "Ou peça aos estudantes para se inscreverem após concluírem a verificação "
 "do NIF."
 
-#: nau_openedx_extensions/certificate_export/views.py:23
+#: nau_openedx_extensions/certificate_export/views.py:28
 msgid "Export task started successfully."
 msgstr "A tarefa de exportação decorreu com sucesso."
 
-#: nau_openedx_extensions/certificate_export/views.py:24
+#: nau_openedx_extensions/certificate_export/views.py:29
 msgid "The supplied course_id key is not valid."
 msgstr "O chave do curso fornecida é inválida."
 
-#: nau_openedx_extensions/certificate_export/views.py:25
+#: nau_openedx_extensions/certificate_export/views.py:30
 msgid "You do not have permission to export certificates for this course."
 msgstr "Não tem permissão para exportar certificados deste curso."
 

@@ -73,3 +73,13 @@ def plugin_settings(settings):
     settings.NAU_SEND_COURSE_CERTIFICATE_CONFIG = getattr(
         settings, "ENV_TOKENS", {}
     ).get("NAU_SEND_COURSE_CERTIFICATE_CONFIG", [])
+
+    # Phase 2 report identity columns (fccn/nau-technical#955).
+    settings.NAU_REPORTS_ENABLE_BASE_COLUMNS = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_REPORTS_ENABLE_BASE_COLUMNS", settings.NAU_REPORTS_ENABLE_BASE_COLUMNS
+    )
+
+    # Certificate date column on the grade report (fccn/nau-technical#32).
+    settings.NAU_REPORTS_ENABLE_CERTIFICATE_DATE = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_REPORTS_ENABLE_CERTIFICATE_DATE", settings.NAU_REPORTS_ENABLE_CERTIFICATE_DATE
+    )

@@ -5,6 +5,7 @@ Mock implementation on getting a student course enrollment allowed.
 CourseInstructorRole = None
 CourseStaffRole = None
 CourseDataResearcherRole = None
+OrgDataResearcherRole = None
 CourseEnrollment = None
 CourseEnrollmentAllowed = None
 
