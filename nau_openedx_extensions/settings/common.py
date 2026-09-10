@@ -91,8 +91,14 @@ def plugin_settings(settings):
     settings.NAU_SITE_CONFIGURATION_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_r_v1"
     settings.NAU_CONTENT_MODULE = "nau_openedx_extensions.edxapp_wrapper.backends.content_r_v1"
 
-    # ADR 0001 (report normalization): when enabled, every CSV course report is
-    # prepended with org_id, course_id, course_run and, on learner-grain
-    # reports, anonymous_user_id. Default off; enabling it is a breaking change
-    # for consumers that read reports by column position.
+    # Phase 2 report identity columns (fccn/nau-technical#955): when enabled,
+    # every CSV course report is prepended with course_id and, on learner-grain
+    # reports, email, username and student_id. Default off; enabling it is a
+    # breaking change for consumers that read reports by column position.
     settings.NAU_REPORTS_ENABLE_BASE_COLUMNS = False
+
+    # Phase 2 certificate date (fccn/nau-technical#955, request #32): when
+    # enabled, the grade report carries a final certificate_obtained_date
+    # column (GeneratedCertificate.created_date for delivered certificates).
+    # Default off.
+    settings.NAU_REPORTS_ENABLE_CERTIFICATE_DATE = False
