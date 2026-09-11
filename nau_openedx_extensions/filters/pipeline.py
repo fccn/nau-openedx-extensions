@@ -219,7 +219,7 @@ class FilterCertificateExportTab(PipelineStep):
         section_data = {
             "fragment": frag,
             "section_key": BLOCK_CATEGORY,
-            "section_display_name": _("Certificate Export"),
+            "section_display_name": _("NAU Reports"),
             "course_id": str(course.id),
             "template_path_prefix": TEMPLATE_ABSOLUTE_PATH,
         }
