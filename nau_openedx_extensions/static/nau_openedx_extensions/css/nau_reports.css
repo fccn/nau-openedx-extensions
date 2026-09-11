@@ -1,0 +1,62 @@
+.nau-reports .action-item {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.nau-reports .action-item-content {
+  margin-left: 10px;
+}
+
+.nau-reports .action-item-content p {
+  margin-bottom: 15px;
+}
+
+.nau-reports h3 {
+  margin-top: 25px;
+  margin-bottom: 15px;
+}
+
+.nau-reports .report-downloads-list li {
+  margin-bottom: 10px;
+}
+
+.nau-reports-status {
+  margin-top: 20px;
+  padding: 10px 15px;
+}
+
+.nau-reports .message-status {
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.nau-reports .message-status .icon {
+  margin-right: 8px;
+}
+
+.nau-reports .message-status.error {
+  background-color: #f2dede;
+  border: 1px solid #ebccd1;
+  color: #a94442;
+}
+
+.nau-reports .message-status.success {
+  background-color: #dff0d8;
+  border: 1px solid #d6e9c6;
+  color: #3c763d;
+}
+
+.nau-reports .message-status.info {
+  background-color: #d9edf7;
+  border: 1px solid #bce8f1;
+  color: #31708f;
+}
+
+.nau-reports .message-status.warning {
+  background-color: #fcf8e3;
+  border: 1px solid #faebcc;
+  color: #8a6d3b;
+}

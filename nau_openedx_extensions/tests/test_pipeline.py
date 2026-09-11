@@ -2,6 +2,7 @@
 Tests for the pipeline module used in nau_openex_extensions
 """
 
+import json
 from unittest.mock import MagicMock, Mock, patch
 
 from django.test import TestCase
@@ -13,6 +14,7 @@ from openedx_filters.learning.filters import CourseEnrollmentStarted
 from nau_openedx_extensions.filters.pipeline import (
     FilterEnrollmentByDomain,
     FilterEnrollmentRequireNIF,
+    FilterNauReportsTab,
     FilterUsersWithAllowedNewsletter,
 )
 
@@ -382,3 +384,126 @@ class FilterUsersWithAllowedNewsletterTest(TestCase):
         self.assertIn("schedules", result)
         self.assertEqual(len(result["schedules"]), 1)
         self.assertEqual(result["schedules"][0].mock_name, "allow_newsletter_true")
+
+
+class FilterNauReportsTabTest(TestCase):
+    """
+    Test the FilterNauReportsTab class that adds the NAU Reports tab to the instructor dashboard.
+    """
+
+    def setUp(self):
+        """Set up a course whose org contains an underscore, as report file names can."""
+        self.course = MagicMock(id=CourseKey.from_string("course-v1:Partner_2+CP02+2026"))
+        self.context = {"course": self.course, "sections": []}
+        self.filter_step = FilterNauReportsTab(
+            "org.openedx.learning.instructor.dashboard.render.started.v1", []
+        )
+
+    def _run_filter(self):
+        """Run the filter with URL resolution and template rendering mocked."""
+        with patch(
+            "nau_openedx_extensions.filters.pipeline.reverse",
+            side_effect=lambda name, kwargs: f"/{name}",
+        ) as reverse_mock:
+            with patch(
+                "nau_openedx_extensions.filters.pipeline.render_to_string",
+                return_value="<div>NAU Reports</div>",
+            ) as render_to_string_mock:
+                result = self.filter_step.run_filter(context=self.context, template_name="instructor_dashboard.html")
+        return result, reverse_mock, render_to_string_mock
+
+    def test_run_filter_adds_nau_reports_section(self):
+        """
+        Test that the filter appends the NAU Reports section to the instructor dashboard.
+
+        Expected result:
+        - One section with the nau_reports key, the "NAU Reports" name and the course id.
+        - Its fragment holds the rendered tab template plus the tab CSS and JavaScript.
+        """
+        result, _, render_to_string_mock = self._run_filter()
+
+        self.assertEqual(len(result["context"]["sections"]), 1)
+        section = result["context"]["sections"][0]
+        self.assertEqual(section["section_key"], "nau_reports")
+        self.assertEqual(section["section_display_name"], "NAU Reports")
+        self.assertEqual(section["course_id"], "course-v1:Partner_2+CP02+2026")
+        self.assertEqual(section["template_path_prefix"], "/instructor_dashboard/")
+        render_to_string_mock.assert_called_once_with("nau_reports/nau_reports.html", self.context)
+        self.assertEqual(section["fragment"].body_html(), "<div>NAU Reports</div>")
+        self.assertEqual(
+            [resource.mimetype for resource in section["fragment"].resources],
+            ["text/css", "application/javascript"],
+        )
+
+    def test_run_filter_passes_report_endpoints_and_messages_to_template(self):
+        """
+        Test that each report button and the downloads list get their endpoint URL for the course.
+
+        Expected result:
+        - Each URL is resolved from its URL name with the course id (and "/csv" for the profile report).
+        - The messages shown by the JavaScript for each report are in the context.
+        """
+        result, reverse_mock, _ = self._run_filter()
+        context = result["context"]
+
+        expected_urls = {
+            "certificate_export_url": ("nau-openedx-extensions:nau_export_certificates_csv", {}),
+            "certificate_export_pdf_url": ("nau-openedx-extensions:nau_export_certificates_pdf", {}),
+            "grade_report_url": ("calculate_grades_csv", {}),
+            "profile_report_url": ("get_students_features", {"csv": "/csv"}),
+            "survey_report_url": ("nau-openedx-extensions:nau_export_surveys_csv", {}),
+            "report_downloads_url": ("list_report_downloads", {}),
+        }
+        for context_key, (url_name, extra_kwargs) in expected_urls.items():
+            with self.subTest(context_key=context_key):
+                self.assertEqual(context[context_key], f"/{url_name}")
+                reverse_mock.assert_any_call(url_name, kwargs={"course_id": self.course.id, **extra_kwargs})
+
+        for message_key in (
+            "grade_report_success",
+            "grade_report_failure",
+            "profile_report_success",
+            "profile_report_failure",
+            "survey_report_success",
+            "survey_report_failure",
+            "report_downloads_empty",
+            "report_downloads_failure",
+        ):
+            with self.subTest(message_key=message_key):
+                self.assertTrue(context[message_key])
+
+    def test_run_filter_report_downloads_prefixes_select_only_tab_reports(self):
+        """
+        Test that the file name prefixes given to the JavaScript list only this tab's reports.
+
+        The JavaScript keeps the report files whose name starts with one of the prefixes. Report
+        files are named "{org}_{course}_{run}_{report}_{timestamp}" and the org can contain underscores.
+
+        Expected result:
+        - One prefix per tab report, built with the platform course file name prefix.
+        - Certificates (CSV and PDF ZIP), grade (and its errors), profile and survey reports are listed.
+        - Other reports, even with similar names, are not listed.
+        """
+        result, _, _ = self._run_filter()
+        prefixes = json.loads(result["context"]["report_downloads_prefixes"])
+
+        self.assertEqual(prefixes, [
+            "Partner_2_CP02_2026_export_course_certificates_",
+            "Partner_2_CP02_2026_grade_report_",
+            "Partner_2_CP02_2026_student_profile_info_",
+            "Partner_2_CP02_2026_survey_report_",
+        ])
+        listed_by_file_name = {
+            "Partner_2_CP02_2026_export_course_certificates_2026-09-11-1000.csv": True,
+            "Partner_2_CP02_2026_export_course_certificates_pdfs_2026-09-11-1001.zip": True,
+            "Partner_2_CP02_2026_grade_report_2026-09-11-0909.csv": True,
+            "Partner_2_CP02_2026_grade_report_err_2026-09-11-0909.csv": True,
+            "Partner_2_CP02_2026_student_profile_info_2026-09-11-0907.csv": True,
+            "Partner_2_CP02_2026_survey_report_2026-09-11-1017.csv": True,
+            "Partner_2_CP02_2026_problem_grade_report_2026-09-11-0908.csv": False,
+            "Partner_2_CP02_2026_course_survey_results_2026-09-11-0959.csv": False,
+            "Partner_2_CP02_2026_anonymized_ids_2026-09-11-0900.csv": False,
+        }
+        for file_name, listed in listed_by_file_name.items():
+            with self.subTest(file_name=file_name):
+                self.assertEqual(any(file_name.startswith(prefix) for prefix in prefixes), listed)

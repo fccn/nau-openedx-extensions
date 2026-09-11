@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2026-08-25 14:02-0300\n"
+"POT-Creation-Date: 2026-09-11 12:21+0000\n"
 "PO-Revision-Date: 2025-07-17 15:32+0100\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -36,6 +36,7 @@ msgstr ""
 "do NIF."
 
 #: nau_openedx_extensions/certificate_export/views.py:23
+#: nau_openedx_extensions/survey_export/views.py:16
 msgid "Export task started successfully."
 msgstr "A tarefa de exportação decorreu com sucesso."
 
@@ -226,7 +227,7 @@ msgid "Duplicate selected allowed lists"
 msgstr "Duplicar listas selecionadas"
 
 #: nau_openedx_extensions/enrollment_by_domain/domain_filter.py:95
-#: nau_openedx_extensions/filters/pipeline.py:63
+#: nau_openedx_extensions/filters/pipeline.py:69
 #, python-brace-format
 msgid ""
 "You need to activate your account before you can enroll in the course. "
@@ -298,11 +299,11 @@ msgstr "Inscrição Domínio permitido"
 msgid "Enrollment Allowed Domains"
 msgstr "Registo Domínios permitidos"
 
-#: nau_openedx_extensions/filters/pipeline.py:75
+#: nau_openedx_extensions/filters/pipeline.py:81
 msgid "If you think this is an error, contact the course support."
 msgstr "Se achar que se trata de um erro, contacte o suporte."
 
-#: nau_openedx_extensions/filters/pipeline.py:76
+#: nau_openedx_extensions/filters/pipeline.py:82
 #, python-format
 msgid ""
 "You can't enroll on this course because your email domain is not allowed."
@@ -311,7 +312,7 @@ msgstr ""
 "Não pode inscrever-se neste curso porque o seu domínio de e-mail não é "
 "permitido. %(custom_message)s"
 
-#: nau_openedx_extensions/filters/pipeline.py:129
+#: nau_openedx_extensions/filters/pipeline.py:135
 msgid ""
 "You need to associate Autenticação Gov to your account or add NIF to your"
 " account."
@@ -319,29 +320,70 @@ msgstr ""
 "É necessário associar a Autenticação Gov à sua conta ou adicionar o NIF à"
 " sua conta."
 
-#: nau_openedx_extensions/filters/pipeline.py:204
+#: nau_openedx_extensions/filters/pipeline.py:210
+#: nau_openedx_extensions/filters/pipeline.py:308
 msgid "CSV export task started successfully!"
 msgstr "Tarefa de exportação do CSV iniciada com sucesso!"
 
-#: nau_openedx_extensions/filters/pipeline.py:205
+#: nau_openedx_extensions/filters/pipeline.py:211
+#: nau_openedx_extensions/filters/pipeline.py:309
 msgid "Failed to start CSV export task."
 msgstr "Falhou o inicio da tarefa de exportação do CSV."
 
-#: nau_openedx_extensions/filters/pipeline.py:206
+#: nau_openedx_extensions/filters/pipeline.py:212
+#: nau_openedx_extensions/filters/pipeline.py:310
 msgid "ZIP export task started successfully!"
 msgstr "Tarefa de exportação do ZIP iniciada com sucesso!"
 
-#: nau_openedx_extensions/filters/pipeline.py:207
+#: nau_openedx_extensions/filters/pipeline.py:213
+#: nau_openedx_extensions/filters/pipeline.py:311
 msgid "Failed to start ZIP export task."
 msgstr "Falhou o inicio da tarefa de exportação do ZIP."
 
-#: nau_openedx_extensions/filters/pipeline.py:208
+#: nau_openedx_extensions/filters/pipeline.py:214
+#: nau_openedx_extensions/filters/pipeline.py:320
 msgid "An unexpected error occurred. Please try again later."
 msgstr "Ocorreu um erro. Por favor tente novamente mais tarde."
 
-#: nau_openedx_extensions/filters/pipeline.py:222
+#: nau_openedx_extensions/filters/pipeline.py:228
 msgid "Certificate Export"
 msgstr "Exportação de certificados"
+
+#: nau_openedx_extensions/filters/pipeline.py:312
+msgid "Grade report task started successfully!"
+msgstr "Tarefa do relatório de classificações iniciada com sucesso!"
+
+#: nau_openedx_extensions/filters/pipeline.py:313
+msgid "Failed to start grade report task."
+msgstr "Falhou o início da tarefa do relatório de classificações."
+
+#: nau_openedx_extensions/filters/pipeline.py:314
+msgid "Profile information report task started successfully!"
+msgstr "Tarefa do relatório de informação de perfil iniciada com sucesso!"
+
+#: nau_openedx_extensions/filters/pipeline.py:315
+msgid "Failed to start profile information report task."
+msgstr "Falhou o início da tarefa do relatório de informação de perfil."
+
+#: nau_openedx_extensions/filters/pipeline.py:316
+msgid "Survey report task started successfully!"
+msgstr "Tarefa do relatório de inquéritos iniciada com sucesso!"
+
+#: nau_openedx_extensions/filters/pipeline.py:317
+msgid "Failed to start survey report task."
+msgstr "Falhou o início da tarefa do relatório de inquéritos."
+
+#: nau_openedx_extensions/filters/pipeline.py:318
+msgid "No reports have been generated yet."
+msgstr "Ainda não foram gerados relatórios."
+
+#: nau_openedx_extensions/filters/pipeline.py:319
+msgid "Failed to load the reports available for download."
+msgstr "Falhou o carregamento dos relatórios disponíveis para transferir."
+
+#: nau_openedx_extensions/filters/pipeline.py:334
+msgid "NAU Reports"
+msgstr "Relatórios NAU"
 
 #: nau_openedx_extensions/management/commands/add_archived_course_message.py:111
 #: nau_openedx_extensions/management/commands/add_archived_course_message.py:116
@@ -384,6 +426,10 @@ msgstr "Certificado"
 msgid "Certificate of Achievement"
 msgstr "Certificado de Conclusão"
 
+#: nau_openedx_extensions/survey_export/views.py:17
+msgid "You do not have permission to export surveys for this course."
+msgstr "Não tem permissão para exportar inquéritos deste curso."
+
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:6
 msgid ""
 "In this section you can export the course certificates in different "
@@ -397,6 +443,7 @@ msgid "Export options"
 msgstr "Opções de exportação"
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:13
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:13
 msgid ""
 "Download a CSV file with the details of all certificates generated for "
 "this course."
@@ -405,10 +452,12 @@ msgstr ""
 " este curso."
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:18
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:18
 msgid "Export certificates CSVs"
 msgstr "Exportar CSVs de certificados"
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:25
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:25
 msgid ""
 "Download a ZIP file containing all certificates in PDF format for this "
 "course."
@@ -417,24 +466,100 @@ msgstr ""
 "este curso."
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:30
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:30
 msgid "Export certificates PDF as ZIP"
 msgstr "Exportar certificados PDF como um ZIP"
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:37
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:96
 msgid "Error"
 msgstr "Erro"
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:38
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:97
 msgid "Success"
 msgstr "Sucesso"
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:39
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:98
 msgid "Info"
 msgstr "Informação"
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:40
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:99
 msgid "Warning"
 msgstr "Aviso"
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:6
+msgid ""
+"In this section you can generate the certificates, grade, profile "
+"information and survey results reports for this course."
+msgstr ""
+"Nesta secção pode gerar os relatórios de certificados, classificações, "
+"informação de perfil e resultados de inquéritos deste curso."
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:9
+msgid "Certificates"
+msgstr "Certificados"
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:37
+msgid "Grades"
+msgstr "Classificações"
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:41
+msgid "Click to generate a CSV grade report for all currently enrolled students."
+msgstr ""
+"Clique para gerar um relatório de classificações CSV para todos os "
+"estudantes atualmente matriculados."
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:46
+msgid "Generate Grade Report"
+msgstr "Gerar Relatório de Classificações"
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:53
+msgid "Profile information"
+msgstr "Informação de perfil"
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:57
+msgid ""
+"Click to generate a CSV file of all students enrolled in this course, "
+"along with profile information such as email address and username:"
+msgstr ""
+"Clique para criar um ficheiro CSV de todos os estudantes matriculados "
+"neste curso, juntamente com informação de perfil como endereço de email e"
+" nome de utilizador:"
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:62
+msgid "Download profile information as a CSV"
+msgstr "Descarregar informação de perfil como um CSV"
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:69
+msgid "Survey results"
+msgstr "Resultados de inquéritos"
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:73
+msgid ""
+"Click to generate a CSV file with the learners' answers to all the Survey"
+" components of this course."
+msgstr ""
+"Clique para gerar um ficheiro CSV com as respostas dos estudantes a todos"
+" os componentes de inquérito (Survey) deste curso."
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:78
+msgid "Generate Survey Report"
+msgstr "Gerar Relatório de Inquéritos"
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:85
+msgid "Reports Available for Download"
+msgstr "Relatórios Disponíveis para Transferir"
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:86
+msgid ""
+"The reports listed below are available for download, identified by UTC "
+"date and time of generation."
+msgstr ""
+"Os relatórios listados abaixo estão disponíveis para download, "
+"identificados pela data e hora de criação no fuso horário de UTC."
 
 #: nau_openedx_extensions/utils/admin.py:63
 msgid "Export Selected to CSV"
