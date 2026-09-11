@@ -81,6 +81,17 @@
     </div>
   </div>
 
+  <div class="report-downloads-controls">
+    <h3>${_("Reports Available for Download")}</h3>
+    <p>${_("The reports listed below are available for download, identified by UTC date and time of generation.")}</p>
+    <ul class="report-downloads-list"
+        data-endpoint="${report_downloads_url}"
+        data-prefixes="${report_downloads_prefixes}"
+        data-empty="${report_downloads_empty}"
+        data-failure="${report_downloads_failure}">
+    </ul>
+  </div>
+
   <div class="certificate-export-status" style="display:none;">
     <div class="message-status error" style="display:none;">${_("Error")}</div>
     <div class="message-status success" style="display:none;">${_("Success")}</div>

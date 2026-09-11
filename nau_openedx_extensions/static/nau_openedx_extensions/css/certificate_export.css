@@ -19,6 +19,10 @@
   margin-bottom: 15px;
 }
 
+.certificate-export-section .report-downloads-list li {
+  margin-bottom: 10px;
+}
+
 .certificate-export-status {
   margin-top: 20px;
   padding: 10px 15px;

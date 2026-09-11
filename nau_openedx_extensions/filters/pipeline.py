@@ -3,6 +3,7 @@ Defined filters.
 """
 
 import importlib.resources as resources
+import json
 from fnmatch import fnmatch
 
 from django.conf import settings
@@ -21,6 +22,10 @@ from nau_openedx_extensions.utils.nif import is_nif_valid
 
 TEMPLATE_ABSOLUTE_PATH = "/instructor_dashboard/"
 BLOCK_CATEGORY = "certificate_export"
+# Names of the reports listed in the NAU Reports tab, as stored in the report store
+# ("{course_prefix}_{name}_{timestamp}"). Matching by prefix also lists the certificates
+# ZIP ("export_course_certificates_pdfs") and the grade report errors ("grade_report_err").
+NAU_REPORTS_TAB_REPORT_NAMES = ("export_course_certificates", "grade_report", "student_profile_info", "survey_report")
 
 
 class FilterEnrollmentByDomain(PipelineStep):   # pylint: disable=too-few-public-methods
@@ -189,7 +194,11 @@ class FilterCertificateExportTab(PipelineStep):
         Returns:
             dict: The context of the template.
         """
+        # pylint: disable=import-outside-toplevel
+        from common.djangoapps.util.file import course_filename_prefix_generator
+
         course = context["course"]
+        course_prefix = course_filename_prefix_generator(course.id)
 
         context.update(
             {
@@ -206,6 +215,11 @@ class FilterCertificateExportTab(PipelineStep):
                 "survey_report_url": reverse(
                     "nau-openedx-extensions:nau_export_surveys_csv", kwargs={"course_id": course.id}
                 ),
+                "report_downloads_url": reverse("list_report_downloads", kwargs={"course_id": course.id}),
+                # File name prefixes the JavaScript uses to list only this tab's reports
+                "report_downloads_prefixes": json.dumps(
+                    [f"{course_prefix}_{name}_" for name in NAU_REPORTS_TAB_REPORT_NAMES]
+                ),
                 "course": course,
                 # Add translated messages for JavaScript
                 "csv_success": _("CSV export task started successfully!"),
@@ -218,6 +232,8 @@ class FilterCertificateExportTab(PipelineStep):
                 "profile_report_failure": _("Failed to start profile information report task."),
                 "survey_report_success": _("Survey report task started successfully!"),
                 "survey_report_failure": _("Failed to start survey report task."),
+                "report_downloads_empty": _("No reports have been generated yet."),
+                "report_downloads_failure": _("Failed to load the reports available for download."),
                 "error_msg": _("An unexpected error occurred. Please try again later."),
             }
         )
