@@ -3,10 +3,10 @@
 <%! from django.utils.translation import gettext as _ %>
 
 <div class="certificate-export-section" data-error-msg="${error_msg}">
-  <p>${_("In this section you can generate the certificates, grade, profile information and survey results reports for this course.")}</p>
+  <p>${_("In this section you can export the course certificates in different formats.")}</p>
 
   <div class="certificate-export-controls">
-    <h3>${_("Certificates")}</h3>
+    <h3>${_("Export options")}</h3>
 
     <div class="action-item">
       <div class="action-item-content">
@@ -31,65 +31,6 @@
         </button>
       </div>
     </div>
-  </div>
-
-  <div class="grade-report-controls">
-    <h3>${_("Grades")}</h3>
-
-    <div class="action-item">
-      <div class="action-item-content">
-        <p>${_("Click to generate a CSV grade report for all currently enrolled students.")}</p>
-        <button class="btn btn-primary" id="generate-grade-report"
-                data-endpoint="${grade_report_url}"
-                data-success="${grade_report_success}"
-                data-failure="${grade_report_failure}">
-          ${_("Generate Grade Report")}
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div class="profile-report-controls">
-    <h3>${_("Profile information")}</h3>
-
-    <div class="action-item">
-      <div class="action-item-content">
-        <p>${_("Click to generate a CSV file of all students enrolled in this course, along with profile information such as email address and username:")}</p>
-        <button class="btn btn-primary" id="generate-profile-report"
-                data-endpoint="${profile_report_url}"
-                data-success="${profile_report_success}"
-                data-failure="${profile_report_failure}">
-          ${_("Download profile information as a CSV")}
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div class="survey-report-controls">
-    <h3>${_("Survey results")}</h3>
-
-    <div class="action-item">
-      <div class="action-item-content">
-        <p>${_("Click to generate a CSV file with the learners' answers to all the Survey components of this course.")}</p>
-        <button class="btn btn-primary" id="generate-survey-report"
-                data-endpoint="${survey_report_url}"
-                data-success="${survey_report_success}"
-                data-failure="${survey_report_failure}">
-          ${_("Generate Survey Report")}
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div class="report-downloads-controls">
-    <h3>${_("Reports Available for Download")}</h3>
-    <p>${_("The reports listed below are available for download, identified by UTC date and time of generation.")}</p>
-    <ul class="report-downloads-list"
-        data-endpoint="${report_downloads_url}"
-        data-prefixes="${report_downloads_prefixes}"
-        data-empty="${report_downloads_empty}"
-        data-failure="${report_downloads_failure}">
-    </ul>
   </div>
 
   <div class="certificate-export-status" style="display:none;">

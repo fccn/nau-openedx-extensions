@@ -12,9 +12,9 @@ from opaque_keys.edx.keys import CourseKey
 from openedx_filters.learning.filters import CourseEnrollmentStarted
 
 from nau_openedx_extensions.filters.pipeline import (
-    FilterCertificateExportTab,
     FilterEnrollmentByDomain,
     FilterEnrollmentRequireNIF,
+    FilterNauReportsTab,
     FilterUsersWithAllowedNewsletter,
 )
 
@@ -386,16 +386,16 @@ class FilterUsersWithAllowedNewsletterTest(TestCase):
         self.assertEqual(result["schedules"][0].mock_name, "allow_newsletter_true")
 
 
-class FilterCertificateExportTabTest(TestCase):
+class FilterNauReportsTabTest(TestCase):
     """
-    Test the FilterCertificateExportTab class that adds the NAU Reports tab to the instructor dashboard.
+    Test the FilterNauReportsTab class that adds the NAU Reports tab to the instructor dashboard.
     """
 
     def setUp(self):
         """Set up a course whose org contains an underscore, as report file names can."""
         self.course = MagicMock(id=CourseKey.from_string("course-v1:Partner_2+CP02+2026"))
         self.context = {"course": self.course, "sections": []}
-        self.filter_step = FilterCertificateExportTab(
+        self.filter_step = FilterNauReportsTab(
             "org.openedx.learning.instructor.dashboard.render.started.v1", []
         )
 
@@ -417,18 +417,18 @@ class FilterCertificateExportTabTest(TestCase):
         Test that the filter appends the NAU Reports section to the instructor dashboard.
 
         Expected result:
-        - One section with the certificate_export key, the "NAU Reports" name and the course id.
+        - One section with the nau_reports key, the "NAU Reports" name and the course id.
         - Its fragment holds the rendered tab template plus the tab CSS and JavaScript.
         """
         result, _, render_to_string_mock = self._run_filter()
 
         self.assertEqual(len(result["context"]["sections"]), 1)
         section = result["context"]["sections"][0]
-        self.assertEqual(section["section_key"], "certificate_export")
+        self.assertEqual(section["section_key"], "nau_reports")
         self.assertEqual(section["section_display_name"], "NAU Reports")
         self.assertEqual(section["course_id"], "course-v1:Partner_2+CP02+2026")
         self.assertEqual(section["template_path_prefix"], "/instructor_dashboard/")
-        render_to_string_mock.assert_called_once_with("certificate_export/certificate_export.html", self.context)
+        render_to_string_mock.assert_called_once_with("nau_reports/nau_reports.html", self.context)
         self.assertEqual(section["fragment"].body_html(), "<div>NAU Reports</div>")
         self.assertEqual(
             [resource.mimetype for resource in section["fragment"].resources],

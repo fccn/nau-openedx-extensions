@@ -22,6 +22,7 @@ from nau_openedx_extensions.utils.nif import is_nif_valid
 
 TEMPLATE_ABSOLUTE_PATH = "/instructor_dashboard/"
 BLOCK_CATEGORY = "certificate_export"
+NAU_REPORTS_BLOCK_CATEGORY = "nau_reports"
 # Names of the reports listed in the NAU Reports tab, as stored in the report store
 # ("{course_prefix}_{name}_{timestamp}"). Matching by prefix also lists the certificates
 # ZIP ("export_course_certificates_pdfs") and the grade report errors ("grade_report_err").
@@ -194,6 +195,88 @@ class FilterCertificateExportTab(PipelineStep):
         Returns:
             dict: The context of the template.
         """
+        course = context["course"]
+
+        context.update(
+            {
+                "certificate_export_url": reverse(
+                    "nau-openedx-extensions:nau_export_certificates_csv", kwargs={"course_id": course.id}
+                ),
+                "certificate_export_pdf_url": reverse(
+                    "nau-openedx-extensions:nau_export_certificates_pdf", kwargs={"course_id": course.id}
+                ),
+                "course": course,
+                # Add translated messages for JavaScript
+                "csv_success": _("CSV export task started successfully!"),
+                "csv_failure": _("Failed to start CSV export task."),
+                "zip_success": _("ZIP export task started successfully!"),
+                "zip_failure": _("Failed to start ZIP export task."),
+                "error_msg": _("An unexpected error occurred. Please try again later."),
+            }
+        )
+
+        # Render the template using Django's template loader
+        html = render_to_string("certificate_export/certificate_export.html", context)
+
+        frag = Fragment(html)
+        frag.add_css(self.resource_string("static/nau_openedx_extensions/css/certificate_export.css"))
+        frag.add_javascript(self.resource_string("static/nau_openedx_extensions/js/certificate_export.js"))
+
+        section_data = {
+            "fragment": frag,
+            "section_key": BLOCK_CATEGORY,
+            "section_display_name": _("Certificate Export"),
+            "course_id": str(course.id),
+            "template_path_prefix": TEMPLATE_ABSOLUTE_PATH,
+        }
+
+        context["sections"].append(section_data)
+
+        return {
+            "context": context,
+        }
+
+    def resource_string(self, path):
+        """Helper to get resources from the extension package."""
+        data = resources.files("nau_openedx_extensions").joinpath(path).read_bytes()
+        return data.decode("utf8")
+
+
+class FilterNauReportsTab(PipelineStep):
+    """
+    Add the NAU Reports tab to the instructor dashboard.
+
+    The tab gathers the reports NAU uses (certificates, grades, profile information and the
+    Survey components responses), each with a button to generate it, and lists the generated
+    files available for download.
+
+    Example usage:
+
+    Add the following configurations to your configuration file:
+
+    ```
+    OPEN_EDX_FILTERS_CONFIG = {
+        "org.openedx.learning.instructor.dashboard.render.started.v1": {
+            "fail_silently": False,
+            "pipeline": [
+                "nau_openedx_extensions.filters.pipeline.FilterNauReportsTab",
+            ],
+        },
+    }
+    ```
+    """
+
+    def run_filter(self, context, template_name):  # pylint: disable=unused-argument, arguments-differ
+        """
+        Add the NAU Reports tab to the instructor dashboard.
+
+        Args:
+            context (dict): The context of the template.
+            template_name (str): The name of the template.
+
+        Returns:
+            dict: The context of the template.
+        """
         # pylint: disable=import-outside-toplevel
         from common.djangoapps.util.file import course_filename_prefix_generator
 
@@ -239,15 +322,15 @@ class FilterCertificateExportTab(PipelineStep):
         )
 
         # Render the template using Django's template loader
-        html = render_to_string("certificate_export/certificate_export.html", context)
+        html = render_to_string("nau_reports/nau_reports.html", context)
 
         frag = Fragment(html)
-        frag.add_css(self.resource_string("static/nau_openedx_extensions/css/certificate_export.css"))
-        frag.add_javascript(self.resource_string("static/nau_openedx_extensions/js/certificate_export.js"))
+        frag.add_css(self.resource_string("static/nau_openedx_extensions/css/nau_reports.css"))
+        frag.add_javascript(self.resource_string("static/nau_openedx_extensions/js/nau_reports.js"))
 
         section_data = {
             "fragment": frag,
-            "section_key": BLOCK_CATEGORY,
+            "section_key": NAU_REPORTS_BLOCK_CATEGORY,
             "section_display_name": _("NAU Reports"),
             "course_id": str(course.id),
             "template_path_prefix": TEMPLATE_ABSOLUTE_PATH,

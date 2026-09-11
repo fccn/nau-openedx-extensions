@@ -213,7 +213,7 @@ msgid "Duplicate selected allowed lists"
 msgstr ""
 
 #: nau_openedx_extensions/enrollment_by_domain/domain_filter.py:95
-#: nau_openedx_extensions/filters/pipeline.py:68
+#: nau_openedx_extensions/filters/pipeline.py:69
 #, python-brace-format
 msgid ""
 "You need to activate your account before you can enroll in the course. "
@@ -277,76 +277,85 @@ msgstr ""
 msgid "Enrollment Allowed Domains"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:80
+#: nau_openedx_extensions/filters/pipeline.py:81
 msgid "If you think this is an error, contact the course support."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:81
+#: nau_openedx_extensions/filters/pipeline.py:82
 #, python-format
 msgid ""
 "You can't enroll on this course because your email domain is not allowed."
 " %(custom_message)s"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:134
+#: nau_openedx_extensions/filters/pipeline.py:135
 msgid ""
 "You need to associate Autenticação Gov to your account or add NIF to your"
 " account."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:225
+#: nau_openedx_extensions/filters/pipeline.py:210
+#: nau_openedx_extensions/filters/pipeline.py:308
 msgid "CSV export task started successfully!"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:226
+#: nau_openedx_extensions/filters/pipeline.py:211
+#: nau_openedx_extensions/filters/pipeline.py:309
 msgid "Failed to start CSV export task."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:227
+#: nau_openedx_extensions/filters/pipeline.py:212
+#: nau_openedx_extensions/filters/pipeline.py:310
 msgid "ZIP export task started successfully!"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:228
+#: nau_openedx_extensions/filters/pipeline.py:213
+#: nau_openedx_extensions/filters/pipeline.py:311
 msgid "Failed to start ZIP export task."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:229
-msgid "Grade report task started successfully!"
-msgstr ""
-
-#: nau_openedx_extensions/filters/pipeline.py:230
-msgid "Failed to start grade report task."
-msgstr ""
-
-#: nau_openedx_extensions/filters/pipeline.py:231
-msgid "Profile information report task started successfully!"
-msgstr ""
-
-#: nau_openedx_extensions/filters/pipeline.py:232
-msgid "Failed to start profile information report task."
-msgstr ""
-
-#: nau_openedx_extensions/filters/pipeline.py:233
-msgid "Survey report task started successfully!"
-msgstr ""
-
-#: nau_openedx_extensions/filters/pipeline.py:234
-msgid "Failed to start survey report task."
-msgstr ""
-
-#: nau_openedx_extensions/filters/pipeline.py:235
-msgid "No reports have been generated yet."
-msgstr ""
-
-#: nau_openedx_extensions/filters/pipeline.py:236
-msgid "Failed to load the reports available for download."
-msgstr ""
-
-#: nau_openedx_extensions/filters/pipeline.py:237
+#: nau_openedx_extensions/filters/pipeline.py:214
+#: nau_openedx_extensions/filters/pipeline.py:320
 msgid "An unexpected error occurred. Please try again later."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:251
+#: nau_openedx_extensions/filters/pipeline.py:228
+msgid "Certificate Export"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:312
+msgid "Grade report task started successfully!"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:313
+msgid "Failed to start grade report task."
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:314
+msgid "Profile information report task started successfully!"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:315
+msgid "Failed to start profile information report task."
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:316
+msgid "Survey report task started successfully!"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:317
+msgid "Failed to start survey report task."
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:318
+msgid "No reports have been generated yet."
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:319
+msgid "Failed to load the reports available for download."
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:334
 msgid "NAU Reports"
 msgstr ""
 
@@ -385,98 +394,116 @@ msgstr ""
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:6
 msgid ""
-"In this section you can generate the certificates, grade, profile "
-"information and survey results reports for this course."
+"In this section you can export the course certificates in different "
+"formats."
 msgstr ""
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:9
-msgid "Certificates"
+msgid "Export options"
 msgstr ""
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:13
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:13
 msgid ""
 "Download a CSV file with the details of all certificates generated for "
 "this course."
 msgstr ""
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:18
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:18
 msgid "Export certificates CSVs"
 msgstr ""
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:25
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:25
 msgid ""
 "Download a ZIP file containing all certificates in PDF format for this "
 "course."
 msgstr ""
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:30
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:30
 msgid "Export certificates PDF as ZIP"
 msgstr ""
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:37
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:96
+msgid "Error"
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:38
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:97
+msgid "Success"
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:39
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:98
+msgid "Info"
+msgstr ""
+
+#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:40
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:99
+msgid "Warning"
+msgstr ""
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:6
+msgid ""
+"In this section you can generate the certificates, grade, profile "
+"information and survey results reports for this course."
+msgstr ""
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:9
+msgid "Certificates"
+msgstr ""
+
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:37
 msgid "Grades"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:41
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:41
 msgid "Click to generate a CSV grade report for all currently enrolled students."
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:46
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:46
 msgid "Generate Grade Report"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:53
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:53
 msgid "Profile information"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:57
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:57
 msgid ""
 "Click to generate a CSV file of all students enrolled in this course, "
 "along with profile information such as email address and username:"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:62
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:62
 msgid "Download profile information as a CSV"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:69
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:69
 msgid "Survey results"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:73
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:73
 msgid ""
 "Click to generate a CSV file with the learners' answers to all the Survey"
 " components of this course."
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:78
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:78
 msgid "Generate Survey Report"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:85
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:85
 msgid "Reports Available for Download"
 msgstr ""
 
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:86
+#: nau_openedx_extensions/templates/nau_reports/nau_reports.html:86
 msgid ""
 "The reports listed below are available for download, identified by UTC "
 "date and time of generation."
-msgstr ""
-
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:96
-msgid "Error"
-msgstr ""
-
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:97
-msgid "Success"
-msgstr ""
-
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:98
-msgid "Info"
-msgstr ""
-
-#: nau_openedx_extensions/templates/certificate_export/certificate_export.html:99
-msgid "Warning"
 msgstr ""
 
 #: nau_openedx_extensions/utils/admin.py:63
@@ -505,16 +532,5 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Send Message"
-#~ msgstr ""
-
-#~ msgid "Certificate Export"
-#~ msgstr ""
-
-#~ msgid ""
-#~ "In this section you can export the"
-#~ " course certificates in different formats."
-#~ msgstr ""
-
-#~ msgid "Export options"
 #~ msgstr ""
 
