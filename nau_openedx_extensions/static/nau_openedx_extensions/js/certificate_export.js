@@ -60,7 +60,8 @@ function setupExportButton(buttonSelector) {
 const exportButtons = [
     "#export-csv-certificates",
     "#export-zip-certificates",
-    "#generate-grade-report"
+    "#generate-grade-report",
+    "#generate-profile-report"
 ];
 
 // Initialize export buttons

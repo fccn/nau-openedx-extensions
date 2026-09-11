@@ -49,6 +49,22 @@
     </div>
   </div>
 
+  <div class="profile-report-controls">
+    <h3>${_("Profile information")}</h3>
+
+    <div class="action-item">
+      <div class="action-item-content">
+        <p>${_("Click to generate a CSV file of all students enrolled in this course, along with profile information such as email address and username:")}</p>
+        <button class="btn btn-primary" id="generate-profile-report"
+                data-endpoint="${profile_report_url}"
+                data-success="${profile_report_success}"
+                data-failure="${profile_report_failure}">
+          ${_("Download profile information as a CSV")}
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="certificate-export-status" style="display:none;">
     <div class="message-status error" style="display:none;">${_("Error")}</div>
     <div class="message-status success" style="display:none;">${_("Success")}</div>
