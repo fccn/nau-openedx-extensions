@@ -33,6 +33,22 @@
     </div>
   </div>
 
+  <div class="grade-report-controls">
+    <h3>${_("Grades")}</h3>
+
+    <div class="action-item">
+      <div class="action-item-content">
+        <p>${_("Click to generate a CSV grade report for all currently enrolled students.")}</p>
+        <button class="btn btn-primary" id="generate-grade-report"
+                data-endpoint="${grade_report_url}"
+                data-success="${grade_report_success}"
+                data-failure="${grade_report_failure}">
+          ${_("Generate Grade Report")}
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="certificate-export-status" style="display:none;">
     <div class="message-status error" style="display:none;">${_("Error")}</div>
     <div class="message-status success" style="display:none;">${_("Success")}</div>

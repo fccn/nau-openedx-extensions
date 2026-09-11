@@ -41,8 +41,9 @@ function setupExportButton(buttonSelector) {
                 },
             });
 
-            const data = await response.json();
-            if (data && data.success) {
+            // NAU endpoints reply {"success": true} and Open edX instructor endpoints
+            // reply {"status": "..."}; both report failures with an HTTP error status.
+            if (response.ok) {
                 alert(successMessage);
             } else {
                 alert(failureMessage);
@@ -58,7 +59,8 @@ function setupExportButton(buttonSelector) {
 
 const exportButtons = [
     "#export-csv-certificates",
-    "#export-zip-certificates"
+    "#export-zip-certificates",
+    "#generate-grade-report"
 ];
 
 // Initialize export buttons
