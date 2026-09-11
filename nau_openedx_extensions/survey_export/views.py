@@ -4,7 +4,7 @@ Views for the survey export API.
 
 from django.utils.translation import gettext as _
 from edx_rest_framework_extensions.auth.session.authentication import SessionAuthentication
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,6 +14,7 @@ from nau_openedx_extensions.survey_export.tasks import export_course_surveys_tas
 
 # Constants for response messages
 SUCCESS_MESSAGE = _("Export task started successfully.")
+NO_PERMISSION_MESSAGE = _("You do not have permission to export surveys for this course.")
 
 
 class SurveyExportAPIView(APIView):
@@ -40,6 +41,12 @@ class SurveyExportAPIView(APIView):
         """
         is_valid, result = validate_course_access(request, course_id)
         if not is_valid:
+            # The shared access check answers "no permission" with a certificates message.
+            if result.status_code == status.HTTP_401_UNAUTHORIZED:  # type: ignore
+                return Response(
+                    {"success": False, "message": NO_PERMISSION_MESSAGE},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
             return result  # type: ignore
 
         export_course_surveys_task.delay(course_id)

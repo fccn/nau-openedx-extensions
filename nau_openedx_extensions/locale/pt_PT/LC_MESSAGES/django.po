@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2026-09-11 11:35+0000\n"
+"POT-Creation-Date: 2026-09-11 12:21+0000\n"
 "PO-Revision-Date: 2025-07-17 15:32+0100\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -425,6 +425,10 @@ msgstr "Certificado"
 #: nau_openedx_extensions/settings/common.py:38
 msgid "Certificate of Achievement"
 msgstr "Certificado de Conclusão"
+
+#: nau_openedx_extensions/survey_export/views.py:17
+msgid "You do not have permission to export surveys for this course."
+msgstr "Não tem permissão para exportar inquéritos deste curso."
 
 #: nau_openedx_extensions/templates/certificate_export/certificate_export.html:6
 msgid ""

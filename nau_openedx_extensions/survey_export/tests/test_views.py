@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.test import APIRequestFactory, APITestCase, force_authenticate
 
 from nau_openedx_extensions.certificate_export.views import INVALID_COURSE_MESSAGE
-from nau_openedx_extensions.survey_export.views import SUCCESS_MESSAGE, SurveyExportAPIView
+from nau_openedx_extensions.survey_export.views import NO_PERMISSION_MESSAGE, SUCCESS_MESSAGE, SurveyExportAPIView
 
 VIEWS_MODULE_PATH = "nau_openedx_extensions.survey_export.views"
 
@@ -61,19 +61,22 @@ class SurveyExportAPIViewTest(APITestCase):
 
     @export_surveys_task_patch
     @validate_course_access_patch
-    def test_survey_export_without_access_returns_validation_response(
+    def test_survey_export_without_permission_returns_survey_message(
         self,
         validate_course_access_mock: MagicMock,
         export_surveys_task_mock: MagicMock,
     ):
-        """Test that the access check response is returned and no task is started."""
-        no_access_response = Response({"success": False}, status=status.HTTP_401_UNAUTHORIZED)
-        validate_course_access_mock.return_value = (False, no_access_response)
+        """Test that a user without access gets the survey no-permission message and no task is started."""
+        certificates_response = Response(
+            {"success": False, "message": "You do not have permission to export certificates for this course."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+        validate_course_access_mock.return_value = (False, certificates_response)
 
         response = self._make_request()
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(response.data, {"success": False})
+        self.assertEqual(response.data, {"success": False, "message": NO_PERMISSION_MESSAGE})
         export_surveys_task_mock.delay.assert_not_called()
 
     @export_surveys_task_patch
