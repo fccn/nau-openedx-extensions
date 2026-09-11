@@ -28,7 +28,10 @@ class NauUserExtendedForm(ModelForm):
             "cc_zip4",
             "cc_doc_number",
             "cc_birth_date",
+            "nif",
             "employment_situation",
+            "nuts",
+            "cae4",
             "allow_newsletter",
             "nif",
         ]

@@ -1,10 +1,11 @@
 """
-Prevent incompatible CourseEnrollmentAllowed rows when a course requires NIF.
+Prevent incompatible CourseEnrollmentAllowed rows when a course requires
+profile data.
 
 Instructor invites (Course enrollment allowed) trigger auto-enrollment on user
-activation; FilterEnrollmentRequireNIF blocks that enrollment if the learner
-has no NIF, leaving the platform in a broken state. Blocking CEA creation
-avoids that.
+activation, and the enrollment filters block that enrollment if the learner is
+missing what the course asks for, leaving the platform in a broken state.
+Blocking CEA creation avoids that.
 """
 
 from django.core.exceptions import ValidationError
@@ -16,16 +17,20 @@ from nau_openedx_extensions.edxapp_wrapper.course_module import get_other_course
 
 def enforce_no_course_enrollment_allowed_when_nif_required(course_id):
     """
-    Raise ValidationError if the course has filter_enrollment_require_nif enabled.
+    Raise ValidationError if the course requires profile data on learner accounts.
+
+    Covers both filter_enrollment_require_nif and the Phase 1
+    filter_enrollment_require_profile_fields. The name is kept for backwards
+    compatibility, it is imported elsewhere.
 
     Args:
         course_id: CourseKey or course id accepted by modulestore.
     """
     if course_id is None:
         return
-    other_course_settings = get_other_course_settings(course_id)
-    filter_by_nif = other_course_settings.get("value", {}).get("filter_enrollment_require_nif")
-    if filter_by_nif:
+    other_course_settings = get_other_course_settings(course_id).get("value", {})
+
+    if other_course_settings.get("filter_enrollment_require_nif"):
         raise ValidationError(
             _(
                 "This course requires a NIF (or Autenticação Gov) on learner accounts. "
@@ -34,6 +39,20 @@ def enforce_no_course_enrollment_allowed_when_nif_required(course_id):
                 "Studio course page -> Settings -> Advanced Settings -> Other course settings\n"
                 "Or ask learners to self-enroll after they complete NIF verification."
             )
+        )
+
+    required_fields = other_course_settings.get("filter_enrollment_require_profile_fields")
+    if required_fields:
+        raise ValidationError(
+            _(
+                "This course requires learners to have {fields} on their account. "
+                "You cannot add an email to «Course enrollment allowed» for this course, "
+                "because the invite would auto-enrol someone who is then kept out of the "
+                "content.\n"
+                "Change the requirement at:\n"
+                "Studio course page -> Settings -> Advanced Settings -> Other course settings\n"
+                "Or ask learners to self-enroll once their profile is complete."
+            ).format(fields=", ".join(required_fields))
         )
 
 
