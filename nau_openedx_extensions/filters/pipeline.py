@@ -203,6 +203,9 @@ class FilterCertificateExportTab(PipelineStep):
                 "profile_report_url": reverse(
                     "get_students_features", kwargs={"course_id": course.id, "csv": "/csv"}
                 ),
+                "survey_report_url": reverse(
+                    "nau-openedx-extensions:nau_export_surveys_csv", kwargs={"course_id": course.id}
+                ),
                 "course": course,
                 # Add translated messages for JavaScript
                 "csv_success": _("CSV export task started successfully!"),
@@ -213,6 +216,8 @@ class FilterCertificateExportTab(PipelineStep):
                 "grade_report_failure": _("Failed to start grade report task."),
                 "profile_report_success": _("Profile information report task started successfully!"),
                 "profile_report_failure": _("Failed to start profile information report task."),
+                "survey_report_success": _("Survey report task started successfully!"),
+                "survey_report_failure": _("Failed to start survey report task."),
                 "error_msg": _("An unexpected error occurred. Please try again later."),
             }
         )

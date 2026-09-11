@@ -65,6 +65,22 @@
     </div>
   </div>
 
+  <div class="survey-report-controls">
+    <h3>${_("Survey results")}</h3>
+
+    <div class="action-item">
+      <div class="action-item-content">
+        <p>${_("Click to generate a CSV file with the learners' answers to all the Survey components of this course.")}</p>
+        <button class="btn btn-primary" id="generate-survey-report"
+                data-endpoint="${survey_report_url}"
+                data-success="${survey_report_success}"
+                data-failure="${survey_report_failure}">
+          ${_("Generate Survey Report")}
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="certificate-export-status" style="display:none;">
     <div class="message-status error" style="display:none;">${_("Error")}</div>
     <div class="message-status success" style="display:none;">${_("Success")}</div>

@@ -61,7 +61,8 @@ const exportButtons = [
     "#export-csv-certificates",
     "#export-zip-certificates",
     "#generate-grade-report",
-    "#generate-profile-report"
+    "#generate-profile-report",
+    "#generate-survey-report"
 ];
 
 // Initialize export buttons
