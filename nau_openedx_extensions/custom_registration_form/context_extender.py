@@ -67,26 +67,27 @@ def update_account_serializer(data, user, **kwargs):
     """
     Updates the data from the student account serializer
     """
-    custom_model_instance = None
     try:
         custom_model_instance = NauUserExtendedModel.objects.get(user=user)
     except ObjectDoesNotExist:
         # If a NauUserExtendedModel does not exist for the user, create an empty one
         custom_model_instance = NauUserExtendedModel()
-    finally:
-        extended_profile = data.get("extended_profile", {})
 
-        custom_profile = []
-        for field in get_fields(custom_model_instance):
-            custom_profile.append(
-                {
-                    "field_name": field.name,
-                    "field_value": getattr(custom_model_instance, field.name, ""),
-                }
-            )
-        extended_profile.extend(custom_profile)
+    # The serializer has already filled extended_profile from UserProfile.meta, using
+    # the extended_profile_fields site configuration. Any name in both that list and
+    # NAU_ACCOUNTS_CC_VISIBLE_FIELDS would otherwise appear twice, once stale and once
+    # current, and the account page resolves duplicates by taking the first. Merging by
+    # field name lets the model win, which is also what the course gate reads.
+    merged = {entry["field_name"]: entry for entry in data.get("extended_profile", [])}
+    merged.update({
+        field.name: {
+            "field_name": field.name,
+            "field_value": getattr(custom_model_instance, field.name, ""),
+        }
+        for field in get_fields(custom_model_instance)
+    })
 
-        data["extended_profile"] = extended_profile
+    data["extended_profile"] = list(merged.values())
 
 
 def partial_update(update, user, **kwargs):

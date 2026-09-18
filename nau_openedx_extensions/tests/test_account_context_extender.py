@@ -5,7 +5,11 @@ from unittest.mock import MagicMock, patch
 
 from django.test import SimpleTestCase, override_settings
 
-from nau_openedx_extensions.custom_registration_form.context_extender import get_fields, partial_update
+from nau_openedx_extensions.custom_registration_form.context_extender import (
+    get_fields,
+    partial_update,
+    update_account_serializer,
+)
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
 
 VISIBLE_FIELDS = ["employment_situation", "nif", "allow_newsletter", "nuts", "cae4"]
@@ -51,6 +55,27 @@ class AccountContextExtenderTest(SimpleTestCase):
         assert self.instance.cc_nif == "987654321"
         assert self.instance.data_authorization is True
         self.instance.save.assert_called_once()
+
+    def test_a_field_in_both_sources_is_returned_once_from_the_model(self):
+        """
+        The serializer fills extended_profile from UserProfile.meta before this hook
+        runs. Appending on top left two entries with the same field_name, and the
+        account page takes the first, so it showed the stale meta value while the
+        course gate read the model. See fccn/nau-technical#1050.
+        """
+        data = {"extended_profile": [
+            {"field_name": "nif", "field_value": "000000000"},
+            {"field_name": "bio", "field_value": "from meta"},
+        ]}
+
+        with patch.object(NauUserExtendedModel.objects, "get", return_value=self.instance):
+            update_account_serializer(data, self.user)
+
+        entries = data["extended_profile"]
+        assert [e["field_name"] for e in entries].count("nif") == 1
+        assert next(e["field_value"] for e in entries if e["field_name"] == "nif") == "123456789"
+        # A meta-only field the model knows nothing about is left alone.
+        assert next(e["field_value"] for e in entries if e["field_name"] == "bio") == "from meta"
 
     def test_fields_outside_the_allowlist_are_refused(self):
         """A crafted request must not be able to withdraw consent or rewrite citizen card data."""
