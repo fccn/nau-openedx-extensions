@@ -147,16 +147,48 @@ def profile_field_is_filled(user, field_name):
     Looks the name up on NauUserExtendedModel first and then on the native
     UserProfile. Returns None when the field exists on neither, so the caller can
     tell "not filled" apart from "not a field at all".
+
+    "Not filled" covers the learner who has no NauUserExtendedModel row at all,
+    which is most of them until they touch these fields.
     """
     if field_name == "nif":
         # nau_nif already falls back to the citizen card NIF, and a stored but
         # invalid NIF should not count as filled.
         return is_nif_valid(user.nau_nif)
 
-    for source in (getattr(user, "nauuserextendedmodel", None), getattr(user, "profile", None)):
-        if source is not None and hasattr(source, field_name):
-            return bool(getattr(source, field_name))
+    if nau_profile_field(field_name) is not None:
+        extended = getattr(user, "nauuserextendedmodel", None)
+        # A user with no row has filled nothing in. Reading this off the instance
+        # instead of the model would make that indistinguishable from a field name
+        # the model has never heard of, and the caller skips those.
+        return bool(getattr(extended, field_name, None))
+
+    profile = getattr(user, "profile", None)
+    if profile is not None and hasattr(profile, field_name):
+        return bool(getattr(profile, field_name))
+
     return None
+
+
+def nau_profile_field(field_name):
+    """
+    The NauUserExtendedModel field called `field_name`, or None if there is none.
+
+    Asked of the model rather than of an instance, so it answers the same for a
+    learner who has no row yet. That is the population the gate exists for:
+    anyone who registered before these fields, or through a path that skips the
+    registration form, has no row at all.
+    """
+    from django.core.exceptions import FieldDoesNotExist  # pylint: disable=import-outside-toplevel
+
+    from nau_openedx_extensions.custom_registration_form.models import (  # pylint: disable=import-outside-toplevel
+        NauUserExtendedModel,
+    )
+
+    try:
+        return NauUserExtendedModel._meta.get_field(field_name)
+    except FieldDoesNotExist:
+        return None
 
 
 def profile_field_label(field_name):
@@ -166,16 +198,10 @@ def profile_field_label(field_name):
     Falls back to the field name with underscores turned into spaces, which
     covers native profile fields and anything not declared on the NAU model.
     """
-    from django.core.exceptions import FieldDoesNotExist  # pylint: disable=import-outside-toplevel
-
-    from nau_openedx_extensions.custom_registration_form.models import (  # pylint: disable=import-outside-toplevel
-        NauUserExtendedModel,
-    )
-
-    try:
-        return str(NauUserExtendedModel._meta.get_field(field_name).verbose_name)
-    except FieldDoesNotExist:
+    field = nau_profile_field(field_name)
+    if field is None:
         return field_name.replace("_", " ")
+    return str(field.verbose_name)
 
 
 def missing_profile_fields(user, course_key):

@@ -5,6 +5,7 @@ Tests for the pipeline module used in nau_openex_extensions
 import re
 from unittest.mock import MagicMock, Mock, patch
 
+import pytest
 from ddt import data, ddt, unpack
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -534,6 +535,30 @@ class FilterEnrollmentRequireProfileFieldsTest(TestCase):
         response = FilterEnrollmentRequireProfileFields.run_filter(self, user, self.course_key, self.mode)
 
         assert response == self.ENROLLMENT_ALLOWED
+
+    @translation.override("en")
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_user_without_an_extended_row_is_blocked(self, get_other_course_settings_mock):
+        # Anyone who registered before these fields existed, or through a path that
+        # skips the registration form, has no NauUserExtendedModel row at all. Django
+        # makes the missing reverse relation raise AttributeError, so it reads as None.
+        # That has to count as "not filled", not as "not a field", which would skip it
+        # and let the whole population through the gate.
+        get_other_course_settings_mock.return_value = self._course_settings(["nuts"])
+        user = self.FakeModel(
+            email="example@example.com",
+            is_active=True,
+            nau_nif=None,
+            nauuserextendedmodel=None,
+            profile=self.FakeModel(),
+        )
+
+        with pytest.raises(CourseEnrollmentStarted.PreventEnrollment) as blocked:
+            FilterEnrollmentRequireProfileFields.run_filter(self, user, self.course_key, self.mode)
+
+        assert blocked.value.message == (
+            "Please complete your profile before enrolling in this course. Missing: NUTS II - NUTS III."
+        )
 
 
 class RequireProfileFieldsOnCourseAboutTest(TestCase):
