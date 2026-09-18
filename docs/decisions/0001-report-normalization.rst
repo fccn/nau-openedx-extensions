@@ -1,5 +1,5 @@
 0001: Common Base Structure for All Course Reports
-###############################################
+##################################################
 
 Status
 ******
@@ -14,7 +14,7 @@ Context
 *******
 
 Every course report defines its own columns independently. This causes three
-problems.
+problems:
 
 **Course identity is not in the data.** It exists only in the file name,
 ``{org}_{course}_{run}_{report}_{timestamp}.csv``. To know which course run a
@@ -127,28 +127,44 @@ below.
 5. Base columns go first
 ========================
 
+First rather than last, so the base structure sits at the same index in every
+report and a consumer can read it without knowing which report it is holding.
+Appending would not give that: the base columns would land at a different index
+per report, and ``grade_report``'s column count already varies per course, so
+there is no stable trailing position to append to.
+
 Consumers that read by column position will break. This is a new feature
 affecting every report, so the release is a major version bump regardless, and
 the change is announced with version 1 of the report catalog. It ships behind a
 plugin setting that defaults to off, so rollback needs no code change.
 
-6. Profile fields are account data, and this contract does not scope them
-=========================================================================
+6. Profile fields are account data, scoped by enrollment
+========================================================
 
 Phase 1 stores the NAU profile fields on ``NAUUserExtendedModel``, which hangs
 off the user account. They are asked for at registration, and the completion
 gate before course access exists to collect them from learners who registered
 before the fields existed. They are account data, not course data.
 
-``student_profile_info`` therefore reports them for any course the learner is
-enrolled in, and this ADR adds no per-course filtering of its own.
+The issue asks that data provided in one course or organization must not appear
+in a report for another. Read literally that assumes the fields are collected
+per course, which Phase 1 is not building. Read as a scoping requirement it is
+already satisfied, because a course report only covers the learners enrolled in
+that course:
 
-This conflicts with a requirement raised on the issue, which asks that data
-provided in one course or organization must not appear in a report for another.
-That requirement assumes the fields are collected per course. Phase 1 is not
-building them that way. The conflict is real and is listed under *Open
-Questions*; it has to be settled before the column set of
-``student_profile_info`` can be frozen.
+- A learner enrolled only in course 1 appears only in course 1's report.
+- A learner enrolled in both appears in both, which is correct: the report
+  describes who is taking the course, and they are taking both.
+
+So no per-course filtering is added here. The value a learner gives is the same
+wherever it is read, which is also what makes it usable as a join key across
+reports, and nothing crosses to a course the learner has no relationship with.
+
+The consequence to state plainly, because it is a real change for FCCN: the
+same learner will show the same profile values in two organizations' reports if
+they are enrolled in courses at both. That is a property of account-level data,
+not a defect, and it is the trade Phase 1 already made when it chose to collect
+these fields once per learner instead of once per course.
 
 7. The certificate issue date is delivered by a join, not a new column
 ======================================================================
@@ -255,6 +271,13 @@ Two adjustments are still required
   Once the wrapper adds the base structure, the file would carry that header
   twice. The report is NAU-owned, so its own column is dropped. This must land
   in the same change as the wrapper.
+
+  The alternative, having the wrapper notice the existing column and skip
+  adding its own, keeps the report untouched but leaves that ``course_id`` where
+  the report happens to put it, in the middle of the row. That breaks the one
+  thing decision 5 promises, the base block in the same place everywhere, and it
+  would do so only for this report. Dropping the report's own column is a
+  one-line change in a file NAU owns.
 - ``student_profile_info`` builds its header from
   ``student_profile_download_fields``, a site configuration value that
   *replaces* the default field list. A deployment configured without
@@ -314,9 +337,9 @@ is the Phase 2 deliverable FCCN asked for. Building a listing today would be
 significant work for little immediate gain, and it would be rewritten anyway if
 Verawood centralizes reporting itself — which the migration plan must confirm.
 
-**The profile scoping conflict.** Until it is settled (see *Open Questions*),
-the column set of ``student_profile_info`` cannot be frozen, so that report's
-entry in the catalog stays open.
+**Profile columns are the same in every report a learner appears in.** Scoping
+by enrollment keeps one course's learners out of another course's report, but it
+does not make the values differ per course, because there is only one value.
 
 Rejected Alternatives
 *********************
@@ -349,13 +372,6 @@ Open Questions
 **Does ARTE map columns by header name or by position?** Position-mapping
 consumers break when the base columns are added, so this determines what
 migration support the partner needs.
-
-**Are the NAU profile fields account data or course data?** Phase 1 stores them
-on the user account and collects them at registration. The issue thread asks
-that data provided in one course or org must not appear in a report for another,
-which only makes sense if they are collected per course. These two positions are
-incompatible, and the answer decides whether ``student_profile_info`` needs
-per-course filtering at all.
 
 **Is the certificate issue date acceptable as a join with**
 ``export_course_certificates``, or must it be a real column inside
