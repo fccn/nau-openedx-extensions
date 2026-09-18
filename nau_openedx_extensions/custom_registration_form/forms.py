@@ -33,7 +33,6 @@ class NauUserExtendedForm(ModelForm):
             "nuts",
             "cae4",
             "allow_newsletter",
-            "nif",
         ]
 
     def __init__(self, *args, **kwargs):
