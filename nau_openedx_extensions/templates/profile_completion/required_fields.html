@@ -1,0 +1,18 @@
+## mako
+<%page expression_filter="h"/>
+<%! from django.utils.translation import gettext as _ %>
+## Standalone page, used when the course about view renders this instead of the
+## course page. It pulls in the LMS stylesheet so the theme applies here too.
+<%namespace name='static' file='/static_content.html'/>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${_("Complete your profile")}</title>
+  ${static.css(group='style-main-v1')}
+</head>
+<body class="view-in-course">
+  <%include file="_panel.html"/>
+</body>
+</html>
