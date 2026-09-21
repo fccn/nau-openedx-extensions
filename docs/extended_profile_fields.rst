@@ -211,26 +211,63 @@ the database and are never shown:
 ``REGISTRATION_EXTRA_FIELDS`` and ``REGISTRATION_FIELD_ORDER``
     Control whether a field is asked for at registration and in what order.
 
+``NAU_ACCOUNTS_CC_VISIBLE_FIELDS``
+    Which fields the account page shows and accepts. Read from site
+    configuration, falling back to the plugin default. See `Editing the fields
+    after registration`_.
+
 A field marked ``optional`` renders on the progressive profiling page, which the
-learner can skip, and that page saves through the account API into
-``UserProfile.meta`` rather than into ``NauUserExtendedModel``. Fields that must
-land in this model have to be collected at registration itself.
+learner can skip. That page saves through the account API, so it writes to
+``UserProfile.meta`` and, for the fields in ``NAU_ACCOUNTS_CC_VISIBLE_FIELDS``,
+to ``NauUserExtendedModel`` as well, through the same hook the account page uses.
+
+Editing the fields after registration
+-------------------------------------
+
+Registration is not the only way in. The account page reads and writes these
+fields through three extension points, which ``context_extender.py`` implements
+and the plugin settings point at:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 42 58
+
+   * - Setting
+     - What it does
+   * - ``NAU_STUDENT_ACCOUNT_CONTEXT_EXTENSION``
+     - Adds the fields to the account page context, as text inputs, dropdowns
+       or checkboxes depending on the model field.
+   * - ``NAU_STUDENT_SERIALIZER_CONTEXT_EXTENSION``
+     - Adds their current values to the account serializer payload.
+   * - ``NAU_STUDENT_ACCOUNT_PARTIAL_UPDATE``
+     - Saves them when the learner submits.
+
+This needs the ``run_extension_point`` call sites in the platform, which live in
+the ``fccn/openedx-platform`` fork only.
+
+``NAU_ACCOUNTS_CC_VISIBLE_FIELDS`` decides which fields take part, and it is a
+strict allowlist on both sides: ``get_fields()`` will not render or serialize a
+field that is missing from it, and ``partial_update`` will not write one either,
+it logs a warning and skips it. That second half matters, because the payload
+comes straight from the request. Without it an account ``PATCH`` could set any
+field on the model, including the ten ``cc_*`` fields populated from
+Autenticação Gov and the ``data_authorization`` consent flag.
+
+``partial_update`` only assigns the fields present in the request, so editing one
+field leaves the rest alone. This is worth stating because the upstream
+replacement, ``PROFILE_EXTENSION_FORM`` (openedx PR 37119), does not behave that
+way: it binds a ModelForm with the submitted data, so every field absent from the
+request validates as empty and is saved as empty.
+
+The default allowlist is:
+
+.. code-block:: python
+
+    ["employment_situation", "nif", "allow_newsletter", "nuts", "cae4"]
 
 Known limitations
 -----------------
 
-* **There is currently no way to edit these fields after registration.** The
-  account page used to render them through ``NAU_ACCOUNTS_CC_VISIBLE_FIELDS`` and
-  the ``NAU_STUDENT_ACCOUNT_*`` extension points, which only ever worked against
-  the ``fccn/openedx-platform`` fork. Those were removed from this plugin, so the
-  path is gone. Upstream added ``ExtendedProfileFieldsSlot`` to
-  ``frontend-app-account`` as the replacement, but it landed after the Teak cut
-  and is available from Ulmo onwards.
-
-  This matters for the gate: the completion panel sends the learner to the
-  account page to fill the missing fields, and until that slot is in place there
-  is nothing there for them to fill. Collecting the fields at registration is the
-  only working path today.
 * The completion panel links to the account page with the missing field names in
   a ``missing`` query parameter, ready for whenever the component reads it.
 * The enrollment API returns the reason in the 403 body, as ``message`` and
