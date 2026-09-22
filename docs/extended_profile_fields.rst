@@ -8,6 +8,9 @@ they are collected once per learner rather than per course.
 This page documents the field mapping, where each value comes from, how it is
 validated, and what has to be configured for the fields to be visible.
 
+For the steps to turn it all on, see `profile_fields_setup.rst
+<profile_fields_setup.rst>`_.
+
 Fields
 ------
 
