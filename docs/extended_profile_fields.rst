@@ -135,6 +135,14 @@ Names are resolved against ``NauUserExtendedModel`` first and then the native
 ``UserProfile``, so ``nuts`` and ``year_of_birth`` both work. ``nif`` is checked
 with ``is_nif_valid`` rather than for mere presence.
 
+Whether a name is a NAU field is decided on the model, not on the learner's row.
+A learner with no ``NauUserExtendedModel`` row at all counts as not having
+filled it, and that is most of them: anyone who registered before these fields
+existed, or through a path that skips the registration form, has no row. Asking
+the row instead would make "no row" look the same as "no such field", and those
+are skipped, so the gate would wave through exactly the population it exists
+for.
+
 A name that matches neither model is logged and skipped rather than treated as
 missing, because blocking a whole course over a typo in the advanced settings is
 a worse failure than ignoring the entry.
@@ -216,6 +224,10 @@ the database and are never shown:
     configuration, falling back to the plugin default. See `Editing the fields
     after registration`_.
 
+    It has to stay in step with ``extended_profile_fields``: the account page
+    filters by that one and this plugin filters by this one, so a field listed
+    in only one of them renders on the page and then silently fails to save.
+
 A field marked ``optional`` renders on the progressive profiling page, which the
 learner can skip. That page saves through the account API, so it writes to
 ``UserProfile.meta`` and, for the fields in ``NAU_ACCOUNTS_CC_VISIBLE_FIELDS``,
@@ -265,6 +277,25 @@ The default allowlist is:
 
     ["employment_situation", "nif", "allow_newsletter", "nuts", "cae4"]
 
+One value per field, taken from the model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``extended_profile`` in the account API response is filled twice. The platform
+builds it from ``UserProfile.meta`` using ``extended_profile_fields``, and then
+``update_account_serializer`` adds the model-backed values. A name in both lists
+has two candidate values.
+
+They are merged by field name and the model wins, because the model is what the
+course gate reads and the page has to show what actually gates the course.
+Appending instead of merging left both entries in the response, and the account
+page takes the first with ``.find()``, so it showed the stale ``meta`` value
+while the gate read the model. A learner could see a field as filled and still
+be locked out.
+
+Expect this in support: a learner whose value only ever reached ``meta``, from
+before the field was model backed, finds it blank on the account page and has to
+enter it again. It was never going to open a gated course for them.
+
 Known limitations
 -----------------
 
@@ -275,4 +306,4 @@ Known limitations
   ``frontend-app-learner-dashboard`` reads it, so a learner clicking enroll from
   an MFE sees no explanation. Showing it needs a frontend change.
 * The completion panel carries no colours of its own. It uses ``btn btn-primary``
-  and ``btn btn-secondary`` so the site theme paints it.
+  so the site theme paints it.
