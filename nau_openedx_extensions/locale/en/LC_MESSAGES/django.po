@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2026-09-17 19:51-0500\n"
+"POT-Creation-Date: 2026-09-24 08:23-0500\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -290,56 +290,56 @@ msgid ""
 " account."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:277
-#: nau_openedx_extensions/filters/pipeline.py:366
+#: nau_openedx_extensions/filters/pipeline.py:301
+#: nau_openedx_extensions/filters/pipeline.py:390
 #, python-brace-format
 msgid ""
 "Please complete your profile before enrolling in this course. Missing: "
 "{fields}."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:362
+#: nau_openedx_extensions/filters/pipeline.py:386
 msgid "Complete your profile to enroll"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:363
+#: nau_openedx_extensions/filters/pipeline.py:387
 msgid "To enroll in this course, please complete the following information:"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:437
+#: nau_openedx_extensions/filters/pipeline.py:461
 msgid "Complete your profile to continue"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:438
+#: nau_openedx_extensions/filters/pipeline.py:462
 msgid "To continue with the course, please complete the following information:"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:444
+#: nau_openedx_extensions/filters/pipeline.py:468
 #, python-brace-format
 msgid "Please complete your profile to open this course. Missing: {fields}."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:519
+#: nau_openedx_extensions/filters/pipeline.py:543
 msgid "CSV export task started successfully!"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:520
+#: nau_openedx_extensions/filters/pipeline.py:544
 msgid "Failed to start CSV export task."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:521
+#: nau_openedx_extensions/filters/pipeline.py:545
 msgid "ZIP export task started successfully!"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:522
+#: nau_openedx_extensions/filters/pipeline.py:546
 msgid "Failed to start ZIP export task."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:523
+#: nau_openedx_extensions/filters/pipeline.py:547
 msgid "An unexpected error occurred. Please try again later."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:537
+#: nau_openedx_extensions/filters/pipeline.py:561
 msgid "Certificate Export"
 msgstr ""
 
