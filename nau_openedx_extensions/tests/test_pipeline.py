@@ -536,6 +536,48 @@ class FilterEnrollmentRequireProfileFieldsTest(TestCase):
 
         assert response == self.ENROLLMENT_ALLOWED
 
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_a_setting_that_is_not_a_list_gates_on_nothing(self, get_other_course_settings_mock):
+        # Advanced settings is a free-form JSON editor. A bool used to crash the
+        # iteration and return 500 for every enrollment on the course.
+        get_other_course_settings_mock.return_value = self._course_settings(True)
+        user = self._user(nuts=None, cae4=None)
+
+        response = FilterEnrollmentRequireProfileFields.run_filter(self, user, self.course_key, self.mode)
+
+        assert response == self.ENROLLMENT_ALLOWED
+
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_a_bare_string_setting_gates_on_nothing(self, get_other_course_settings_mock):
+        # "nif" instead of ["nif"] is the likelier typo and the quieter failure: the
+        # string iterates character by character, every character reads as an unknown
+        # field, and the course silently stops gating.
+        get_other_course_settings_mock.return_value = self._course_settings("nif")
+        user = self._user(nau_nif=None, nuts=None)
+
+        with patch('nau_openedx_extensions.filters.pipeline.log') as log_mock:
+            response = FilterEnrollmentRequireProfileFields.run_filter(self, user, self.course_key, self.mode)
+
+        assert response == self.ENROLLMENT_ALLOWED
+        # The course not gating is the same outcome as before the guard. What has to
+        # change is that it says so, instead of hiding behind one warning per letter.
+        assert log_mock.error.called
+        assert not log_mock.warning.called
+
+    @translation.override("en")
+    @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
+    def test_an_entry_that_is_not_a_name_is_skipped(self, get_other_course_settings_mock):
+        # The rest of the list still has to work, so one bad entry cannot disarm it.
+        get_other_course_settings_mock.return_value = self._course_settings([123, "nuts"])
+        user = self._user(nuts=None)
+
+        with pytest.raises(CourseEnrollmentStarted.PreventEnrollment) as blocked:
+            FilterEnrollmentRequireProfileFields.run_filter(self, user, self.course_key, self.mode)
+
+        assert blocked.value.message == (
+            "Please complete your profile before enrolling in this course. Missing: NUTS II - NUTS III."
+        )
+
     @translation.override("en")
     @patch('nau_openedx_extensions.filters.pipeline.get_other_course_settings')
     def test_user_without_an_extended_row_is_blocked(self, get_other_course_settings_mock):

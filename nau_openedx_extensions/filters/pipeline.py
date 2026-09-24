@@ -210,7 +210,9 @@ def missing_profile_fields(user, course_key):
 
     Returns an empty list when the course does not require any, which is the
     default: a course only gates on profile data if it says so in its advanced
-    settings.
+    settings. A malformed setting is treated the same way, for the same reason a
+    misspelled field name is ignored: a course author's mistake in Studio should
+    not be able to take enrollment down for everyone.
     """
     other_course_settings = get_other_course_settings(course_key)
     required_fields = other_course_settings.get("value", {}).get(REQUIRE_PROFILE_FIELDS_SETTING)
@@ -218,8 +220,30 @@ def missing_profile_fields(user, course_key):
     if not required_fields:
         return []
 
+    if not isinstance(required_fields, (list, tuple)):
+        # Advanced settings are a free-form JSON editor, so this arrives as whatever
+        # the course author typed. Iterating a bool raises and takes enrollment down
+        # for the whole course. A string is quieter and worse: it iterates character
+        # by character, every character looks like an unknown field, and the course
+        # ends up gating on nothing with only warnings to show for it.
+        log.error(
+            "Course %s has '%s' set to %r, which is not a list. Ignoring it.",
+            course_key,
+            REQUIRE_PROFILE_FIELDS_SETTING,
+            required_fields,
+        )
+        return []
+
     missing = []
     for field_name in required_fields:
+        if not isinstance(field_name, str):
+            log.warning(
+                "Course %s requires the profile field %r, which is not a field name. "
+                "Ignoring it.",
+                course_key,
+                field_name,
+            )
+            continue
         filled = profile_field_is_filled(user, field_name)
         if filled is None:
             log.warning(
