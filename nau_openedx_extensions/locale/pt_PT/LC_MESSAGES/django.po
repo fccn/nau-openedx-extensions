@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2026-09-24 08:23-0500\n"
+"POT-Creation-Date: 2026-09-25 12:11+1000\n"
 "PO-Revision-Date: 2025-07-17 15:32+0100\n"
 "Last-Translator: Ivo Branco <ivo.branco@fccn.pt>\n"
 "Language: pt_PT\n"
@@ -61,6 +61,7 @@ msgid "Export task started successfully."
 msgstr "A tarefa de exportação decorreu com sucesso."
 
 #: nau_openedx_extensions/certificate_export/views.py:24
+#: nau_openedx_extensions/profile_completion/views.py:22
 msgid "The supplied course_id key is not valid."
 msgstr "O chave do curso fornecida é inválida."
 
@@ -324,8 +325,24 @@ msgstr ""
 "É necessário associar a Autenticação Gov à sua conta ou adicionar o NIF à"
 " sua conta."
 
-#: nau_openedx_extensions/filters/pipeline.py:301
-#: nau_openedx_extensions/filters/pipeline.py:390
+#: nau_openedx_extensions/filters/pipeline.py:203
+msgid "Gender"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:204
+msgid "Year of birth"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:205
+msgid "Country"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:206
+msgid "Education"
+msgstr "Educação"
+
+#: nau_openedx_extensions/filters/pipeline.py:321
+#: nau_openedx_extensions/filters/pipeline.py:417
 #, python-brace-format
 msgid ""
 "Please complete your profile before enrolling in this course. Missing: "
@@ -334,48 +351,48 @@ msgstr ""
 "Complete o seu perfil antes de se inscrever neste curso. Em falta: "
 "{fields}."
 
-#: nau_openedx_extensions/filters/pipeline.py:386
+#: nau_openedx_extensions/filters/pipeline.py:413
 msgid "Complete your profile to enroll"
 msgstr "Complete o seu perfil para se inscrever"
 
-#: nau_openedx_extensions/filters/pipeline.py:387
+#: nau_openedx_extensions/filters/pipeline.py:414
 msgid "To enroll in this course, please complete the following information:"
 msgstr "Para se inscrever neste curso, por favor complete a seguinte informação:"
 
-#: nau_openedx_extensions/filters/pipeline.py:461
+#: nau_openedx_extensions/filters/pipeline.py:488
 msgid "Complete your profile to continue"
 msgstr "Complete o seu perfil para continuar"
 
-#: nau_openedx_extensions/filters/pipeline.py:462
+#: nau_openedx_extensions/filters/pipeline.py:489
 msgid "To continue with the course, please complete the following information:"
 msgstr "Para continuar com o curso, por favor complete a seguinte informação:"
 
-#: nau_openedx_extensions/filters/pipeline.py:468
+#: nau_openedx_extensions/filters/pipeline.py:495
 #, python-brace-format
 msgid "Please complete your profile to open this course. Missing: {fields}."
 msgstr "Complete o seu perfil para aceder a este curso. Em falta: {fields}."
 
-#: nau_openedx_extensions/filters/pipeline.py:543
+#: nau_openedx_extensions/filters/pipeline.py:570
 msgid "CSV export task started successfully!"
 msgstr "Tarefa de exportação do CSV iniciada com sucesso!"
 
-#: nau_openedx_extensions/filters/pipeline.py:544
+#: nau_openedx_extensions/filters/pipeline.py:571
 msgid "Failed to start CSV export task."
 msgstr "Falhou o inicio da tarefa de exportação do CSV."
 
-#: nau_openedx_extensions/filters/pipeline.py:545
+#: nau_openedx_extensions/filters/pipeline.py:572
 msgid "ZIP export task started successfully!"
 msgstr "Tarefa de exportação do ZIP iniciada com sucesso!"
 
-#: nau_openedx_extensions/filters/pipeline.py:546
+#: nau_openedx_extensions/filters/pipeline.py:573
 msgid "Failed to start ZIP export task."
 msgstr "Falhou o inicio da tarefa de exportação do ZIP."
 
-#: nau_openedx_extensions/filters/pipeline.py:547
+#: nau_openedx_extensions/filters/pipeline.py:574
 msgid "An unexpected error occurred. Please try again later."
 msgstr "Ocorreu um erro. Por favor tente novamente mais tarde."
 
-#: nau_openedx_extensions/filters/pipeline.py:561
+#: nau_openedx_extensions/filters/pipeline.py:588
 msgid "Certificate Export"
 msgstr "Exportação de certificados"
 
