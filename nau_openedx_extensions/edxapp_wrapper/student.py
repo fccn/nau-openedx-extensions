@@ -66,6 +66,18 @@ def get_course_data_researcher_role():
     return backend.CourseDataResearcherRole
 
 
+def get_org_data_researcher_role():
+    """
+    Wrapper for `common.djangoapps.student.roles.OrgDataResearcherRole` in edx-platform.
+
+    Organization-wide data researchers hold the `data_researcher` role scoped
+    to an org (no course id), so they are not covered by CourseDataResearcherRole.
+    """
+    backend_function = settings.NAU_STUDENT_MODULE
+    backend = import_module(backend_function)
+    return backend.OrgDataResearcherRole
+
+
 def get_course_enrollment_model():
     """
     Wrapper for `common.djangoapps.student.models.course_enrollment.CourseEnrollment` in edx-platform.
@@ -90,4 +102,5 @@ def get_course_enrollment_allowed_model():
 CourseInstructorRole = get_course_instructor_role()
 CourseStaffRole = get_course_staff_role()
 CourseDataResearcherRole = get_course_data_researcher_role()
+OrgDataResearcherRole = get_org_data_researcher_role()
 CourseEnrollment = get_course_enrollment_model()

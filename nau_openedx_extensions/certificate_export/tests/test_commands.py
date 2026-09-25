@@ -703,3 +703,41 @@ class ExportCourseCertificatesCommandTest(TestCase):
 
         output = self.command.stdout.getvalue()
         self.assertIn(test_message, output)
+
+    @patch_use_read_replica
+    @patch_site_configuration
+    @patch_upload_csv
+    @patch_generated_certificate
+    def test_own_course_id_column_dropped_when_base_columns_enabled(
+            self, mock_generated_certificate,  # pylint: disable=unused-argument
+            mock_upload_csv, mock_site_config, mock_use_read_replica):
+        """
+        With the base-columns contract enabled (ADR 0001), the report drops its
+        own course_id column: the wrapper prepends the base course_id, and the
+        file must not carry the same header twice.
+        """
+        mock_certificates = [self.create_mock_certificate()]
+        mock_use_read_replica.return_value = mock_certificates
+        mock_site_config.get_value_for_org.return_value = self.lms_root_url
+
+        with override_settings(
+            NAU_CERTIFICATE_DOWNLOAD_URL=self.valid_download_url,
+            NAU_REPORTS_ENABLE_BASE_COLUMNS=True,
+        ):
+            self.command.handle(course_ids=[self.valid_course_id])
+
+        rows = mock_upload_csv.call_args[0][0]
+        self.assertEqual(
+            rows[0],
+            [
+                "student email",
+                "student username",
+                "student name",
+                "certificate created date",
+                "certificate verify_uuid",
+                "certificate_web_link_url",
+                "certificate_download_pdf_link",
+            ],
+        )
+        self.assertEqual(rows[1][0], "test@example.com")
+        self.assertNotIn(self.valid_course_id, rows[1])
