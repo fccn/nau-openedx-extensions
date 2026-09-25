@@ -21,6 +21,7 @@ from nau_openedx_extensions.edxapp_wrapper.certificates import GeneratedCertific
 from nau_openedx_extensions.edxapp_wrapper.instructor_task import upload_csv_to_report_store
 from nau_openedx_extensions.edxapp_wrapper.site_configuration import SiteConfiguration
 from nau_openedx_extensions.edxapp_wrapper.util import use_read_replica_if_available
+from nau_openedx_extensions.reports import base_columns
 
 
 class Command(BaseCommand):
@@ -94,6 +95,16 @@ class Command(BaseCommand):
                         certificate_download_pdf_link,
                     ]
                 )
+
+            if base_columns.is_enabled():
+                # The base-columns wrapper prepends course_id to every CSV
+                # report, so this report's own course_id column is dropped to
+                # avoid carrying the same header twice. The column is located
+                # by header name, so a reordered header still drops the right
+                # one and a renamed or removed one fails loudly (ValueError).
+                # With the setting off, the legacy format is unchanged.
+                course_id_index = rows[0].index("course_id")
+                rows = [row[:course_id_index] + row[course_id_index + 1:] for row in rows]
 
             upload_csv_to_report_store(
                 rows,
