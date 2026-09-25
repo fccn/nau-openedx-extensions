@@ -79,6 +79,21 @@ def plugin_settings(settings):
         "nuts",
         "cae4",
     ]
+
+    # Global allowlist of all User attribute names that may ever be appended to the
+    # Student Profile Info CSV report via the per-course advanced setting
+    # ``nau_additional_features_on_instructor_analytics_student_profile_info``
+    # (fccn/nau-technical#797). Only fields present here will be accepted; any other
+    # field requested at the course level will be skipped with a warning.
+    #
+    # Example::
+    #
+    #   NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO = [
+    #       "nau_nif",
+    #       "nau_user_extended_model_cc_nic",
+    #   ]
+    settings.NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO = []
+
     settings.SCORMXBLOCK_ASYNC_THRESHOLD = 500
     settings.NAU_SITE_CONFIGURATION_HELPERS_MODULE = (
         "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_helpers_l_v1"
