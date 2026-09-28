@@ -63,7 +63,7 @@ msgstr "A tarefa de exportação decorreu com sucesso."
 #: nau_openedx_extensions/certificate_export/views.py:24
 #: nau_openedx_extensions/profile_completion/views.py:22
 msgid "The supplied course_id key is not valid."
-msgstr "O chave do curso fornecida é inválida."
+msgstr "A chave do curso fornecida é inválida."
 
 #: nau_openedx_extensions/certificate_export/views.py:25
 msgid "You do not have permission to export certificates for this course."
