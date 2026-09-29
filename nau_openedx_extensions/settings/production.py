@@ -55,6 +55,16 @@ def plugin_settings(settings):
     settings.NAU_ACCOUNTS_CC_VISIBLE_FIELDS = getattr(settings, "ENV_TOKENS", {}).get(
         "NAU_ACCOUNTS_CC_VISIBLE_FIELDS", settings.NAU_ACCOUNTS_CC_VISIBLE_FIELDS
     )
+
+    # Allowlist of extra Student Profile Info CSV fields selectable per course
+    # (fccn/nau-technical#797).
+    settings.NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO = getattr(
+        settings, "ENV_TOKENS", {}
+    ).get(
+        "NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO",
+        settings.NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO,
+    )
+
     SOCIAL_AUTH_TPA_SAML_PIPELINE = getattr(settings, "ENV_TOKENS", {}).get(
         "SOCIAL_AUTH_TPA_SAML_PIPELINE", None
     )
@@ -82,3 +92,13 @@ def plugin_settings(settings):
     settings.NAU_SEND_COURSE_CERTIFICATE_CONFIG = getattr(
         settings, "ENV_TOKENS", {}
     ).get("NAU_SEND_COURSE_CERTIFICATE_CONFIG", [])
+
+    # Phase 2 report identity columns (fccn/nau-technical#955).
+    settings.NAU_REPORTS_ENABLE_BASE_COLUMNS = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_REPORTS_ENABLE_BASE_COLUMNS", settings.NAU_REPORTS_ENABLE_BASE_COLUMNS
+    )
+
+    # Certificate date column on the grade report (fccn/nau-technical#32).
+    settings.NAU_REPORTS_ENABLE_CERTIFICATE_DATE = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_REPORTS_ENABLE_CERTIFICATE_DATE", settings.NAU_REPORTS_ENABLE_CERTIFICATE_DATE
+    )

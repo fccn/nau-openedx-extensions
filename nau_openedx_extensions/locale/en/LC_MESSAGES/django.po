@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2026-09-23 15:09+1000\n"
+"POT-Creation-Date: 2026-09-29 16:37+0100\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -41,16 +41,17 @@ msgid ""
 "Or ask learners to self-enroll once their profile is complete."
 msgstr ""
 
-#: nau_openedx_extensions/certificate_export/views.py:23
+#: nau_openedx_extensions/certificate_export/views.py:28
 #: nau_openedx_extensions/survey_export/views.py:16
 msgid "Export task started successfully."
 msgstr ""
 
-#: nau_openedx_extensions/certificate_export/views.py:24
+#: nau_openedx_extensions/certificate_export/views.py:29
+#: nau_openedx_extensions/profile_completion/views.py:22
 msgid "The supplied course_id key is not valid."
 msgstr ""
 
-#: nau_openedx_extensions/certificate_export/views.py:25
+#: nau_openedx_extensions/certificate_export/views.py:30
 msgid "You do not have permission to export certificates for this course."
 msgstr ""
 
@@ -291,97 +292,113 @@ msgid ""
 " account."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:283
-#: nau_openedx_extensions/filters/pipeline.py:372
+#: nau_openedx_extensions/filters/pipeline.py:209
+msgid "Gender"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:210
+msgid "Year of birth"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:211
+msgid "Country"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:212
+msgid "Education"
+msgstr ""
+
+#: nau_openedx_extensions/filters/pipeline.py:327
+#: nau_openedx_extensions/filters/pipeline.py:423
 #, python-brace-format
 msgid ""
 "Please complete your profile before enrolling in this course. Missing: "
 "{fields}."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:368
+#: nau_openedx_extensions/filters/pipeline.py:419
 msgid "Complete your profile to enroll"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:369
+#: nau_openedx_extensions/filters/pipeline.py:420
 msgid "To enroll in this course, please complete the following information:"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:443
+#: nau_openedx_extensions/filters/pipeline.py:494
 msgid "Complete your profile to continue"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:444
+#: nau_openedx_extensions/filters/pipeline.py:495
 msgid "To continue with the course, please complete the following information:"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:450
+#: nau_openedx_extensions/filters/pipeline.py:501
 #, python-brace-format
 msgid "Please complete your profile to open this course. Missing: {fields}."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:525
-#: nau_openedx_extensions/filters/pipeline.py:623
+#: nau_openedx_extensions/filters/pipeline.py:576
+#: nau_openedx_extensions/filters/pipeline.py:674
 msgid "CSV export task started successfully!"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:526
-#: nau_openedx_extensions/filters/pipeline.py:624
+#: nau_openedx_extensions/filters/pipeline.py:577
+#: nau_openedx_extensions/filters/pipeline.py:675
 msgid "Failed to start CSV export task."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:527
-#: nau_openedx_extensions/filters/pipeline.py:625
+#: nau_openedx_extensions/filters/pipeline.py:578
+#: nau_openedx_extensions/filters/pipeline.py:676
 msgid "ZIP export task started successfully!"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:528
-#: nau_openedx_extensions/filters/pipeline.py:626
+#: nau_openedx_extensions/filters/pipeline.py:579
+#: nau_openedx_extensions/filters/pipeline.py:677
 msgid "Failed to start ZIP export task."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:529
-#: nau_openedx_extensions/filters/pipeline.py:635
+#: nau_openedx_extensions/filters/pipeline.py:580
+#: nau_openedx_extensions/filters/pipeline.py:686
 msgid "An unexpected error occurred. Please try again later."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:543
+#: nau_openedx_extensions/filters/pipeline.py:594
 msgid "Certificate Export"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:627
+#: nau_openedx_extensions/filters/pipeline.py:678
 msgid "Grade report task started successfully!"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:628
+#: nau_openedx_extensions/filters/pipeline.py:679
 msgid "Failed to start grade report task."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:629
+#: nau_openedx_extensions/filters/pipeline.py:680
 msgid "Profile information report task started successfully!"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:630
+#: nau_openedx_extensions/filters/pipeline.py:681
 msgid "Failed to start profile information report task."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:631
+#: nau_openedx_extensions/filters/pipeline.py:682
 msgid "Survey report task started successfully!"
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:632
+#: nau_openedx_extensions/filters/pipeline.py:683
 msgid "Failed to start survey report task."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:633
+#: nau_openedx_extensions/filters/pipeline.py:684
 msgid "No reports have been generated yet."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:634
+#: nau_openedx_extensions/filters/pipeline.py:685
 msgid "Failed to load the reports available for download."
 msgstr ""
 
-#: nau_openedx_extensions/filters/pipeline.py:649
+#: nau_openedx_extensions/filters/pipeline.py:700
 msgid "NAU Reports"
 msgstr ""
 

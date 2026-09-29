@@ -197,17 +197,37 @@ def nau_profile_field(field_name):
         return None
 
 
+def native_profile_field_labels():
+    """
+    Labels of the native profile fields a course can require, in the current language.
+
+    They have no verbose_name to show, so they are labelled as the account page labels
+    them, where the learner goes to fill them in. Built on each call rather than at
+    import time, so they follow the language of the request.
+    """
+    return {
+        "gender": _("Gender"),
+        "year_of_birth": _("Year of birth"),
+        "country": _("Country"),
+        "level_of_education": _("Education"),
+    }
+
+
 def profile_field_label(field_name):
     """
     Human readable label for a field name, for messages the learner sees.
 
-    Falls back to the field name with underscores turned into spaces, which
-    covers native profile fields and anything not declared on the NAU model.
+    NAU fields use their verbose_name and the native fields a course can require
+    native_profile_field_labels(). Anything else falls back to the field name with
+    underscores turned into spaces.
     """
     field = nau_profile_field(field_name)
-    if field is None:
-        return field_name.replace("_", " ")
-    return str(field.verbose_name)
+    if field is not None:
+        return str(field.verbose_name)
+    native_labels = native_profile_field_labels()
+    if field_name in native_labels:
+        return native_labels[field_name]
+    return field_name.replace("_", " ")
 
 
 def missing_profile_fields(user, course_key):
@@ -216,7 +236,9 @@ def missing_profile_fields(user, course_key):
 
     Returns an empty list when the course does not require any, which is the
     default: a course only gates on profile data if it says so in its advanced
-    settings.
+    settings. A malformed setting is treated the same way, for the same reason a
+    misspelled field name is ignored: a course author's mistake in Studio should
+    not be able to take enrollment down for everyone.
     """
     other_course_settings = get_other_course_settings(course_key)
     required_fields = other_course_settings.get("value", {}).get(REQUIRE_PROFILE_FIELDS_SETTING)
@@ -224,8 +246,30 @@ def missing_profile_fields(user, course_key):
     if not required_fields:
         return []
 
+    if not isinstance(required_fields, (list, tuple)):
+        # Advanced settings are a free-form JSON editor, so this arrives as whatever
+        # the course author typed. Iterating a bool raises and takes enrollment down
+        # for the whole course. A string is quieter and worse: it iterates character
+        # by character, every character looks like an unknown field, and the course
+        # ends up gating on nothing with only warnings to show for it.
+        log.error(
+            "Course %s has '%s' set to %r, which is not a list. Ignoring it.",
+            course_key,
+            REQUIRE_PROFILE_FIELDS_SETTING,
+            required_fields,
+        )
+        return []
+
     missing = []
     for field_name in required_fields:
+        if not isinstance(field_name, str):
+            log.warning(
+                "Course %s requires the profile field %r, which is not a field name. "
+                "Ignoring it.",
+                course_key,
+                field_name,
+            )
+            continue
         filled = profile_field_is_filled(user, field_name)
         if filled is None:
             log.warning(
@@ -288,17 +332,24 @@ class FilterEnrollmentRequireProfileFields(PipelineStep):
         return {}
 
 
+def profile_completion_account_url(missing):
+    """
+    The account page link that highlights the `missing` fields, as `?missing=nif,nuts`.
+    """
+    account_url = getattr(settings, "ACCOUNT_MICROFRONTEND_URL", "")
+    separator = "&" if "?" in account_url else "?"
+    return f"{account_url}{separator}{urlencode({'missing': ','.join(missing)})}"
+
+
 def profile_completion_context(missing, heading, body_text):
     """
     Context for the profile completion panel, shared by the pages that show it.
     """
-    account_url = getattr(settings, "ACCOUNT_MICROFRONTEND_URL", "")
-    separator = "&" if "?" in account_url else "?"
     return {
         "heading": heading,
         "body_text": body_text,
         "missing_labels": [profile_field_label(name) for name in missing],
-        "account_url": f"{account_url}{separator}{urlencode({'missing': ','.join(missing)})}",
+        "account_url": profile_completion_account_url(missing),
     }
 
 

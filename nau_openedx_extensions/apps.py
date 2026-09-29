@@ -40,6 +40,20 @@ class NauOpenEdxConfig(AppConfig):
         """
         Method to perform actions after apps registry is ended
         """
+        # Prepend the report identity columns (course_id, and on learner-grain
+        # reports email/username/student_id) by wrapping the platform write path.
+        # Inert unless NAU_REPORTS_ENABLE_BASE_COLUMNS is enabled (default off).
+        from nau_openedx_extensions.reports import base_columns  # pylint: disable=import-outside-toplevel # noqa
+
+        base_columns.install()
+
+        # Append certificate_obtained_date to the grade report (decision in
+        # fccn/nau-technical#955 for #32: a real column, not a join). Inert
+        # unless NAU_REPORTS_ENABLE_CERTIFICATE_DATE is enabled (default off).
+        from nau_openedx_extensions.reports import certificate_date  # pylint: disable=import-outside-toplevel # noqa
+
+        certificate_date.install()
+
         # Override the default Video xBlock the _poster private function.
         # Override the class was giving more work because of the html dependencies
         # was being loaded from the new package. So it was more easy just replace the
@@ -93,3 +107,14 @@ class NauOpenEdxConfig(AppConfig):
         prev_find_question_label_func = LoncapaProblem.find_question_label  # pylint: disable=protected-access
         LoncapaProblem.find_question_label = \
             get_find_question_label_factory(prev_find_question_label_func)  # pylint: disable=protected-access
+
+        # Wrap the Student Profile Info report task to append per-course extra
+        # profile fields from the course advanced setting
+        # nau_additional_features_on_instructor_analytics_student_profile_info,
+        # filtered against the Django allowlist
+        # NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO
+        # (fccn/nau-technical#797).
+        from nau_openedx_extensions.utils.instructor_analytics import \
+            install_upload_students_csv_wrapper  # pylint: disable=import-outside-toplevel # noqa
+
+        install_upload_students_csv_wrapper()
