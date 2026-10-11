@@ -78,6 +78,7 @@ setup(
             "coursecertificate = nau_openedx_extensions.coursecertificate.apps:CoursecertificateConfig",
             "enrollment_by_domain = nau_openedx_extensions.enrollment_by_domain.apps:EnrollmentByDomainConfig",
             "email_channel = nau_openedx_extensions.email_channel.apps:EmailChannelConfig",
+            "nau_orders = nau_openedx_extensions.orders.apps:OrdersConfig",
         ],
         "cms.djangoapp": [
             "nau_openedx_extensions = nau_openedx_extensions.studio.apps:NauOpenCmsConfig",

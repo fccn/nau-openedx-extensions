@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: equipa@nau.edu.pt\n"
-"POT-Creation-Date: 2026-08-25 14:02-0300\n"
+"POT-Creation-Date: 2026-10-11 12:31-0300\n"
 "PO-Revision-Date: 2021-02-15 15:56+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -51,6 +51,7 @@ msgid "Course key string (e.g. course-v1:ORG+ID+Run)"
 msgstr ""
 
 #: nau_openedx_extensions/course_filters/models.py:22
+#: nau_openedx_extensions/orders/models.py:120
 msgid "Course ID"
 msgstr ""
 
@@ -322,6 +323,212 @@ msgstr ""
 msgid ""
 "This is an archived course and no longer allows activities to be carried "
 "out in order to obtain a certificate."
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:23
+msgid "Awaiting payment"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:24
+msgid "Paid"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:25
+msgid "Cancelled"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:26
+msgid "Refunded"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:32
+msgid "User"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:37
+msgid ""
+"The number the learner sees and quotes to support, set by the payment "
+"plugin."
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:38
+msgid "Number"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:42
+msgid "Slug of the payment plugin that recorded the order."
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:43
+msgid "Provider"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:48
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:47
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:68
+msgid "Status"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:53
+msgid ""
+"Payment method label reported by the payment plugin, e.g. REFMB, MBWAY, "
+"VISA."
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:54
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:45
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:66
+msgid "Payment method"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:58
+msgid "ISO 4217 code."
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:59
+msgid "Currency"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:64
+msgid "Amount charged, tax included."
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:65
+msgid "Total"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:68
+msgid "When the learner committed to the purchase."
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:69
+msgid "Placed at"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:74
+msgid "Paid at"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:79
+msgid "Absolute URL of the payment plugin's invoice page, if any."
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:80
+msgid "Invoice URL"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:85
+msgid "Absolute URL of the official receipt, if any."
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:86
+msgid "Receipt URL"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:92
+#: nau_openedx_extensions/orders/models.py:109
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:42
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:54
+msgid "Order"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:93
+msgid "Orders"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:113
+msgid "What the learner bought, as shown at checkout."
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:114
+msgid "Title"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:119
+msgid "Course key, when the item is a course mode."
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:125
+msgid "Course mode slug, when applicable."
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:126
+msgid "Mode"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:130
+msgid "Quantity"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:135
+msgid "Tax included."
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:136
+msgid "Unit price"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:140
+msgid "Order item"
+msgstr ""
+
+#: nau_openedx_extensions/orders/models.py:141
+msgid "Order items"
+msgstr ""
+
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:4
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:35
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:36
+msgid "Order History"
+msgstr ""
+
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:43
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:55
+msgid "Date"
+msgstr ""
+
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:44
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:56
+msgid "Items"
+msgstr ""
+
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:46
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:67
+msgid "Amount"
+msgstr ""
+
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:48
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:71
+msgid "Documents"
+msgstr ""
+
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:72
+msgid "Invoice"
+msgstr ""
+
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:73
+msgid "Receipt"
+msgstr ""
+
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:82
+msgid "Pagination"
+msgstr ""
+
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:83
+msgid "Previous"
+msgstr ""
+
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:84
+#, python-format
+msgid "Page %(current)s of %(total)s"
+msgstr ""
+
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:85
+msgid "Next"
+msgstr ""
+
+#: nau_openedx_extensions/orders/templates/nau_orders/order_history.html:90
+msgid "You have not made any purchases yet."
 msgstr ""
 
 #: nau_openedx_extensions/partner_integration/course_filters.py:101

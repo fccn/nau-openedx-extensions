@@ -7,4 +7,5 @@ from django.urls import include, path, re_path
 urlpatterns = [
     re_path(r"^certificate-export/", include("nau_openedx_extensions.certificate_export.urls")),
     path("partner-integration/", include("nau_openedx_extensions.partner_integration.urls")),
+    path("orders/", include("nau_openedx_extensions.orders.urls")),
 ]

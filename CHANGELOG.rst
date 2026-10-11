@@ -12,6 +12,7 @@ Change Log
 Unreleased
 ----------
 
+* Add the orders app: a NAU-owned record of learner purchases (``Order``, ``OrderItem``) with the ``record_order`` / ``update_order`` recording API for payment plugins. See ``docs/decisions/0002-orders-app.rst``.
 * Add capability to change the default DEFAULT_COURSE_LANGUAGE and ORA2_FILEUPLOAD_BACKEND
 * Add entrypoint to use this plugin also in studio. Add the capability to change the value of MAX_ASSET_UPLOAD_FILE_SIZE_IN_MB from the configuration files.
 * Added support for python3 and django2.2

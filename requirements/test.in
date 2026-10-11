@@ -14,3 +14,10 @@ faker
 ddt
 autopep8
 Django<5.0,>=4.2
+
+# Cross-package integration tests of the orders app (nau_openedx_extensions/orders/tests/test_paygate_integration.py).
+# The tests skip themselves when these are not installed.
+responses
+qrcode
+zeitlabs-payments @ git+https://github.com/zeit-labs/openedx-zeitlabs-payments.git@main
+zeitlabs-payments-paygate @ git+https://github.com/fccn/zeitlabs-payments-paygate.git@main

@@ -1,0 +1,93 @@
+{% extends "main_django.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Order History" %} | {{ platform_name }}{% endblock %}
+
+{% block headextra %}
+<style>
+  .nau-orders { max-width: 1100px; margin: 0 auto; padding: 32px 16px; }
+  .nau-orders h1 { font-size: 1.75rem; margin: 0 0 24px; }
+  .nau-orders table { width: 100%; border-collapse: collapse; }
+  .nau-orders th, .nau-orders td { padding: 12px 10px; border-bottom: 1px solid #e0e0e0; text-align: left; vertical-align: top; }
+  .nau-orders th { font-weight: 600; white-space: nowrap; }
+  .nau-orders td.nau-orders-amount, .nau-orders th.nau-orders-amount { text-align: right; white-space: nowrap; }
+  .nau-orders ul.nau-orders-items { margin: 0; padding: 0; list-style: none; }
+  .nau-orders .nau-orders-course { display: block; color: #6b6b6b; font-size: 0.875rem; }
+  .nau-orders .nau-orders-status { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.875rem; white-space: nowrap; }
+  .nau-orders .nau-orders-status-pending { background: #fff3cd; color: #7a5a00; }
+  .nau-orders .nau-orders-status-paid { background: #d4edda; color: #155724; }
+  .nau-orders .nau-orders-status-cancelled { background: #e2e3e5; color: #41464b; }
+  .nau-orders .nau-orders-status-refunded { background: #cce5ff; color: #004085; }
+  .nau-orders .nau-orders-links a { display: inline-block; margin-right: 12px; white-space: nowrap; }
+  .nau-orders .nau-orders-empty { padding: 32px 0; color: #6b6b6b; }
+  .nau-orders .nau-orders-pagination { margin-top: 24px; display: flex; gap: 16px; align-items: center; }
+  @media (max-width: 768px) {
+    .nau-orders thead { display: none; }
+    .nau-orders tr { display: block; border-bottom: 2px solid #e0e0e0; padding: 8px 0; }
+    .nau-orders td { display: block; border: 0; padding: 4px 0; }
+    .nau-orders td.nau-orders-amount { text-align: left; }
+    .nau-orders td::before { content: attr(data-label); display: block; font-weight: 600; font-size: 0.8125rem; color: #6b6b6b; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<main class="nau-orders" id="main" aria-label="{% trans 'Order History' %}">
+  <h1>{% trans "Order History" %}</h1>
+
+  {% if orders %}
+  <table>
+    <thead>
+      <tr>
+        <th>{% trans "Order" %}</th>
+        <th>{% trans "Date" %}</th>
+        <th>{% trans "Items" %}</th>
+        <th>{% trans "Payment method" %}</th>
+        <th class="nau-orders-amount">{% trans "Amount" %}</th>
+        <th>{% trans "Status" %}</th>
+        <th>{% trans "Documents" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td data-label="{% trans 'Order' %}">{{ order.number }}</td>
+        <td data-label="{% trans 'Date' %}">{{ order.placed_at|date:"SHORT_DATE_FORMAT" }}</td>
+        <td data-label="{% trans 'Items' %}">
+          <ul class="nau-orders-items">
+            {% for item in order.items.all %}
+            <li>
+              {{ item.title }}{% if item.quantity > 1 %} &times;{{ item.quantity }}{% endif %}
+              {% if item.course_id %}<span class="nau-orders-course">{{ item.course_id }}</span>{% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        </td>
+        <td data-label="{% trans 'Payment method' %}">{{ order.payment_method|default:"—" }}</td>
+        <td data-label="{% trans 'Amount' %}" class="nau-orders-amount">{{ order.total }} {{ order.currency }}</td>
+        <td data-label="{% trans 'Status' %}">
+          <span class="nau-orders-status nau-orders-status-{{ order.status }}">{{ order.get_status_display }}</span>
+        </td>
+        <td data-label="{% trans 'Documents' %}" class="nau-orders-links">
+          {% if order.invoice_url %}<a href="{{ order.invoice_url }}">{% trans "Invoice" %}</a>{% endif %}
+          {% if order.receipt_url %}<a href="{{ order.receipt_url }}" target="_blank" rel="noopener">{% trans "Receipt" %}</a>{% endif %}
+          {% if not order.invoice_url and not order.receipt_url %}—{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if is_paginated %}
+  <nav class="nau-orders-pagination" aria-label="{% trans 'Pagination' %}">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a>{% endif %}
+    <span>{% blocktrans with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktrans %}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">{% trans "Next" %}</a>{% endif %}
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <p class="nau-orders-empty">{% trans "You have not made any purchases yet." %}</p>
+  {% endif %}
+</main>
+{% endblock %}
