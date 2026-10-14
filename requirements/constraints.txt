@@ -7,3 +7,7 @@ openedx-events==10.2.0
 # pip-tools==7.4.1
 click>=8.0,<9.0
 pylint<2.16.0
+# Pinned to match fccn/openedx-platform (nau/teak.master) and to prevent
+# repeat of nau-technical#1019: djangorestframework==3.18.0 drops Django 4.2
+# support entirely, which is incompatible with the Django<5.0 pin above.
+djangorestframework<3.18.0
