@@ -98,6 +98,11 @@ def plugin_settings(settings):
         "NAU_REPORTS_ENABLE_BASE_COLUMNS", settings.NAU_REPORTS_ENABLE_BASE_COLUMNS
     )
 
+    # Canonical casing of the course keys (fccn/nau-technical#1090).
+    settings.NAU_CANONICAL_COURSE_KEYS_ENABLED = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_CANONICAL_COURSE_KEYS_ENABLED", settings.NAU_CANONICAL_COURSE_KEYS_ENABLED
+    )
+
     # Certificate date column on the grade report (fccn/nau-technical#32).
     settings.NAU_REPORTS_ENABLE_CERTIFICATE_DATE = getattr(settings, "ENV_TOKENS", {}).get(
         "NAU_REPORTS_ENABLE_CERTIFICATE_DATE", settings.NAU_REPORTS_ENABLE_CERTIFICATE_DATE
