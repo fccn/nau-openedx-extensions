@@ -119,8 +119,37 @@ def plugin_settings(settings):
     # breaking change for consumers that read reports by column position.
     settings.NAU_REPORTS_ENABLE_BASE_COLUMNS = False
 
+    # Use the casing of the course keys stored in the course overview (the canonical one) in the
+    # requests and in the course home URLs (fccn/nau-technical#1090). Set to False to disable it.
+    settings.NAU_CANONICAL_COURSE_KEYS_ENABLED = True
+    middleware = "nau_openedx_extensions.canonical_course_key.middleware.CanonicalCourseKeyMiddleware"
+    if middleware not in settings.MIDDLEWARE:
+        settings.MIDDLEWARE.append(middleware)
+    _append_filter_pipeline_step(
+        settings,
+        "org.openedx.learning.course.homepage.url.creation.started.v1",
+        "nau_openedx_extensions.canonical_course_key.filters.CourseHomeUrlCanonicalCourseKey",
+    )
+
     # Phase 2 certificate date (fccn/nau-technical#955, request #32): when
     # enabled, the grade report carries a final certificate_obtained_date
     # column (GeneratedCertificate.created_date for delivered certificates).
     # Default off.
     settings.NAU_REPORTS_ENABLE_CERTIFICATE_DATE = False
+
+
+def _append_filter_pipeline_step(settings, filter_type, pipeline_step):
+    """
+    Add a pipeline step to the configuration of an Open edX filter, keeping the existing configuration.
+
+    A filter configured here is created with `fail_silently` enabled, as the steps added by this plugin are
+    best-effort, unlike the ones added with `append_filter_config` in nau-tutor-configs. The option of a filter
+    that is already configured is kept.
+    """
+    if not hasattr(settings, "OPEN_EDX_FILTERS_CONFIG"):
+        settings.OPEN_EDX_FILTERS_CONFIG = {}
+    filter_config = settings.OPEN_EDX_FILTERS_CONFIG.setdefault(
+        filter_type, {"fail_silently": True, "pipeline": []}
+    )
+    if pipeline_step not in filter_config["pipeline"]:
+        filter_config["pipeline"].append(pipeline_step)
