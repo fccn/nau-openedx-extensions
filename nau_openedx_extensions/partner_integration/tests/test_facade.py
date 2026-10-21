@@ -232,6 +232,33 @@ class TestCertificateExportFacade(TransactionTestCase):
         result = self.facade.apply_heavy_operations([cert.id])
         self.assertEqual(result.count(), 1)
 
+    @patch(
+        "nau_openedx_extensions.partner_integration.facade.use_read_replica_if_available",
+        side_effect=lambda queryset: queryset,
+    )
+    def test_apply_heavy_operations_uses_read_replica(self, mock_replica):
+        """The heavy hydrate query is built on the read replica, not on the writer."""
+        from lms.djangoapps.certificates.tests.factories import GeneratedCertificateFactory
+
+        cert = GeneratedCertificateFactory.create(user=self.user, course_id=self.course.id)
+        result = self.facade.apply_heavy_operations([cert.id])
+        mock_replica.assert_called_once()
+        self.assertEqual(result.count(), 1)
+
+    def test_apply_heavy_operations_joins_the_nif_record(self):
+        """Reading the NIF of every row does not trigger one lazy query per row."""
+        from lms.djangoapps.certificates.tests.factories import GeneratedCertificateFactory
+
+        certificates = [
+            GeneratedCertificateFactory.create(user=NauUserExtendedModelFactory.create().user, course_id=self.course.id)
+            for _ in range(3)
+        ]
+        rows = list(self.facade.apply_heavy_operations([certificate.id for certificate in certificates]))
+        with self.assertNumQueries(0):
+            nifs = [row.user.nau_nif for row in rows]
+        self.assertEqual(len(nifs), 3)
+        self.assertTrue(all(nifs))
+
     def test_get_certificates_success(self):
         """Full get_certificates flow returns certificate IDs."""
         from lms.djangoapps.certificates.tests.factories import GeneratedCertificateFactory
@@ -358,6 +385,29 @@ class TestEnrollmentFacade(TransactionTestCase):
         enrollment = CourseEnrollmentFactory.create(user=self.user, course_id=self.course.id)
         result = self.facade.apply_heavy_operations([enrollment.id])
         self.assertEqual(result.count(), 1)
+
+    @patch(
+        "nau_openedx_extensions.partner_integration.facade.use_read_replica_if_available",
+        side_effect=lambda queryset: queryset,
+    )
+    def test_apply_heavy_operations_uses_read_replica(self, mock_replica):
+        """The heavy hydrate query is built on the read replica, not on the writer."""
+        enrollment = CourseEnrollmentFactory.create(user=self.user, course_id=self.course.id)
+        result = self.facade.apply_heavy_operations([enrollment.id])
+        mock_replica.assert_called_once()
+        self.assertEqual(result.count(), 1)
+
+    def test_apply_heavy_operations_joins_the_nif_record(self):
+        """Reading the NIF of every row does not trigger one lazy query per row."""
+        enrollments = [
+            CourseEnrollmentFactory.create(user=NauUserExtendedModelFactory.create().user, course_id=self.course.id)
+            for _ in range(3)
+        ]
+        rows = list(self.facade.apply_heavy_operations([enrollment.id for enrollment in enrollments]))
+        with self.assertNumQueries(0):
+            nifs = [row.user.nau_nif for row in rows]
+        self.assertEqual(len(nifs), 3)
+        self.assertTrue(all(nifs))
 
     def test_get_enrollments_success(self):
         """Full get_enrollments flow returns enrollment IDs."""
