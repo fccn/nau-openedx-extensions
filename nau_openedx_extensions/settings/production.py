@@ -4,6 +4,8 @@ Settings for nau_openedx_extensions
 
 from __future__ import absolute_import, unicode_literals
 
+from nau_openedx_extensions.read_replica import registration as read_replica_registration
+
 
 def plugin_settings(settings):
     """
@@ -110,3 +112,22 @@ def plugin_settings(settings):
     settings.NAU_READ_REPLICA_REPORT_TASKS = getattr(settings, "ENV_TOKENS", {}).get(
         "NAU_READ_REPLICA_REPORT_TASKS", settings.NAU_READ_REPLICA_REPORT_TASKS
     )
+
+    # Read replica routing of the allow-listed GET requests (fccn/nau-technical#1091).
+    settings.NAU_READ_REPLICA_ROUTING_ENABLED = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_READ_REPLICA_ROUTING_ENABLED", settings.NAU_READ_REPLICA_ROUTING_ENABLED
+    )
+    settings.NAU_READ_REPLICA_GET_ALLOWLIST = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_READ_REPLICA_GET_ALLOWLIST", settings.NAU_READ_REPLICA_GET_ALLOWLIST
+    )
+    settings.NAU_READ_REPLICA_DEBUG_HEADER = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_READ_REPLICA_DEBUG_HEADER", settings.NAU_READ_REPLICA_DEBUG_HEADER
+    )
+    settings.NAU_READ_REPLICA_BARRIER_SLOW_MS = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_READ_REPLICA_BARRIER_SLOW_MS", settings.NAU_READ_REPLICA_BARRIER_SLOW_MS
+    )
+    settings.NAU_READ_REPLICA_BREAKER_SECONDS = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_READ_REPLICA_BREAKER_SECONDS", settings.NAU_READ_REPLICA_BREAKER_SECONDS
+    )
+    if settings.NAU_READ_REPLICA_ROUTING_ENABLED:
+        read_replica_registration.register_get_routing(settings)

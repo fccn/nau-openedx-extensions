@@ -126,6 +126,18 @@ def plugin_settings(settings):
     # Registered names of the instructor report tasks whose queries run on the read replica.
     settings.NAU_READ_REPLICA_REPORT_TASKS = list(read_replica_conf.DEFAULT_REPORT_TASKS)
 
+    # Serve an allow-list of GET requests from the read replica. ``NAU_READ_REPLICA_ROUTING_ENABLED`` installs the
+    # router and the middleware (nothing happens in the Studio), the ``nau_read_replica.get_routing`` waffle
+    # switch turns it on and off.
+    settings.NAU_READ_REPLICA_ROUTING_ENABLED = False
+    # Regular expressions matched from the start of the request path. An empty list routes nothing.
+    settings.NAU_READ_REPLICA_GET_ALLOWLIST = []
+    # Add the X-NAU-DB-Route header (replica or writer) to routed responses, to validate the routing.
+    settings.NAU_READ_REPLICA_DEBUG_HEADER = False
+    # A causal barrier slower than this (milliseconds) means the replica lags: skip it for the next seconds.
+    settings.NAU_READ_REPLICA_BARRIER_SLOW_MS = 250
+    settings.NAU_READ_REPLICA_BREAKER_SECONDS = 10
+
     # Phase 2 certificate date (fccn/nau-technical#955, request #32): when
     # enabled, the grade report carries a final certificate_obtained_date
     # column (GeneratedCertificate.created_date for delivered certificates).
