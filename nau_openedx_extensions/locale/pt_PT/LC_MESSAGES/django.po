@@ -471,11 +471,11 @@ msgstr ""
 "A integração com o parceiro não tem permissão para inscrever utilizadores"
 " neste curso. Por favor, contacte o suporte."
 
-#: nau_openedx_extensions/settings/common.py:37
+#: nau_openedx_extensions/settings/common.py:38
 msgid "Certificate"
 msgstr "Certificado"
 
-#: nau_openedx_extensions/settings/common.py:38
+#: nau_openedx_extensions/settings/common.py:39
 msgid "Certificate of Achievement"
 msgstr "Certificado de Conclusão"
 
