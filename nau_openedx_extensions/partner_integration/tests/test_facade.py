@@ -45,6 +45,19 @@ class TestDataExtractorFacade(TransactionTestCase):
         with self.assertRaises(PartnerIntegrationInternalErrorException):
             self.facade.apply_base_security_scope({"org": "ANY"})
 
+    @patch(
+        "nau_openedx_extensions.partner_integration.facade.use_read_replica_if_available",
+        side_effect=lambda queryset: queryset,
+    )
+    def test_apply_base_security_scope_without_replica(self, mock_replica):
+        """Write endpoints read the courses of their scope from the writer."""
+        CourseOverviewFactory.create(org="SCOPE_ORG")
+
+        result = self.facade.apply_base_security_scope({"org": "SCOPE_ORG"}, use_replica=False)
+
+        mock_replica.assert_not_called()
+        self.assertEqual(result.count(), 1)
+
 
 class TestCertificateExportFacade(TransactionTestCase):
     """Tests for CertificateExportFacade methods."""
@@ -232,6 +245,33 @@ class TestCertificateExportFacade(TransactionTestCase):
         result = self.facade.apply_heavy_operations([cert.id])
         self.assertEqual(result.count(), 1)
 
+    @patch(
+        "nau_openedx_extensions.partner_integration.facade.use_read_replica_if_available",
+        side_effect=lambda queryset: queryset,
+    )
+    def test_apply_heavy_operations_uses_read_replica(self, mock_replica):
+        """The heavy hydrate query is built on the read replica, not on the writer."""
+        from lms.djangoapps.certificates.tests.factories import GeneratedCertificateFactory
+
+        cert = GeneratedCertificateFactory.create(user=self.user, course_id=self.course.id)
+        result = self.facade.apply_heavy_operations([cert.id])
+        mock_replica.assert_called_once()
+        self.assertEqual(result.count(), 1)
+
+    def test_apply_heavy_operations_joins_the_nif_record(self):
+        """Reading the NIF of every row does not trigger one lazy query per row."""
+        from lms.djangoapps.certificates.tests.factories import GeneratedCertificateFactory
+
+        certificates = [
+            GeneratedCertificateFactory.create(user=NauUserExtendedModelFactory.create().user, course_id=self.course.id)
+            for _ in range(3)
+        ]
+        rows = list(self.facade.apply_heavy_operations([certificate.id for certificate in certificates]))
+        with self.assertNumQueries(0):
+            nifs = [row.user.nau_nif for row in rows]
+        self.assertEqual(len(nifs), 3)
+        self.assertTrue(all(nifs))
+
     def test_get_certificates_success(self):
         """Full get_certificates flow returns certificate IDs."""
         from lms.djangoapps.certificates.tests.factories import GeneratedCertificateFactory
@@ -359,6 +399,29 @@ class TestEnrollmentFacade(TransactionTestCase):
         result = self.facade.apply_heavy_operations([enrollment.id])
         self.assertEqual(result.count(), 1)
 
+    @patch(
+        "nau_openedx_extensions.partner_integration.facade.use_read_replica_if_available",
+        side_effect=lambda queryset: queryset,
+    )
+    def test_apply_heavy_operations_uses_read_replica(self, mock_replica):
+        """The heavy hydrate query is built on the read replica, not on the writer."""
+        enrollment = CourseEnrollmentFactory.create(user=self.user, course_id=self.course.id)
+        result = self.facade.apply_heavy_operations([enrollment.id])
+        mock_replica.assert_called_once()
+        self.assertEqual(result.count(), 1)
+
+    def test_apply_heavy_operations_joins_the_nif_record(self):
+        """Reading the NIF of every row does not trigger one lazy query per row."""
+        enrollments = [
+            CourseEnrollmentFactory.create(user=NauUserExtendedModelFactory.create().user, course_id=self.course.id)
+            for _ in range(3)
+        ]
+        rows = list(self.facade.apply_heavy_operations([enrollment.id for enrollment in enrollments]))
+        with self.assertNumQueries(0):
+            nifs = [row.user.nau_nif for row in rows]
+        self.assertEqual(len(nifs), 3)
+        self.assertTrue(all(nifs))
+
     def test_get_enrollments_success(self):
         """Full get_enrollments flow returns enrollment IDs."""
         enrollment = CourseEnrollmentFactory.create(user=self.user, course_id=self.course.id)
@@ -421,6 +484,43 @@ class TestEnrollmentFacade(TransactionTestCase):
         result = self.facade.enroll_user(
             self.scope, str(self.course.id), None, None, self.user.username)
         self.assertIsNotNone(result)
+
+    def assert_enroll_user_reads_only_from_the_writer(self, nif=None, email=None, username=None):
+        """
+        enroll-user is a write endpoint, so none of its reads (the course of the scope, the user and the
+        enrollment returned after add_enrollment) goes through the read replica helper.
+        """
+        course = self.course
+        user = self.user
+        created = []
+
+        def create_enrollment(*args, **kwargs):
+            created.append(CourseEnrollmentFactory.create(user=user, course_id=course.id))
+            return {"is_active": True}
+
+        with patch("nau_openedx_extensions.partner_integration.facade.enrollment_api") as mock_api, patch(
+            "nau_openedx_extensions.partner_integration.facade.use_read_replica_if_available",
+            side_effect=lambda queryset: queryset,
+        ) as mock_replica:
+            mock_api.add_enrollment.side_effect = create_enrollment
+            result = self.facade.enroll_user(self.scope, str(course.id), nif, email, username)
+
+        mock_replica.assert_not_called()
+        self.assertEqual(result.pk, created[0].pk)
+        self.assertEqual(result.user, user)
+        self.assertEqual(result.course, course)
+
+    def test_enroll_user_by_email_reads_only_from_the_writer(self):
+        """The user found by e-mail and the enrollment returned are read from the writer."""
+        self.assert_enroll_user_reads_only_from_the_writer(email=self.user.email)
+
+    def test_enroll_user_by_nif_reads_only_from_the_writer(self):
+        """The user found by NIF and the enrollment returned are read from the writer."""
+        self.assert_enroll_user_reads_only_from_the_writer(nif=self.user_ext.nif)
+
+    def test_enroll_user_by_username_reads_only_from_the_writer(self):
+        """The user found by username and the enrollment returned are read from the writer."""
+        self.assert_enroll_user_reads_only_from_the_writer(username=self.user.username)
 
     def test_enroll_user_already_enrolled_active(self):
         """Already enrolled (active) raises DataConflictException."""
