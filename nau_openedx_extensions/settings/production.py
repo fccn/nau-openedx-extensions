@@ -102,3 +102,11 @@ def plugin_settings(settings):
     settings.NAU_REPORTS_ENABLE_CERTIFICATE_DATE = getattr(settings, "ENV_TOKENS", {}).get(
         "NAU_REPORTS_ENABLE_CERTIFICATE_DATE", settings.NAU_REPORTS_ENABLE_CERTIFICATE_DATE
     )
+
+    # Read replica routing of the heavy instructor reports (fccn/nau-technical#1091).
+    settings.NAU_READ_REPLICA_REPORTS_ENABLED = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_READ_REPLICA_REPORTS_ENABLED", settings.NAU_READ_REPLICA_REPORTS_ENABLED
+    )
+    settings.NAU_READ_REPLICA_REPORT_TASKS = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_READ_REPLICA_REPORT_TASKS", settings.NAU_READ_REPLICA_REPORT_TASKS
+    )

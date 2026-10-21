@@ -12,6 +12,10 @@ NAU Open edX extensions is a [django app plugin](https://github.com/edx/edx-plat
 [Field mapping, validation and required configuration](docs/extended_profile_fields.rst) for the NAU
 characterization data (NIF, employment situation, NUTS, CAE4).
 
+## Read replica routing
+[Routing the heavy instructor reports to the read replica](docs/read_replica.rst), with its settings, switches
+and rollout steps (fccn/nau-technical#1091).
+
 ## Python
 
 This package requires the same Python version of the edx-platform.

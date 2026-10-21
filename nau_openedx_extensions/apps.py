@@ -54,6 +54,14 @@ class NauOpenEdxConfig(AppConfig):
 
         certificate_date.install()
 
+        # Run the heavy instructor report tasks on the read replica instead of the writer
+        # (fccn/nau-technical#1091). Inert unless NAU_READ_REPLICA_REPORTS_ENABLED is enabled
+        # (default off) and the nau_read_replica.reports waffle switch is active.
+        from nau_openedx_extensions.read_replica import \
+            reports as read_replica_reports  # pylint: disable=import-outside-toplevel # noqa
+
+        read_replica_reports.install()
+
         # Override the default Video xBlock the _poster private function.
         # Override the class was giving more work because of the html dependencies
         # was being loaded from the new package. So it was more easy just replace the
