@@ -7,6 +7,7 @@ from __future__ import absolute_import, unicode_literals
 from django.utils.translation import gettext_lazy as _
 
 from nau_openedx_extensions import ROOT_DIRECTORY
+from nau_openedx_extensions.read_replica import conf as read_replica_conf
 
 SECRET_KEY = "a-not-to-be-trusted-secret-key"
 INSTALLED_APPS = (
@@ -118,6 +119,12 @@ def plugin_settings(settings):
     # reports, email, username and student_id. Default off; enabling it is a
     # breaking change for consumers that read reports by column position.
     settings.NAU_REPORTS_ENABLE_BASE_COLUMNS = False
+
+    # Read replica routing (fccn/nau-technical#1091). Default off: the code is installed only when the
+    # setting is true, and even then the nau_read_replica.reports waffle switch decides at run time.
+    settings.NAU_READ_REPLICA_REPORTS_ENABLED = False
+    # Registered names of the instructor report tasks whose queries run on the read replica.
+    settings.NAU_READ_REPLICA_REPORT_TASKS = list(read_replica_conf.DEFAULT_REPORT_TASKS)
 
     # Phase 2 certificate date (fccn/nau-technical#955, request #32): when
     # enabled, the grade report carries a final certificate_obtained_date

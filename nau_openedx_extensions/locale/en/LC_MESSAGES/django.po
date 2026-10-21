@@ -427,11 +427,11 @@ msgid ""
 "course. Please contact support."
 msgstr ""
 
-#: nau_openedx_extensions/settings/common.py:37
+#: nau_openedx_extensions/settings/common.py:38
 msgid "Certificate"
 msgstr ""
 
-#: nau_openedx_extensions/settings/common.py:38
+#: nau_openedx_extensions/settings/common.py:39
 msgid "Certificate of Achievement"
 msgstr ""
 
