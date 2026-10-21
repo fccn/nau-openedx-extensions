@@ -18,3 +18,14 @@ from edx_toggles.toggles import WaffleSwitch
 # .. toggle_creation_date: 2026-10-21
 # .. toggle_tickets: https://github.com/fccn/nau-technical/issues/1091
 REPORTS = WaffleSwitch("nau_read_replica.reports", __name__)
+
+# .. toggle_name: nau_read_replica.get_routing
+# .. toggle_implementation: WaffleSwitch
+# .. toggle_default: False
+# .. toggle_description: Serve the GET requests that match NAU_READ_REPLICA_GET_ALLOWLIST from the read replica,
+#   after a causal barrier that makes the replica catch up with the writer. Only has an effect when
+#   NAU_READ_REPLICA_ROUTING_ENABLED is true.
+# .. toggle_use_cases: circuit_breaker
+# .. toggle_creation_date: 2026-10-21
+# .. toggle_tickets: https://github.com/fccn/nau-technical/issues/1091
+GET_ROUTING = WaffleSwitch("nau_read_replica.get_routing", __name__)
