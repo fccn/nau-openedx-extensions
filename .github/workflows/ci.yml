@@ -13,7 +13,9 @@ concurrency:
 jobs:
 
   test-and-lint:
-    runs-on: ubuntu-latest
+    # Not ubuntu-latest: the cached virtual environment has the compiled MySQLdb linked to the
+    # libmysqlclient of this image, which is not available in newer ones (ubuntu-26.04).
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         include:
