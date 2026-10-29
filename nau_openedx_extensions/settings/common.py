@@ -94,6 +94,14 @@ def plugin_settings(settings):
     #   ]
     settings.NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO = []
 
+    # fccn/nau-technical#1036: keep the plain CMS session alive for users who are
+    # only making JWT-authenticated requests (e.g. via the authoring MFE), which
+    # never otherwise touch/resave it. See studio.session_refresh for details.
+    if settings.SERVICE_VARIANT == "cms":
+        middleware = "nau_openedx_extensions.studio.session_refresh.TouchSessionMiddleware"
+        if middleware not in settings.MIDDLEWARE:
+            settings.MIDDLEWARE.append(middleware)
+
     settings.SCORMXBLOCK_ASYNC_THRESHOLD = 500
     settings.NAU_SITE_CONFIGURATION_HELPERS_MODULE = (
         "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_helpers_l_v1"
