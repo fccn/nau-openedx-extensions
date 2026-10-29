@@ -9,8 +9,12 @@ NAU Open edX extensions is a [django app plugin](https://github.com/edx/edx-plat
 [Usage details](docs/usage.rst).
 
 ## Extended profile fields
-[Field mapping, validation and required configuration](docs/extended_profile_fields.rst) for the NAU
-characterization data (NIF, employment situation, NUTS, CAE4).
+The NAU characterization data (NIF, employment situation, NUTS, CAE4).
+
+- [Setup guide](docs/profile_fields_setup.rst): how to turn the fields on, what to
+  configure, and how to make a course require them.
+- [Reference](docs/extended_profile_fields.rst): field mapping, validation, and how
+  the gate and the account page work.
 
 ## Python
 
