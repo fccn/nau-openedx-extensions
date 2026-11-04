@@ -207,7 +207,7 @@ lint-fix: | _prerequire _venv ## Fix Python import sort
 .PHONY: lint-fix
 
 # Define PIP_COMPILE_OPTS=-v to get more information during make upgrade.
-PIP_COMPILE = pip-compile --rebuild --upgrade $(PIP_COMPILE_OPTS)
+PIP_COMPILE = $(VENV_BIN)/pip-compile --rebuild --upgrade $(PIP_COMPILE_OPTS)
 
 pre-requirements: _venv ## install Python requirements for running pip-tools
 	$(PIP) install -r requirements/pip.txt
@@ -223,11 +223,11 @@ compile-requirements: pre-requirements ## Re-compile *.in requirements to *.txt
 	mv requirements/common_constraints.tmp requirements/common_constraints.txt
 	sed 's/Django<4.0//g' requirements/common_constraints.txt > requirements/common_constraints.tmp
 	mv requirements/common_constraints.tmp requirements/common_constraints.txt
-	pip-compile -v --allow-unsafe ${COMPILE_OPTS} -o requirements/pip.txt requirements/pip.in
-	pip install -r requirements/pip.txt
+	$(VENV_BIN)/pip-compile -v --allow-unsafe ${COMPILE_OPTS} -o requirements/pip.txt requirements/pip.in
+	$(PIP) install -r requirements/pip.txt
 
-	pip-compile -v ${COMPILE_OPTS} -o requirements/pip-tools.txt requirements/pip-tools.in
-	pip install -r requirements/pip-tools.txt
+	$(VENV_BIN)/pip-compile -v ${COMPILE_OPTS} -o requirements/pip-tools.txt requirements/pip-tools.in
+	$(PIP) install -r requirements/pip-tools.txt
 	$(PIP_COMPILE) -o requirements/base.txt requirements/base.in
 	$(PIP_COMPILE) -o requirements/test.txt requirements/test.in
 	$(PIP_COMPILE) -o requirements/tox.txt requirements/tox.in
