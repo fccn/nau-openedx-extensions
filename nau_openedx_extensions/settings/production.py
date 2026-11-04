@@ -103,6 +103,14 @@ def plugin_settings(settings):
         "NAU_CANONICAL_COURSE_KEYS_ENABLED", settings.NAU_CANONICAL_COURSE_KEYS_ENABLED
     )
 
+    # Session keep-alive middleware kill switch and interval (fccn/nau-technical#1036).
+    settings.NAU_SESSION_TOUCH_ENABLED = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_SESSION_TOUCH_ENABLED", settings.NAU_SESSION_TOUCH_ENABLED
+    )
+    settings.NAU_SESSION_TOUCH_INTERVAL_SECONDS = getattr(settings, "ENV_TOKENS", {}).get(
+        "NAU_SESSION_TOUCH_INTERVAL_SECONDS", settings.NAU_SESSION_TOUCH_INTERVAL_SECONDS
+    )
+
     # Certificate date column on the grade report (fccn/nau-technical#32).
     settings.NAU_REPORTS_ENABLE_CERTIFICATE_DATE = getattr(settings, "ENV_TOKENS", {}).get(
         "NAU_REPORTS_ENABLE_CERTIFICATE_DATE", settings.NAU_REPORTS_ENABLE_CERTIFICATE_DATE

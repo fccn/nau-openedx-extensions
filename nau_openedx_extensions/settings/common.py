@@ -94,6 +94,15 @@ def plugin_settings(settings):
     #   ]
     settings.NAU_ALL_ADDITIONAL_FEATURES_ON_INSTRUCTOR_ANALYTICS_STUDENT_PROFILE_INFO = []
 
+    # fccn/nau-technical#1036: keep the plain CMS session alive for users who are
+    # only making JWT-authenticated requests (e.g. via the authoring MFE), which
+    # never otherwise touch/resave it. Sliding sessions: this also means a Studio
+    # session now ends 14 days after the user's *last activity* rather than 14
+    # days after their last login -- see studio.session_refresh for details.
+    settings.NAU_SESSION_TOUCH_ENABLED = True
+    settings.NAU_SESSION_TOUCH_INTERVAL_SECONDS = 600
+    _register_session_touch_middleware(settings)
+
     settings.SCORMXBLOCK_ASYNC_THRESHOLD = 500
     settings.NAU_SITE_CONFIGURATION_HELPERS_MODULE = (
         "nau_openedx_extensions.edxapp_wrapper.backends.site_configuration_helpers_l_v1"
@@ -122,9 +131,7 @@ def plugin_settings(settings):
     # Use the casing of the course keys stored in the course overview (the canonical one) in the
     # requests and in the course home URLs (fccn/nau-technical#1090). Set to False to disable it.
     settings.NAU_CANONICAL_COURSE_KEYS_ENABLED = True
-    middleware = "nau_openedx_extensions.canonical_course_key.middleware.CanonicalCourseKeyMiddleware"
-    if middleware not in settings.MIDDLEWARE:
-        settings.MIDDLEWARE.append(middleware)
+    _append_middleware(settings, "nau_openedx_extensions.canonical_course_key.middleware.CanonicalCourseKeyMiddleware")
     _append_filter_pipeline_step(
         settings,
         "org.openedx.learning.course.homepage.url.creation.started.v1",
@@ -136,6 +143,22 @@ def plugin_settings(settings):
     # column (GeneratedCertificate.created_date for delivered certificates).
     # Default off.
     settings.NAU_REPORTS_ENABLE_CERTIFICATE_DATE = False
+
+
+def _append_middleware(settings, middleware_path):
+    """
+    Add a middleware to MIDDLEWARE, keeping the existing configuration, unless it is already there.
+    """
+    if middleware_path not in settings.MIDDLEWARE:
+        settings.MIDDLEWARE.append(middleware_path)
+
+
+def _register_session_touch_middleware(settings):
+    """
+    Register TouchSessionMiddleware for CMS only (fccn/nau-technical#1036).
+    """
+    if settings.SERVICE_VARIANT == "cms":
+        _append_middleware(settings, "nau_openedx_extensions.studio.session_refresh.TouchSessionMiddleware")
 
 
 def _append_filter_pipeline_step(settings, filter_type, pipeline_step):
