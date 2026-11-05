@@ -143,9 +143,14 @@ class CertificateExportFacade(DataExtractorFacade):
     def apply_heavy_operations(self, certificate_ids):
         """
         Apply the heavy operations of the query
+
+        The page of ids was selected on the read replica, so the hydrate query, the heaviest
+        one of the request, runs there too instead of on the writer. The NIF record is joined
+        here because the serializer reads it for every row, which would otherwise be one lazy
+        query per row.
         """
-        certificates_query = GeneratedCertificate.objects.filter(id__in=certificate_ids)
-        certificates_query = certificates_query.select_related("user")
+        certificates_query = use_read_replica_if_available(GeneratedCertificate.objects.filter(id__in=certificate_ids))
+        certificates_query = certificates_query.select_related("user", "user__nauuserextendedmodel")
         certificates_query = certificates_query.distinct()
         certificates_query = self._annotate_course_data(certificates_query)
         certificates_query = self._annotate_enrollment_data(certificates_query)
@@ -390,9 +395,13 @@ class EnrollmentFacade(DataExtractorFacade):
     def apply_heavy_operations(self, enrollment_ids):
         """
         Apply the heavy operations of the query
+
+        The page of ids was selected on the read replica, so the hydrate query runs there too
+        instead of on the writer. The NIF record is joined here because the serializer reads it
+        for every row, which would otherwise be one lazy query per row.
         """
-        enrollments_query = CourseEnrollment.objects.filter(id__in=enrollment_ids)
-        enrollments_query = enrollments_query.select_related("user", "course")
+        enrollments_query = use_read_replica_if_available(CourseEnrollment.objects.filter(id__in=enrollment_ids))
+        enrollments_query = enrollments_query.select_related("user", "user__nauuserextendedmodel", "course")
         enrollments_query = enrollments_query.distinct()
 
         return enrollments_query
