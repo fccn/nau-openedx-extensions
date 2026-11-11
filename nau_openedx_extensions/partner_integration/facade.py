@@ -42,7 +42,7 @@ class DataExtractorFacade:
     filtering logic is common to all data extractor facades.
     """
 
-    def apply_base_security_scope(self, base_security_scope):
+    def apply_base_security_scope(self, base_security_scope, use_replica=True):
         """
         Applies the partner query security scope to filter courses. It comes from
         the partner configuration.
@@ -58,10 +58,15 @@ class DataExtractorFacade:
             "org": "NAU",
             "end__gte": "2025-01-01"
         }
+
+        The courses are read from the read replica unless `use_replica` is false, which write
+        endpoints use so that everything they read comes from the writer.
         """
         try:
             logger.info("Executing query by security scope.")
-            course_query = use_read_replica_if_available(CourseOverview.objects.filter(**base_security_scope))
+            course_query = CourseOverview.objects.filter(**base_security_scope)
+            if use_replica:
+                course_query = use_read_replica_if_available(course_query)
 
             return course_query
         except Exception as e:
@@ -143,9 +148,14 @@ class CertificateExportFacade(DataExtractorFacade):
     def apply_heavy_operations(self, certificate_ids):
         """
         Apply the heavy operations of the query
+
+        The page of ids was selected on the read replica, so the hydrate query, the heaviest
+        one of the request, runs there too instead of on the writer. The NIF record is joined
+        here because the serializer reads it for every row, which would otherwise be one lazy
+        query per row.
         """
-        certificates_query = GeneratedCertificate.objects.filter(id__in=certificate_ids)
-        certificates_query = certificates_query.select_related("user")
+        certificates_query = use_read_replica_if_available(GeneratedCertificate.objects.filter(id__in=certificate_ids))
+        certificates_query = certificates_query.select_related("user", "user__nauuserextendedmodel")
         certificates_query = certificates_query.distinct()
         certificates_query = self._annotate_course_data(certificates_query)
         certificates_query = self._annotate_enrollment_data(certificates_query)
@@ -257,6 +267,10 @@ class EnrollmentFacade(DataExtractorFacade):
         Enrolls a user in a course using his NIF or email provided.
         It implements the enrollment logic using the Open edX enrollment API.
 
+        This is a write endpoint, so everything it reads comes from the writer, never from the read
+        replica (read-your-writes): a replica that is a moment behind does not have a user that was
+        just created, nor the enrollment that `add_enrollment` has just written.
+
         Returns:
             list: The course CourseEnrollment object for the enrolled user.
         """
@@ -264,7 +278,7 @@ class EnrollmentFacade(DataExtractorFacade):
         User = get_user_model()
         try:
             base_security_scope = query_security_scope.get("base_security_scope", {})
-            courses_base_query = super().apply_base_security_scope(base_security_scope)
+            courses_base_query = super().apply_base_security_scope(base_security_scope, use_replica=False)
 
             try:
                 course = courses_base_query.get(id=course_id)
@@ -278,15 +292,15 @@ class EnrollmentFacade(DataExtractorFacade):
 
             user = None
             if email:
-                user = use_read_replica_if_available(User.objects.filter(email=email)).get()
+                user = User.objects.filter(email=email).get()
             elif nif and not user:
                 filters = (
                     Q(nauuserextendedmodel__nif=nif) |
                     Q(nauuserextendedmodel__cc_nif=nif)
                 )
-                user = use_read_replica_if_available(User.objects.filter(filters)).get()
+                user = User.objects.filter(filters).get()
             elif username and not user:
-                user = use_read_replica_if_available(User.objects.filter(username=username)).get()
+                user = User.objects.filter(username=username).get()
 
             course_enrollment = CourseEnrollment.objects.filter(course=course, user=user)
             if course_enrollment.exists():
@@ -305,11 +319,9 @@ class EnrollmentFacade(DataExtractorFacade):
             # that is, all enrollment endpoints return the same serializer structure.
             enrollment = enrollment_api.add_enrollment(user.username, str(course.id))
             if enrollment:
-                enrollment_register = use_read_replica_if_available(
-                    CourseEnrollment.objects.filter(
-                        course=course,
-                        user=user
-                    )
+                enrollment_register = CourseEnrollment.objects.filter(
+                    course=course,
+                    user=user
                 ).select_related("user", "course").first()
                 return enrollment_register
 
@@ -390,9 +402,13 @@ class EnrollmentFacade(DataExtractorFacade):
     def apply_heavy_operations(self, enrollment_ids):
         """
         Apply the heavy operations of the query
+
+        The page of ids was selected on the read replica, so the hydrate query runs there too
+        instead of on the writer. The NIF record is joined here because the serializer reads it
+        for every row, which would otherwise be one lazy query per row.
         """
-        enrollments_query = CourseEnrollment.objects.filter(id__in=enrollment_ids)
-        enrollments_query = enrollments_query.select_related("user", "course")
+        enrollments_query = use_read_replica_if_available(CourseEnrollment.objects.filter(id__in=enrollment_ids))
+        enrollments_query = enrollments_query.select_related("user", "user__nauuserextendedmodel", "course")
         enrollments_query = enrollments_query.distinct()
 
         return enrollments_query
