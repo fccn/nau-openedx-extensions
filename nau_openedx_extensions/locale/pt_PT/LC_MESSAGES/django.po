@@ -622,7 +622,7 @@ msgstr "Ir para a minha conta"
 msgid "Complete your profile"
 msgstr "Complete o seu perfil"
 
-#: nau_openedx_extensions/utils/admin.py:63
+#: nau_openedx_extensions/utils/admin.py:76
 msgid "Export Selected to CSV"
 msgstr "Exportar selecionados para CSV"
 

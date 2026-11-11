@@ -4,11 +4,10 @@ Admin for nau user extended model
 
 from __future__ import absolute_import, unicode_literals
 
-from common.djangoapps.util.query import use_read_replica_if_available  # lint-amnesty, pylint: disable=import-error
 from django.contrib import admin
 
 from nau_openedx_extensions.custom_registration_form.models import NauUserExtendedModel
-from nau_openedx_extensions.utils.admin import ExportCsvMixin
+from nau_openedx_extensions.utils.admin import ExportCsvMixin, use_read_replica_for_read_only_requests
 
 
 @admin.register(NauUserExtendedModel)
@@ -63,4 +62,4 @@ class NauUserExtendedModelAdmin(admin.ModelAdmin, ExportCsvMixin):
         qs, use_distinct = super().get_search_results(request, queryset, search_term)
         if search_term and len(search_term) > 0 and len(search_term) < 3:
             qs = NauUserExtendedModel.objects.none()
-        return use_read_replica_if_available(qs), use_distinct
+        return use_read_replica_for_read_only_requests(request, qs), use_distinct

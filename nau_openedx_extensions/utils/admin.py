@@ -9,6 +9,19 @@ from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
 
+def use_read_replica_for_read_only_requests(request, queryset):
+    """
+    Pin the queryset to the read replica, if there is one, when the request only reads (GET and HEAD).
+
+    Django builds the queryset of the change list with `get_search_results` for the POST of an admin action as
+    well, and the action writes through that queryset: `delete_selected` runs its DELETE on the database the
+    queryset is pinned to, so a queryset pinned to the replica would write to the replica.
+    """
+    if request.method in ("GET", "HEAD"):
+        return use_read_replica_if_available(queryset)
+    return queryset
+
+
 class ExportCsvMixin:
     """
     Generic mixin that has an admin action that exports its data to CSV
