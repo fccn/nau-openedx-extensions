@@ -561,7 +561,7 @@ msgstr ""
 msgid "Complete your profile"
 msgstr ""
 
-#: nau_openedx_extensions/utils/admin.py:63
+#: nau_openedx_extensions/utils/admin.py:76
 msgid "Export Selected to CSV"
 msgstr ""
 

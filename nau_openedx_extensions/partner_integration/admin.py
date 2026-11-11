@@ -2,10 +2,11 @@
 import json
 import logging
 
-from common.djangoapps.util.query import use_read_replica_if_available  # lint-amnesty, pylint: disable=import-error
 from django import forms
 from django.contrib import admin
 from django.utils.crypto import get_random_string
+
+from nau_openedx_extensions.utils.admin import use_read_replica_for_read_only_requests
 
 from .models import PartnerAPIClient, SSOPartnerIntegration
 
@@ -112,6 +113,6 @@ class SSOPartnerIntegrationAdmin(admin.ModelAdmin):
             return str(error)
 
     def get_search_results(self, request, queryset, search_term):
-        """Override the default search to apply `use_read_replica_if_available`"""
+        """Override the default search to read from the replica for the requests that only read"""
         qs, use_distinct = super().get_search_results(request, queryset, search_term)
-        return use_read_replica_if_available(qs), use_distinct
+        return use_read_replica_for_read_only_requests(request, qs), use_distinct
